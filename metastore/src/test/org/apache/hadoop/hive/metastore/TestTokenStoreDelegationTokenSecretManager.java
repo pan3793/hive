@@ -67,7 +67,8 @@ public class TestTokenStoreDelegationTokenSecretManager {
     try {
       mgr.startThreads();
       String tokenStr =
-          mgr.getDelegationToken(UserGroupInformation.getCurrentUser().getShortUserName());
+          mgr.getDelegationToken(UserGroupInformation.getCurrentUser().getShortUserName(),
+                  UserGroupInformation.getCurrentUser().getShortUserName());
       Assert.assertNotNull(mgr.verifyDelegationToken(tokenStr));
       DelegationTokenIdentifier id = getID(tokenStr);
       long initialExpiry = tokenStore.getToken(id).getRenewDate();
@@ -94,7 +95,8 @@ public class TestTokenStoreDelegationTokenSecretManager {
     try {
       mgr.startThreads();
       String tokenStr =
-          mgr.getDelegationToken(UserGroupInformation.getCurrentUser().getShortUserName());
+          mgr.getDelegationToken(UserGroupInformation.getCurrentUser().getShortUserName(),
+                  UserGroupInformation.getCurrentUser().getShortUserName());
       DelegationTokenIdentifier id = getID(tokenStr);
       Assert.assertNotNull(mgr.verifyDelegationToken(tokenStr));
       // Sleep for the renewal duration
