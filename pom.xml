@@ -1214,50 +1214,6 @@
       </reporting>
     </profile>
     <profile>
-      <!-- Windows-specific settings to allow unit tests to work -->
-      <id>windows-test</id>
-      <activation>
-        <os>
-          <family>Windows</family>
-       </os>
-      </activation>
-      <build>
-        <plugins>
-          <!-- maven.test.classpath (used for HIVE_HADOOP_TEST_CLASSPATH) exceeds the 8K Windows -->
-          <!-- command shell limit which causes tests which call hadoop command to fail.         -->
-          <!-- Workaround is to copy all necessary jars to a single location to shorten the      -->
-          <!-- the length of the environment variable.                                           -->
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <version>2.8</version>
-            <executions>
-              <execution>
-                <id>copy-dependencies</id>
-                <phase>package</phase>
-                <goals>
-                  <goal>copy-dependencies</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>${project.build.directory}/deplibs/</outputDirectory>
-                  <overWriteReleases>false</overWriteReleases>
-                  <overWriteSnapshots>false</overWriteSnapshots>
-                  <overWriteIfNewer>true</overWriteIfNewer>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-      <properties>
-        <hadoop.bin.path>${basedir}/${hive.path.to.root}/testutils/hadoop.cmd</hadoop.bin.path>
-        <test.extra.path>;${env.HADOOP_HOME}/bin</test.extra.path>
-        <test.hive.hadoop.classpath>${project.build.directory}/deplibs/*</test.hive.hadoop.classpath>
-        <test.tmp.dir.uri>file:///${test.tmp.dir}</test.tmp.dir.uri>
-        <test.log4j.scheme>file:/</test.log4j.scheme>
-      </properties>
-    </profile>
-    <profile>
       <id>itests</id>
       <modules>
         <module>itests</module>
