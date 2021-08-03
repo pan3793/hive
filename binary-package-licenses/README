@@ -30,7 +30,6 @@ datanucleus*
 derby
 disruptor
 dropwizard-metrics-hadoop-metrics2-reporter
-druid*
 eigenbase-properties
 emitter
 extendedset

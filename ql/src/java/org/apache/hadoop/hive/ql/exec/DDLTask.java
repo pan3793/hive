@@ -4850,8 +4850,7 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     boolean retval = true;
     if (tbl.getStorageHandler() != null) {
       String sh = tbl.getStorageHandler().toString();
-      retval = !sh.equals("org.apache.hadoop.hive.hbase.HBaseStorageHandler")
-              && !sh.equals(Constants.DRUID_HIVE_STORAGE_HANDLER_ID);
+      retval = !sh.equals("org.apache.hadoop.hive.hbase.HBaseStorageHandler");
     }
     return retval;
   }
