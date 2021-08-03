@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.calcite.adapter.druid.DruidQuery;
 import org.apache.calcite.avatica.util.TimeUnitRange;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
@@ -349,10 +348,6 @@ public class ASTConverter {
       TableScan f = (TableScan) r;
       s = new Schema(f);
       ast = ASTBuilder.table(f);
-    } else if (r instanceof DruidQuery) {
-      DruidQuery f = (DruidQuery) r;
-      s = new Schema(f);
-      ast = ASTBuilder.table(f);
     } else if (r instanceof Join) {
       Join join = (Join) r;
       QueryBlockInfo left = convertSource(join.getLeft());
@@ -429,8 +424,7 @@ public class ASTConverter {
     @Override
     public void visit(RelNode node, int ordinal, RelNode parent) {
 
-      if (node instanceof TableScan ||
-          node instanceof DruidQuery) {
+      if (node instanceof TableScan) {
         ASTConverter.this.from = node;
       } else if (node instanceof Filter) {
         handle((Filter) node);
@@ -699,14 +693,6 @@ public class ASTConverter {
       HiveTableScan hts = (HiveTableScan) scan;
       String tabName = hts.getTableAlias();
       for (RelDataTypeField field : scan.getRowType().getFieldList()) {
-        add(new ColumnInfo(tabName, field.getName()));
-      }
-    }
-
-    Schema(DruidQuery dq) {
-      HiveTableScan hts = (HiveTableScan) ((DruidQuery)dq).getTableScan();
-      String tabName = hts.getTableAlias();
-      for (RelDataTypeField field : dq.getRowType().getFieldList()) {
         add(new ColumnInfo(tabName, field.getName()));
       }
     }

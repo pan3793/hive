@@ -31,9 +31,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.calcite.adapter.druid.DruidQuery;
-import org.apache.calcite.adapter.druid.DruidSchema;
-import org.apache.calcite.adapter.druid.DruidTable;
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptMaterialization;
@@ -289,40 +286,9 @@ public final class HiveMaterializedViewsRegistry {
     RelNode tableRel;
 
     // 3. Build operator
-    if (obtainTableType(viewTable) == TableType.DRUID) {
-      // Build Druid query
-      String address = HiveConf.getVar(SessionState.get().getConf(),
-          HiveConf.ConfVars.HIVE_DRUID_BROKER_DEFAULT_ADDRESS);
-      String dataSource = viewTable.getParameters().get(Constants.DRUID_DATA_SOURCE);
-      Set<String> metrics = new HashSet<>();
-      List<RelDataType> druidColTypes = new ArrayList<>();
-      List<String> druidColNames = new ArrayList<>();
-      for (RelDataTypeField field : rowType.getFieldList()) {
-        druidColTypes.add(field.getType());
-        druidColNames.add(field.getName());
-        if (field.getName().equals(DruidTable.DEFAULT_TIMESTAMP_COLUMN)) {
-          // timestamp
-          continue;
-        }
-        if (field.getType().getSqlTypeName() == SqlTypeName.VARCHAR) {
-          // dimension
-          continue;
-        }
-        metrics.add(field.getName());
-      }
-      List<Interval> intervals = Arrays.asList(DruidTable.DEFAULT_INTERVAL);
-
-      DruidTable druidTable = new DruidTable(new DruidSchema(address, address, false),
-          dataSource, RelDataTypeImpl.proto(rowType), metrics, DruidTable.DEFAULT_TIMESTAMP_COLUMN, intervals);
-      final TableScan scan = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
-          optTable, viewTable.getTableName(), null, false, false);
-      tableRel = DruidQuery.create(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION),
-          optTable, druidTable, ImmutableList.<RelNode>of(scan));
-    } else {
-      // Build Hive Table Scan Rel
-      tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
-          viewTable.getTableName(), null, false, false);
-    }
+    // Build Hive Table Scan Rel
+    tableRel = new HiveTableScan(cluster, cluster.traitSetOf(HiveRelNode.CONVENTION), optTable,
+        viewTable.getTableName(), null, false, false);
     return tableRel;
   }
 
@@ -374,19 +340,5 @@ public final class HiveMaterializedViewsRegistry {
     public String toString() {
       return "ViewKey{" + viewName + "," + creationDate + "}";
     }
-  }
-
-  private static TableType obtainTableType(Table tabMetaData) {
-    if (tabMetaData.getStorageHandler() != null &&
-            tabMetaData.getStorageHandler().toString().equals(
-                    Constants.DRUID_HIVE_STORAGE_HANDLER_ID)) {
-      return TableType.DRUID;
-    }
-    return TableType.NATIVE;
-  }
-
-  private enum TableType {
-    DRUID,
-    NATIVE
   }
 }
