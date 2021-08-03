@@ -75,10 +75,6 @@ import org.apache.hadoop.fs.CommonConfigurationKeysPublic;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.HBaseTestingUtility;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.zookeeper.MiniZooKeeperCluster;
 import org.apache.hadoop.hive.cli.CliDriver;
 import org.apache.hadoop.hive.cli.CliSessionState;
 import org.apache.hadoop.hive.cli.control.AbstractCliConfig;
@@ -93,7 +89,6 @@ import org.apache.hadoop.hive.llap.daemon.MiniLlapCluster;
 import org.apache.hadoop.hive.llap.io.api.LlapProxy;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Index;
-import org.apache.hadoop.hive.metastore.hbase.HBaseStore;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -118,6 +113,7 @@ import org.apache.hadoop.hive.shims.HadoopShims;
 import org.apache.hadoop.hive.shims.ShimLoader;
 import org.apache.hadoop.util.Shell;
 import org.apache.hive.common.util.StreamPrinter;
+import org.apache.hive.testutils.MiniZooKeeperCluster;
 import org.apache.logging.log4j.util.Strings;
 import org.apache.tools.ant.BuildException;
 import org.apache.zookeeper.WatchedEvent;
@@ -190,18 +186,16 @@ public class QTestUtil {
 
   private final String initScript;
   private final String cleanupScript;
-  private boolean useHBaseMetastore = false;
 
   public interface SuiteAddTestFunctor {
     public void addTestToSuite(TestSuite suite, Object setup, String tName);
   }
-  private HBaseTestingUtility utility;
 
   HashSet<String> getSrcTables() {
     HashSet<String> srcTables = new HashSet<String>();
     // FIXME: moved default value to here...for now
     // i think this features is never really used from the command line
-    String defaultTestSrcTables = "src,src1,srcbucket,srcbucket2,src_json,src_thrift,src_sequencefile,srcpart,alltypesorc,src_hbase,cbo_t1,cbo_t2,cbo_t3,src_cbo,part,lineitem";
+    String defaultTestSrcTables = "src,src1,srcbucket,srcbucket2,src_json,src_thrift,src_sequencefile,srcpart,alltypesorc,cbo_t1,cbo_t2,cbo_t3,src_cbo,part,lineitem";
     for (String srcTable : System.getProperty("test.src.tables", defaultTestSrcTables).trim().split(",")) {
       srcTable = srcTable.trim();
       if (!srcTable.isEmpty()) {
@@ -335,14 +329,9 @@ public class QTestUtil {
       conf.setBoolVar(ConfVars.HIVE_VECTORIZATION_ENABLED, true);
     }
 
-    if (!useHBaseMetastore) {
-      // Plug verifying metastore in for testing DirectSQL.
-      conf.setVar(HiveConf.ConfVars.METASTORE_RAW_STORE_IMPL,
-        "org.apache.hadoop.hive.metastore.VerifyingObjectStore");
-    } else {
-      conf.setVar(ConfVars.METASTORE_RAW_STORE_IMPL, HBaseStore.class.getName());
-      conf.setBoolVar(ConfVars.METASTORE_FASTPATH, true);
-    }
+    // Plug verifying metastore in for testing DirectSQL.
+    conf.setVar(HiveConf.ConfVars.METASTORE_RAW_STORE_IMPL,
+      "org.apache.hadoop.hive.metastore.VerifyingObjectStore");
 
     if (mr != null) {
       mr.setupConfiguration(conf);
@@ -496,24 +485,6 @@ public class QTestUtil {
     return "jceks://file" + new Path(keyDir, "test.jks").toUri();
   }
 
-  private void startMiniHBaseCluster() throws Exception {
-    Configuration hbaseConf = HBaseConfiguration.create();
-    hbaseConf.setInt("hbase.master.info.port", -1);
-    utility = new HBaseTestingUtility(hbaseConf);
-    utility.startMiniCluster();
-    conf = new HiveConf(utility.getConfiguration(), Driver.class);
-    HBaseAdmin admin = utility.getHBaseAdmin();
-    // Need to use reflection here to make compilation pass since HBaseIntegrationTests
-    // is not compiled in hadoop-1. All HBaseMetastore tests run under hadoop-2, so this
-    // guarantee HBaseIntegrationTests exist when we hitting this code path
-    java.lang.reflect.Method initHBaseMetastoreMethod = Class.forName(
-        "org.apache.hadoop.hive.metastore.hbase.HBaseStoreTestUtil")
-        .getMethod("initHBaseMetastore", HBaseAdmin.class, HiveConf.class);
-    initHBaseMetastoreMethod.invoke(null, admin, conf);
-    conf.setVar(ConfVars.METASTORE_RAW_STORE_IMPL, HBaseStore.class.getName());
-    conf.setBoolVar(ConfVars.METASTORE_FASTPATH, true);
-  }
-
   public QTestUtil(String outDir, String logDir, MiniClusterType clusterType,
                    String confDir, String hadoopVer, String initScript, String cleanupScript,
                    boolean useHBaseMetastore, boolean withLlapIo) throws Exception {
@@ -538,7 +509,6 @@ public class QTestUtil {
     }
     this.outDir = outDir;
     this.logDir = logDir;
-    this.useHBaseMetastore = useHBaseMetastore;
     this.srcTables=getSrcTables();
     this.srcUDFs = getSrcUDFs();
 
@@ -549,11 +519,7 @@ public class QTestUtil {
     }
 
     queryState = new QueryState(new HiveConf(Driver.class));
-    if (useHBaseMetastore) {
-      startMiniHBaseCluster();
-    } else {
-      conf = queryState.getConf();
-    }
+    conf = queryState.getConf();
     this.hadoopVer = getHadoopMainVersion(hadoopVer);
     qMap = new TreeMap<String, String>();
     qSkipSet = new HashSet<String>();
@@ -668,9 +634,6 @@ public class QTestUtil {
       SessionState.get().getTezSession().close(false);
     }
     setup.tearDown();
-    if (useHBaseMetastore) {
-      utility.shutdownMiniCluster();
-    }
     if (mr != null) {
       mr.shutdown();
       mr = null;

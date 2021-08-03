@@ -110,12 +110,6 @@
       <optional>true</optional>
     </dependency>
    <!-- test inter-project -->
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-common</artifactId>
-      <version>${hbase.version}</version>
-      <scope>test</scope>
-    </dependency>
      <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
