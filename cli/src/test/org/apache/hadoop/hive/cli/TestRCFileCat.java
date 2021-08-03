@@ -25,10 +25,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hive.ql.io.RCFile;
 import org.apache.hadoop.hive.ql.io.RCFileOutputFormat;
 import org.apache.hadoop.hive.serde2.columnar.BytesRefArrayWritable;
@@ -51,15 +51,15 @@ public class TestRCFileCat {
     File template = File.createTempFile("hive", "tmpTest");
     Configuration configuration = new Configuration();
 
-    byte[][] record_1 = { Bytes.toBytes("123"), Bytes.toBytes("456"),
-        Bytes.toBytes("789"), Bytes.toBytes("1000"), Bytes.toBytes("5.3"),
-        Bytes.toBytes("hive and hadoop"), new byte[0], Bytes.toBytes("NULL") };
-    byte[][] record_2 = { Bytes.toBytes("100"), Bytes.toBytes("200"),
-        Bytes.toBytes("123"), Bytes.toBytes("1000"), Bytes.toBytes("5.3"),
-        Bytes.toBytes("hive and hadoop"), new byte[0], Bytes.toBytes("NULL") };
-    byte[][] record_3 = { Bytes.toBytes("200"), Bytes.toBytes("400"),
-        Bytes.toBytes("678"), Bytes.toBytes("1000"), Bytes.toBytes("4.8"),
-        Bytes.toBytes("hive and hadoop"), new byte[0], Bytes.toBytes("TEST") };
+    byte[][] record_1 = { toBytes("123"), toBytes("456"),
+        toBytes("789"), toBytes("1000"), toBytes("5.3"),
+        toBytes("hive and hadoop"), new byte[0], toBytes("NULL") };
+    byte[][] record_2 = { toBytes("100"), toBytes("200"),
+        toBytes("123"), toBytes("1000"), toBytes("5.3"),
+        toBytes("hive and hadoop"), new byte[0], toBytes("NULL") };
+    byte[][] record_3 = { toBytes("200"), toBytes("400"),
+        toBytes("678"), toBytes("1000"), toBytes("4.8"),
+        toBytes("hive and hadoop"), new byte[0], toBytes("TEST") };
 
     RCFileOutputFormat.setColumnNumber(configuration, 8);
 
@@ -149,5 +149,9 @@ public class TestRCFileCat {
     }
     writer.append(bytes);
 
+  }
+  
+  private byte[] toBytes(String s) {
+    return s.getBytes(StandardCharsets.UTF_8);
   }
 }

@@ -28,7 +28,7 @@ import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.zookeeper.MiniZooKeeperCluster;
+import org.apache.hive.testutils.MiniZooKeeperCluster;
 import org.apache.hadoop.hive.thrift.HadoopThriftAuthBridge.Server.ServerMode;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.security.token.delegation.AbstractDelegationTokenSecretManager.DelegationTokenInformation;
