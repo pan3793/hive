@@ -230,19 +230,6 @@
     </dependency>
   </dependencies>
 
-  <profiles>
-    <profile>
-      <activation>
-	<os>
-          <family>Windows</family>
-        </os>
-      </activation>
-    <properties>
-      <exclude.tests>**/*.java</exclude.tests>
-    </properties>
-    </profile>
-  </profiles>
-
   <build>
     <plugins>
       <plugin>
