@@ -51,7 +51,6 @@ import org.apache.hadoop.hive.conf.Validator.StringSet;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.DriverContext;
-import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorGroupByOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorReduceSinkOperator;
@@ -90,7 +89,6 @@ import org.apache.hadoop.hive.ql.plan.MapredWork;
 import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
-import org.apache.hadoop.hive.ql.plan.SparkWork;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.ql.plan.VectorReduceSinkInfo;
@@ -535,36 +533,6 @@ public class ExplainTask extends Task<ExplainWork> implements Serializable {
               JSONObject jsonDep = new JSONObject(new LinkedHashMap<>());
               jsonDep.put("parent", dep.getName());
               jsonDep.put("type", dep.getType());
-              json.accumulate(ent.getKey().toString(), jsonDep);
-            }
-          }
-        } else if (ent.getValue() != null && !((List<?>) ent.getValue()).isEmpty()
-            && ((List<?>) ent.getValue()).get(0) != null &&
-            ((List<?>) ent.getValue()).get(0) instanceof SparkWork.Dependency) {
-          if (out != null) {
-            boolean isFirst = true;
-            for (SparkWork.Dependency dep: (List<SparkWork.Dependency>) ent.getValue()) {
-              if (!isFirst) {
-                out.print(", ");
-              } else {
-                out.print("<- ");
-                isFirst = false;
-              }
-              out.print(dep.getName());
-              out.print(" (");
-              out.print(dep.getShuffleType());
-              out.print(", ");
-              out.print(dep.getNumPartitions());
-              out.print(")");
-            }
-            out.println();
-          }
-          if (jsonOutput) {
-            for (SparkWork.Dependency dep: (List<SparkWork.Dependency>) ent.getValue()) {
-              JSONObject jsonDep = new JSONObject(new LinkedHashMap<>());
-              jsonDep.put("parent", dep.getName());
-              jsonDep.put("type", dep.getShuffleType());
-              jsonDep.put("partitions", dep.getNumPartitions());
               json.accumulate(ent.getKey().toString(), jsonDep);
             }
           }

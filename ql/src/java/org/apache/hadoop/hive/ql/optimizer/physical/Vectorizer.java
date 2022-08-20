@@ -46,7 +46,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
 import org.apache.hadoop.hive.ql.exec.persistence.MapJoinKey;
-import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.VectorMapJoinInnerBigOnlyLongOperator;
@@ -119,8 +118,6 @@ import org.apache.hadoop.hive.ql.plan.VectorFilterDesc;
 import org.apache.hadoop.hive.ql.plan.VectorTableScanDesc;
 import org.apache.hadoop.hive.ql.plan.VectorizationCondition;
 import org.apache.hadoop.hive.ql.plan.VectorGroupByDesc.ProcessingMode;
-import org.apache.hadoop.hive.ql.plan.VectorSparkHashTableSinkDesc;
-import org.apache.hadoop.hive.ql.plan.VectorSparkPartitionPruningSinkDesc;
 import org.apache.hadoop.hive.ql.plan.VectorLimitDesc;
 import org.apache.hadoop.hive.ql.plan.VectorMapJoinInfo;
 import org.apache.hadoop.hive.ql.plan.VectorSMBJoinDesc;
@@ -128,9 +125,6 @@ import org.apache.hadoop.hive.ql.plan.PartitionDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.SMBJoinDesc;
-import org.apache.hadoop.hive.ql.plan.SparkHashTableSinkDesc;
-import org.apache.hadoop.hive.ql.optimizer.spark.SparkPartitionPruningSinkDesc;
-import org.apache.hadoop.hive.ql.plan.SparkWork;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
 import org.apache.hadoop.hive.ql.plan.TezWork;
@@ -547,22 +541,6 @@ public class Vectorizer implements PhysicalPlanResolver {
             setReduceWorkExplainConditions(reduceWork);
 
             // We are only vectorizing Reduce under Tez/Spark.
-            if (isReduceVectorizationEnabled) {
-              convertReduceWork(reduceWork);
-            }
-          }
-        }
-      } else if (currTask instanceof SparkTask) {
-        SparkWork sparkWork = (SparkWork) currTask.getWork();
-        for (BaseWork baseWork : sparkWork.getAllWork()) {
-          if (baseWork instanceof MapWork) {
-            convertMapWork((MapWork) baseWork, true);
-          } else if (baseWork instanceof ReduceWork) {
-            ReduceWork reduceWork = (ReduceWork) baseWork;
-
-            // Always set the EXPLAIN conditions.
-            setReduceWorkExplainConditions(reduceWork);
-
             if (isReduceVectorizationEnabled) {
               convertReduceWork(reduceWork);
             }
@@ -1736,10 +1714,6 @@ public class Vectorizer implements PhysicalPlanResolver {
       case SPARKPRUNINGSINK:
         ret = true;
         break;
-      case HASHTABLESINK:
-        ret = op instanceof SparkHashTableSinkOperator &&
-            validateSparkHashTableSinkOperator((SparkHashTableSinkOperator) op);
-        break;
       default:
         setOperatorNotSupported(op);
         ret = false;
@@ -1785,13 +1759,6 @@ public class Vectorizer implements PhysicalPlanResolver {
         break;
       case LIMIT:
       case EVENT:
-      case SPARKPRUNINGSINK:
-        ret = true;
-        break;
-      case HASHTABLESINK:
-        ret = op instanceof SparkHashTableSinkOperator &&
-            validateSparkHashTableSinkOperator((SparkHashTableSinkOperator) op);
-        break;
       default:
         setOperatorNotSupported(op);
         ret = false;
@@ -1867,17 +1834,6 @@ public class Vectorizer implements PhysicalPlanResolver {
       return false;
     }
     return true;
-  }
-
-  private boolean validateSparkHashTableSinkOperator(SparkHashTableSinkOperator op) {
-    SparkHashTableSinkDesc desc = op.getConf();
-    byte tag = desc.getTag();
-    // it's essentially a MapJoinDesc
-    List<ExprNodeDesc> filterExprs = desc.getFilters().get(tag);
-    List<ExprNodeDesc> keyExprs = desc.getKeys().get(tag);
-    List<ExprNodeDesc> valueExprs = desc.getExprs().get(tag);
-    return validateExprNodeDesc(filterExprs, "Filter", VectorExpressionDescriptor.Mode.FILTER) &&
-        validateExprNodeDesc(keyExprs, "Key") && validateExprNodeDesc(valueExprs, "Value");
   }
 
   private boolean validateReduceSinkOperator(ReduceSinkOperator op) {
@@ -3490,26 +3446,6 @@ public class Vectorizer implements PhysicalPlanResolver {
           eventDesc.setVectorDesc(vectorEventDesc);
           vectorOp = OperatorFactory.getVectorOperator(
               op.getCompilationOpContext(), eventDesc, vContext, op);
-          isNative = true;
-        }
-        break;
-      case HASHTABLESINK:
-        {
-          SparkHashTableSinkDesc sparkHashTableSinkDesc = (SparkHashTableSinkDesc) op.getConf();
-          VectorSparkHashTableSinkDesc vectorSparkHashTableSinkDesc = new VectorSparkHashTableSinkDesc();
-          sparkHashTableSinkDesc.setVectorDesc(vectorSparkHashTableSinkDesc);
-          vectorOp = OperatorFactory.getVectorOperator(
-              op.getCompilationOpContext(), sparkHashTableSinkDesc, vContext, op);
-          isNative = true;
-        }
-        break;
-      case SPARKPRUNINGSINK:
-        {
-          SparkPartitionPruningSinkDesc sparkPartitionPruningSinkDesc = (SparkPartitionPruningSinkDesc) op.getConf();
-          VectorSparkPartitionPruningSinkDesc vectorSparkPartitionPruningSinkDesc = new VectorSparkPartitionPruningSinkDesc();
-          sparkPartitionPruningSinkDesc.setVectorDesc(vectorSparkPartitionPruningSinkDesc);
-          vectorOp = OperatorFactory.getVectorOperator(
-              op.getCompilationOpContext(), sparkPartitionPruningSinkDesc, vContext, op);
           isNative = true;
         }
         break;

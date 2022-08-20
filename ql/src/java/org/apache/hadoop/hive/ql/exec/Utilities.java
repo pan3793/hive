@@ -57,7 +57,6 @@ import org.apache.hadoop.hive.ql.exec.mr.ExecDriver;
 import org.apache.hadoop.hive.ql.exec.mr.ExecMapper;
 import org.apache.hadoop.hive.ql.exec.mr.ExecReducer;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
-import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
 import org.apache.hadoop.hive.ql.exec.tez.DagUtils;
 import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
@@ -390,19 +389,6 @@ public final class Utilities {
     Kryo kryo = SerializationUtilities.borrowKryo();
     try {
       String engine = HiveConf.getVar(conf, ConfVars.HIVE_EXECUTION_ENGINE);
-      if (engine.equals("spark")) {
-        // TODO Add jar into current thread context classloader as it may be invoked by Spark driver inside
-        // threads, should be unnecessary while SPARK-5377 is resolved.
-        String addedJars = conf.get(HIVE_ADDED_JARS);
-        if (addedJars != null && !addedJars.isEmpty()) {
-          AddToClassPathAction addAction = new AddToClassPathAction(
-              Thread.currentThread().getContextClassLoader(), Arrays.asList(addedJars.split(";"))
-          );
-          ClassLoader newLoader = AccessController.doPrivileged(addAction);
-          Thread.currentThread().setContextClassLoader(newLoader);
-          kryo.setClassLoader(newLoader);
-        }
-      }
 
       path = getPlanPath(conf, name);
       LOG.info("PLAN PATH = " + path);
@@ -2335,27 +2321,6 @@ public final class Utilities {
 
       if (task.getDependentTasks() != null) {
         getTezTasks(task.getDependentTasks(), tezTasks);
-      }
-    }
-  }
-
-  public static List<SparkTask> getSparkTasks(List<Task<? extends Serializable>> tasks) {
-    List<SparkTask> sparkTasks = new ArrayList<SparkTask>();
-    if (tasks != null) {
-      getSparkTasks(tasks, sparkTasks);
-    }
-    return sparkTasks;
-  }
-
-  private static void getSparkTasks(List<Task<? extends Serializable>> tasks,
-    List<SparkTask> sparkTasks) {
-    for (Task<? extends Serializable> task : tasks) {
-      if (task instanceof SparkTask && !sparkTasks.contains(task)) {
-        sparkTasks.add((SparkTask) task);
-      }
-
-      if (task.getDependentTasks() != null) {
-        getSparkTasks(task.getDependentTasks(), sparkTasks);
       }
     }
   }

@@ -56,7 +56,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.llap.coordinator.LlapCoordinator;
 import org.apache.hadoop.hive.llap.registry.impl.LlapRegistryService;
-import org.apache.hadoop.hive.ql.exec.spark.session.SparkSessionManagerImpl;
 import org.apache.hadoop.hive.ql.exec.tez.TezSessionPoolManager;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
@@ -553,14 +552,6 @@ public class HiveServer2 extends CompositeService {
             + "Shutting down HiveServer2 anyway.", e);
       }
     }
-
-    if (hiveConf != null && hiveConf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
-      try {
-        SparkSessionManagerImpl.getInstance().shutdown();
-      } catch(Exception ex) {
-        LOG.error("Spark session pool manager failed to stop during HiveServer2 shutdown.", ex);
-      }
-    }
   }
 
   @VisibleForTesting
@@ -619,9 +610,6 @@ public class HiveServer2 extends CompositeService {
           sessionPool.startPool();
         }
 
-        if (hiveConf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
-          SparkSessionManagerImpl.getInstance().setup(hiveConf);
-        }
         break;
       } catch (Throwable throwable) {
         if (server != null) {

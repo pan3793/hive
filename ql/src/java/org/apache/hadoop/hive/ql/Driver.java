@@ -1784,10 +1784,8 @@ public class Driver implements CommandProcessor {
 
       setQueryDisplays(plan.getRootTasks());
       int mrJobs = Utilities.getMRTasks(plan.getRootTasks()).size();
-      int jobs = mrJobs + Utilities.getTezTasks(plan.getRootTasks()).size()
-          + Utilities.getSparkTasks(plan.getRootTasks()).size();
+      int jobs = mrJobs + Utilities.getTezTasks(plan.getRootTasks()).size();
       if (jobs > 0) {
-        logMrWarning(mrJobs);
         console.printInfo("Query ID = " + queryId);
         console.printInfo("Total jobs = " + jobs);
       }
@@ -2084,21 +2082,6 @@ public class Driver implements CommandProcessor {
         task.setQueryDisplay(queryDisplay);
         setQueryDisplays(task.getDependentTasks());
       }
-    }
-  }
-
-  private void logMrWarning(int mrJobs) {
-    if (mrJobs <= 0 || !("mr".equals(HiveConf.getVar(conf, ConfVars.HIVE_EXECUTION_ENGINE)))) {
-      return;
-    }
-    String warning = HiveConf.generateMrDeprecationWarning();
-    LOG.warn(warning);
-    warning = "WARNING: " + warning;
-    console.printInfo(warning);
-    // Propagate warning to beeline via operation log.
-    OperationLog ol = OperationLog.getCurrentOperationLog();
-    if (ol != null) {
-      ol.writeOperationLog(LoggingLevel.EXECUTION, warning + "\n");
     }
   }
 

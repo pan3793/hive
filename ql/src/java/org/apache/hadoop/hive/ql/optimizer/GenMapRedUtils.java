@@ -68,7 +68,6 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.exec.mr.ExecDriver;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
-import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.io.RCFileInputFormat;
 import org.apache.hadoop.hive.ql.io.merge.MergeFileWork;
@@ -110,7 +109,6 @@ import org.apache.hadoop.hive.ql.plan.PlanUtils;
 import org.apache.hadoop.hive.ql.plan.RCFileMergeDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
-import org.apache.hadoop.hive.ql.plan.SparkWork;
 import org.apache.hadoop.hive.ql.plan.StatsWork;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
@@ -432,7 +430,7 @@ public final class GenMapRedUtils {
    *          current alias
    * @param topOp
    *          the top operator of the stack
-   * @param plan
+   * @param task
    *          current plan
    * @param local
    *          whether you need to add to map-reduce or local work
@@ -872,13 +870,6 @@ public final class GenMapRedUtils {
           ((MapWork)w).deriveExplainAttributes();
         }
       }
-    } else if (task instanceof SparkTask) {
-      SparkWork work = (SparkWork) task.getWork();
-      for (BaseWork w : work.getAllWorkUnsorted()) {
-        if (w instanceof MapWork) {
-          ((MapWork) w).deriveExplainAttributes();
-        }
-      }
     }
 
     if (task.getChildTasks() == null) {
@@ -909,13 +900,6 @@ public final class GenMapRedUtils {
       for (BaseWork w : work.getAllWorkUnsorted()) {
         if (w instanceof MapWork) {
           ((MapWork)w).deriveLlap(conf, false);
-        }
-      }
-    } else if (task instanceof SparkTask) {
-      SparkWork work = (SparkWork) task.getWork();
-      for (BaseWork w : work.getAllWorkUnsorted()) {
-        if (w instanceof MapWork) {
-          ((MapWork) w).deriveLlap(conf, false);
         }
       }
     }
@@ -1323,10 +1307,6 @@ public final class GenMapRedUtils {
         work = new TezWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID), conf);
         cplan.setName("File Merge");
         ((TezWork) work).add(cplan);
-      } else if (conf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
-        work = new SparkWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID));
-        cplan.setName("Spark Merge File Work");
-        ((SparkWork) work).add(cplan);
       } else {
         work = cplan;
       }
@@ -1336,10 +1316,6 @@ public final class GenMapRedUtils {
         work = new TezWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID), conf);
         cplan.setName("File Merge");
         ((TezWork)work).add(cplan);
-      } else if (conf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
-        work = new SparkWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID));
-        cplan.setName("Spark Merge File Work");
-        ((SparkWork) work).add(cplan);
       } else {
         work = new MapredWork();
         ((MapredWork)work).setMapWork(cplan);
@@ -1488,11 +1464,6 @@ public final class GenMapRedUtils {
       mrWork.getMapWork().setGatheringStats(true);
       if (mrWork.getReduceWork() != null) {
         mrWork.getReduceWork().setGatheringStats(true);
-      }
-    } else if (currTask.getWork() instanceof SparkWork) {
-      SparkWork work = (SparkWork) currTask.getWork();
-      for (BaseWork w: work.getAllWork()) {
-        w.setGatheringStats(true);
       }
     } else { // must be TezWork
       TezWork work = (TezWork) currTask.getWork();
@@ -1851,9 +1822,6 @@ public final class GenMapRedUtils {
           // tez blurs the boundary between map and reduce, thus it has it's own
           // config
           return hconf.getBoolVar(ConfVars.HIVEMERGETEZFILES);
-        } else if (currTask.getWork() instanceof SparkWork) {
-          // spark has its own config for merging
-          return hconf.getBoolVar(ConfVars.HIVEMERGESPARKFILES);
         }
 
         if (fsOp.getConf().isLinkedFileSink()) {

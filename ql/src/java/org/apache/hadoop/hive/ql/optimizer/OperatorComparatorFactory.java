@@ -46,7 +46,6 @@ import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.SMBMapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.ScriptOperator;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
-import org.apache.hadoop.hive.ql.exec.SparkHashTableSinkOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.TemporaryHashSinkOperator;
 import org.apache.hadoop.hive.ql.exec.UDTFOperator;
@@ -55,7 +54,6 @@ import org.apache.hadoop.hive.ql.exec.vector.VectorFilterOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorGroupByOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorLimitOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorSelectOperator;
-import org.apache.hadoop.hive.ql.exec.vector.VectorSparkHashTableSinkOperator;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.FilterDesc;
@@ -69,7 +67,6 @@ import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
 import org.apache.hadoop.hive.ql.plan.SMBJoinDesc;
 import org.apache.hadoop.hive.ql.plan.ScriptDesc;
 import org.apache.hadoop.hive.ql.plan.SelectDesc;
-import org.apache.hadoop.hive.ql.plan.SparkHashTableSinkDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
 import org.apache.hadoop.hive.ql.plan.UDTFDesc;
 
@@ -88,9 +85,6 @@ public class OperatorComparatorFactory {
     comparatorMapping.put(MapJoinOperator.class, new MapJoinOperatorComparator());
     comparatorMapping.put(SMBMapJoinOperator.class, new SMBMapJoinOperatorComparator());
     comparatorMapping.put(LimitOperator.class, new LimitOperatorComparator());
-    comparatorMapping.put(SparkHashTableSinkOperator.class, new SparkHashTableSinkOperatorComparator());
-    comparatorMapping.put(VectorSparkHashTableSinkOperator.class,
-        new SparkHashTableSinkOperatorComparator());
     comparatorMapping.put(LateralViewJoinOperator.class, new LateralViewJoinOperatorComparator());
     comparatorMapping.put(VectorGroupByOperator.class, new VectorGroupByOperatorComparator());
     comparatorMapping.put(CommonMergeJoinOperator.class, new MapJoinOperatorComparator());
@@ -414,31 +408,6 @@ public class OperatorComparatorFactory {
       LimitDesc desc2 = op2.getConf();
 
       return desc1.getLimit() == desc2.getLimit();
-    }
-  }
-
-  static class SparkHashTableSinkOperatorComparator implements OperatorComparator<SparkHashTableSinkOperator> {
-
-    @Override
-    public boolean equals(SparkHashTableSinkOperator op1, SparkHashTableSinkOperator op2) {
-      Preconditions.checkNotNull(op1);
-      Preconditions.checkNotNull(op2);
-      SparkHashTableSinkDesc desc1 = op1.getConf();
-      SparkHashTableSinkDesc desc2 = op2.getConf();
-
-      if (compareObject(desc1.getFilterMapString(), desc2.getFilterMapString()) &&
-        compareObject(desc1.getKeysString(), desc2.getKeysString()) &&
-        desc1.getPosBigTable() == desc2.getPosBigTable() &&
-        compareObject(desc1.getKeysString(), desc2.getKeysString()) &&
-        compareObject(desc1.getFiltersStringMap(), desc2.getFiltersStringMap()) &&
-        compareObject(desc1.getOutputColumnNames(), desc2.getOutputColumnNames()) &&
-        compareObject(desc1.getCondsList(), desc2.getCondsList()) &&
-        desc1.getHandleSkewJoin() == desc2.getHandleSkewJoin() &&
-        compareString(desc1.getNullSafeString(), desc2.getNullSafeString())) {
-        return true;
-      } else {
-        return false;
-      }
     }
   }
 

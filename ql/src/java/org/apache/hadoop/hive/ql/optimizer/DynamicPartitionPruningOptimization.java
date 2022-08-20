@@ -41,14 +41,12 @@ import org.apache.hadoop.hive.ql.lib.Rule;
 import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.Table;
-import org.apache.hadoop.hive.ql.optimizer.spark.SparkPartitionPruningSinkDesc;
 import org.apache.hadoop.hive.ql.parse.OptimizeTezProcContext;
 import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.PrunedPartitionList;
 import org.apache.hadoop.hive.ql.parse.RuntimeValuesInfo;
 import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.parse.spark.OptimizeSparkProcContext;
 import org.apache.hadoop.hive.ql.plan.*;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFBloomFilter.GenericUDAFBloomFilterEvaluator;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDAFEvaluator;
@@ -131,8 +129,6 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     ParseContext parseContext;
     if (procCtx instanceof OptimizeTezProcContext) {
       parseContext = ((OptimizeTezProcContext) procCtx).parseContext;
-    } else if (procCtx instanceof OptimizeSparkProcContext) {
-      parseContext = ((OptimizeSparkProcContext) procCtx).getParseContext();
     } else {
       throw new IllegalArgumentException("expected parseContext to be either " +
           "OptimizeTezProcContext or OptimizeSparkProcContext, but found " +
@@ -142,8 +138,7 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
     FilterOperator filter = (FilterOperator) nd;
     FilterDesc desc = filter.getConf();
 
-    if (!parseContext.getConf().getBoolVar(ConfVars.TEZ_DYNAMIC_PARTITION_PRUNING) &&
-        !parseContext.getConf().getBoolVar(ConfVars.SPARK_DYNAMIC_PARTITION_PRUNING)) {
+    if (!parseContext.getConf().getBoolVar(ConfVars.TEZ_DYNAMIC_PARTITION_PRUNING)) {
       // nothing to do when the optimization is off
       return null;
     }
@@ -374,13 +369,6 @@ public class DynamicPartitionPruningOptimization implements NodeProcessor {
       OperatorFactory.getAndMakeChild(eventDesc, groupByOp);
     } else {
       // Must be spark branch
-      SparkPartitionPruningSinkDesc desc = new SparkPartitionPruningSinkDesc();
-      desc.setTableScan(ts);
-      desc.setTable(PlanUtils.getReduceValueTableDesc(PlanUtils
-          .getFieldSchemasFromColumnList(keyExprs, "key")));
-      desc.setTargetColumnName(column);
-      desc.setPartKey(partKey);
-      OperatorFactory.getAndMakeChild(desc, groupByOp);
     }
   }
 

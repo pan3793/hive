@@ -17,7 +17,6 @@
  */
 package org.apache.hadoop.hive.ql.parse;
 
-import com.google.common.base.Preconditions;
 import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -358,7 +357,7 @@ public class TezCompiler extends TaskCompiler {
 
     Map<Rule, NodeProcessor> opRules = new LinkedHashMap<Rule, NodeProcessor>();
     opRules.put(
-        new RuleRegExp(new String("Dynamic Partition Pruning"), FilterOperator.getOperatorName()
+        new RuleRegExp("Dynamic Partition Pruning", FilterOperator.getOperatorName()
             + "%"), new DynamicPartitionPruningOptimization());
 
     // The dispatcher fires the processor corresponding to the closest matching
