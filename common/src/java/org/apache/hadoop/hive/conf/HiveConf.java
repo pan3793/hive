@@ -92,15 +92,13 @@ public class HiveConf extends Configuration {
   private final Set<String> hiddenSet = new HashSet<String>();
 
   private Pattern modWhiteListPattern = null;
-  private volatile boolean isSparkConfigUpdated = false;
   private static final int LOG_PREFIX_LENGTH = 64;
 
   public boolean getSparkConfigUpdated() {
-    return isSparkConfigUpdated;
+    return false;
   }
 
   public void setSparkConfigUpdated(boolean isSparkConfigUpdated) {
-    this.isSparkConfigUpdated = isSparkConfigUpdated;
   }
 
   public interface EncoderDecoder<K, V> {
@@ -3665,37 +3663,11 @@ public class HiveConf extends Configuration {
       // When either name or value is null, the set method below will fail,
       // and throw IllegalArgumentException
       set(name, value);
-      if (isSparkRelatedConfig(name)) {
-        isSparkConfigUpdated = true;
-      }
     }
   }
 
   public boolean isHiddenConfig(String name) {
     return hiddenSet.contains(name);
-  }
-
-  /**
-   * check whether spark related property is updated, which includes spark configurations,
-   * RSC configurations and yarn configuration in Spark on YARN mode.
-   * @param name
-   * @return
-   */
-  private boolean isSparkRelatedConfig(String name) {
-    boolean result = false;
-    if (name.startsWith("spark")) { // Spark property.
-      // for now we don't support changing spark app name on the fly
-      result = !name.equals("spark.app.name");
-    } else if (name.startsWith("yarn")) { // YARN property in Spark on YARN mode.
-      String sparkMaster = get("spark.master");
-      if (sparkMaster != null && sparkMaster.startsWith("yarn")) {
-        result = true;
-      }
-    } else if (name.startsWith("hive.spark")) { // Remote Spark Context property.
-      result = true;
-    }
-
-    return result;
   }
 
   public static int getIntVar(Configuration conf, ConfVars var) {
@@ -4033,7 +4005,6 @@ public class HiveConf extends Configuration {
     super(other);
     hiveJar = other.hiveJar;
     auxJars = other.auxJars;
-    isSparkConfigUpdated = other.isSparkConfigUpdated;
     origProp = (Properties)other.origProp.clone();
     restrictList.addAll(other.restrictList);
     hiddenSet.addAll(other.hiddenSet);
@@ -4591,12 +4562,6 @@ public class HiveConf extends Configuration {
       result += s;
     }
     return result;
-  }
-
-  public static String generateMrDeprecationWarning() {
-    return "Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. "
-        + "Consider using a different execution engine (i.e. " + HiveConf.getNonMrEngines()
-        + ") or using Hive 1.X releases.";
   }
 
   private static final Object reverseMapLock = new Object();

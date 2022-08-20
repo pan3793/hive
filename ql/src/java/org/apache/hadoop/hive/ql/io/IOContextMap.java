@@ -50,12 +50,6 @@ public class IOContextMap {
   private static final ConcurrentHashMap<String, IOContext> globalMap =
       new ConcurrentHashMap<String, IOContext>();
 
-  /** Used for Spark */
-  private static final ThreadLocal<IOContext> sparkThreadLocal = new ThreadLocal<IOContext>(){
-    @Override
-    protected IOContext initialValue() { return new IOContext(); }
-  };
-
   /** Used for Tez+LLAP */
   private static final ConcurrentHashMap<String, ConcurrentHashMap<String, IOContext>> attemptMap =
       new ConcurrentHashMap<String, ConcurrentHashMap<String, IOContext>>();
@@ -82,9 +76,6 @@ public class IOContextMap {
   }
 
   public static IOContext get(Configuration conf) {
-    if (HiveConf.getVar(conf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("spark")) {
-      return sparkThreadLocal.get();
-    }
     String inputName = conf.get(Utilities.INPUT_NAME);
     if (inputName == null) {
       inputName = DEFAULT_CONTEXT;
@@ -112,7 +103,6 @@ public class IOContextMap {
   }
 
   public static void clear() {
-    sparkThreadLocal.remove();
     globalMap.clear();
   }
 }

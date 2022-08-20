@@ -80,8 +80,6 @@ import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.serde.serdeConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 
-import com.clearspring.analytics.util.Lists;
-
 /**
  * Implementation of one of the rule-based map join optimization. User passes hints to specify
  * map-joins and during this optimization, all user specified map joins are converted to MapJoins -
@@ -276,11 +274,9 @@ public class MapJoinProcessor extends Transform {
   /**
    * convert a regular join to a a map-side join.
    *
-   * @param opParseCtxMap
+   * @param conf
    * @param op
    *          join operator
-   * @param joinTree
-   *          qb join tree
    * @param mapJoinPos
    *          position of the source to be read as part of map-reduce framework. All other sources
    *          are cached in memory
@@ -411,11 +407,9 @@ public class MapJoinProcessor extends Transform {
   /**
    * convert a sortmerge join to a a map-side join.
    *
-   * @param opParseCtxMap
+   * @param hconf
    * @param smbJoinOp
    *          join operator
-   * @param joinTree
-   *          qb join tree
    * @param bigTablePos
    *          position of the source to be read as part of map-reduce framework. All other sources
    *          are cached in memory

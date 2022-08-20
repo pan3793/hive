@@ -97,8 +97,6 @@ import org.apache.hadoop.hive.metastore.hbase.HBaseStore;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.exec.spark.session.SparkSession;
-import org.apache.hadoop.hive.ql.exec.spark.session.SparkSessionManagerImpl;
 import org.apache.hadoop.hive.ql.exec.tez.TezSessionState;
 import org.apache.hadoop.hive.ql.lockmgr.zookeeper.CuratorFrameworkSingleton;
 import org.apache.hadoop.hive.ql.lockmgr.zookeeper.ZooKeeperHiveLockManager;
@@ -187,7 +185,6 @@ public class QTestUtil {
   private String hadoopVer = null;
   private QTestSetup setup = null;
   private TezSessionState tezSessionState = null;
-  private SparkSession sparkSession = null;
   private boolean isSessionStateStarted = false;
   private static final String javaVersion = getJavaVersion();
 
@@ -450,8 +447,6 @@ public class QTestUtil {
     mr(CoreClusterType.MR, FsType.hdfs),
     tez(CoreClusterType.TEZ, FsType.hdfs),
     tez_local(CoreClusterType.TEZ, FsType.local),
-    spark(CoreClusterType.SPARK, FsType.local),
-    miniSparkOnYarn(CoreClusterType.SPARK, FsType.hdfs),
     llap(CoreClusterType.TEZ, FsType.hdfs),
     llap_local(CoreClusterType.TEZ, FsType.local),
     none(CoreClusterType.MR, FsType.local);
@@ -481,10 +476,6 @@ public class QTestUtil {
         return tez;
       } else if (type.equals("tez_local")) {
         return tez_local;
-      } else if (type.equals("spark")) {
-        return spark;
-      } else if (type.equals("miniSparkOnYarn")) {
-        return miniSparkOnYarn;
       } else if (type.equals("llap")) {
         return llap;
       } else if (type.equals("llap_local")) {
@@ -662,8 +653,6 @@ public class QTestUtil {
         mr = shims.getMiniTezCluster(conf, numTrackers, uriString,
             EnumSet.of(MiniClusterType.llap, MiniClusterType.llap_local).contains(clusterType));
       }
-    } else if (clusterType == MiniClusterType.miniSparkOnYarn) {
-      mr = shims.getMiniSparkCluster(conf, 2, uriString, 1);
     } else if (clusterType == MiniClusterType.mr) {
       mr = shims.getMiniMrCluster(conf, 2, uriString, 1);
     }
@@ -679,15 +668,6 @@ public class QTestUtil {
       SessionState.get().getTezSession().close(false);
     }
     setup.tearDown();
-    if (sparkSession != null) {
-      try {
-        SparkSessionManagerImpl.getInstance().closeSession(sparkSession);
-      } catch (Exception ex) {
-        LOG.error("Error closing spark session.", ex);
-      } finally {
-        sparkSession = null;
-      }
-    }
     if (useHBaseMetastore) {
       utility.shutdownMiniCluster();
     }
@@ -1178,13 +1158,6 @@ public class QTestUtil {
       oldSs.close();
     }
 
-    if (oldSs != null && clusterType.getCoreClusterType() == CoreClusterType.SPARK) {
-      sparkSession = oldSs.getSparkSession();
-      ss.setSparkSession(sparkSession);
-      oldSs.setSparkSession(null);
-      oldSs.close();
-    }
-
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
     }
@@ -1201,29 +1174,7 @@ public class QTestUtil {
   }
 
   private CliSessionState createSessionState() {
-   return new CliSessionState(conf) {
-      @Override
-      public void setSparkSession(SparkSession sparkSession) {
-        super.setSparkSession(sparkSession);
-        if (sparkSession != null) {
-          try {
-            // Wait a little for cluster to init, at most 4 minutes
-            long endTime = System.currentTimeMillis() + 240000;
-            while (sparkSession.getMemoryAndCores().getSecond() <= 1) {
-              if (System.currentTimeMillis() >= endTime) {
-                String msg = "Timed out waiting for Spark cluster to init";
-                throw new IllegalStateException(msg);
-              }
-              Thread.sleep(100);
-            }
-          } catch (Exception e) {
-            String msg = "Error trying to obtain executor info: " + e;
-            LOG.error(msg, e);
-            throw new IllegalStateException(msg, e);
-          }
-        }
-      }
-    };
+   return new CliSessionState(conf);
   }
 
   private CliSessionState startSessionState(boolean canReuseSession)
@@ -1249,12 +1200,6 @@ public class QTestUtil {
       oldSs.close();
     }
 
-    if (oldSs != null && clusterType.getCoreClusterType() == CoreClusterType.SPARK) {
-      sparkSession = oldSs.getSparkSession();
-      ss.setSparkSession(sparkSession);
-      oldSs.setSparkSession(null);
-      oldSs.close();
-    }
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
     }

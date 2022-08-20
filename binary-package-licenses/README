@@ -65,7 +65,6 @@ lz4
 mapdb
 maven*
 metrics*
-netty*
 opencsv*
 parquet-hadoop-bundle
 aggdesigner-algorithm

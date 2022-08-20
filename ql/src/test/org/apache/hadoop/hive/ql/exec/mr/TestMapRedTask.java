@@ -25,7 +25,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.hive.common.metrics.common.Metrics;
 import org.apache.hadoop.hive.common.metrics.common.MetricsConstant;
-import org.apache.hadoop.hive.ql.exec.spark.SparkTask;
 import org.junit.Test;
 import org.mockito.Mockito;
 
