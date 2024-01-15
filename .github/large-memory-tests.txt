@@ -6,3 +6,7 @@
 **/org/apache/hive/jdbc/TestJdbcWithMiniHA.java
 **/org/apache/hive/jdbc/TestJdbcWithMiniLlap.java
 **/org/apache/hive/service/cli/operation/TestOperationLoggingAPIWithTez.java
+
+# jdbc-handler
+# this test fails with `NoClassDefFound org/apache/commons/dbcp/BasicDataSourceFactory`
+**/org/apache/hive/storage/jdbc/dao/GenericJdbcDatabaseAccessorTest.java
