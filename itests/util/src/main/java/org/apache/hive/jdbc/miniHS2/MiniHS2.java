@@ -238,7 +238,7 @@ public class MiniHS2 extends AbstractHiveService {
         mr = ShimLoader.getHadoopShims().getMiniTezCluster(hiveConf, 2, uriString, true);
         break;
       case MR:
-        mr = ShimLoader.getHadoopShims().getMiniMrCluster(hiveConf, 2, uriString, 1);
+        mr = ShimLoader.getHadoopShims().getMiniMrCluster(hiveConf, 1, uriString, 1);
         break;
       default:
         throw new IllegalArgumentException("Unsupported cluster type " + mr);
