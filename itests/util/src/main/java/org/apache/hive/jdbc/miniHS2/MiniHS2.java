@@ -217,7 +217,7 @@ public class MiniHS2 extends AbstractHiveService {
 
     if (miniClusterType != MiniClusterType.LOCALFS_ONLY) {
       // Initialize dfs
-      dfs = ShimLoader.getHadoopShims().getMiniDfs(hiveConf, 4, true, null, isHA);
+      dfs = ShimLoader.getHadoopShims().getMiniDfs(hiveConf, 1, true, null, isHA);
       fs = dfs.getFileSystem();
       String uriString = fs.getUri().toString();
 
