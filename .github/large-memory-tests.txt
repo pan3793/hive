@@ -1,0 +1,5 @@
+# itests/hive-unit
+**/org/apache/hive/beeline/TestBeeLineWithArgs.java
+**/org/apache/hive/jdbc/TestJdbcWithMiniHA.java
+**/org/apache/hive/jdbc/TestJdbcWithMiniLlap.java
+**/org/apache/hive/service/cli/operation/TestOperationLoggingAPIWithTez.java

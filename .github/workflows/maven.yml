@@ -46,6 +46,7 @@ jobs:
             org.apache.maven.plugins:maven-antrun-plugin:run@setup-test-dirs \
             org.apache.maven.plugins:maven-antrun-plugin:run@setup-metastore-scripts \
             org.apache.maven.plugins:maven-surefire-plugin:test \
+            -Dsurefire.excludesFile=$PWD/.github/large-memory-tests.txt \
             -pl "${{ matrix.modules }}"
     - name: Upload test log
       if: failure()
