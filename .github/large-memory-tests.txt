@@ -1,3 +1,6 @@
+# hcatalog/core
+**/org/apache/hive/hcatalog/mapreduce/TestHCatMultiOutputFormat.java
+
 # itests/hive-unit
 **/org/apache/hive/beeline/TestBeeLineWithArgs.java
 **/org/apache/hive/jdbc/TestJdbcWithMiniHA.java
