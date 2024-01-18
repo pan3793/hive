@@ -255,10 +255,10 @@ public class TestDatabases {
     try {
       client.getDatabase(null);
       // TODO: Should have a check on the server side.
-      Assert.fail("Expected a NullPointerException or TTransportException to be thrown");
+      Assert.fail("Expected a NullPointerException or TException to be thrown");
     } catch (NullPointerException exception) {
       // Expected exception - Embedded MetaStore
-    } catch (TTransportException exception) {
+    } catch (TException exception) {
       // Expected exception - Remote MetaStore
     }
   }
@@ -274,10 +274,10 @@ public class TestDatabases {
     try {
       client.dropDatabase(null);
       // TODO: Should be checked on server side
-      Assert.fail("Expected an NullPointerException or TTransportException to be thrown");
+      Assert.fail("Expected an NullPointerException or TException to be thrown");
     } catch (NullPointerException exception) {
       // Expected exception - Embedded MetaStore
-    } catch (TTransportException exception) {
+    } catch (TException exception) {
       // Expected exception - Remote MetaStore
     }
   }
