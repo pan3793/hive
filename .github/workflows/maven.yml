@@ -24,8 +24,8 @@ jobs:
           - ":hive-webhcat,:hive-hcatalog-streaming,:hive-hplsql,:hive-llap-ext-client,:hive-shims-aggregator,:hive-testutils,:hive-packaging"
           - ":hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample"
           - ":hive-it-unit"
-          - ":hive-it-unit-hadoop2"
-          - ":hive-blobstore,:hive-it-test-serde,:hive-it-qfile,:hive-jmh,:hive-it-minikdc"
+          - ":hive-it-unit-hadoop2,:hive-blobstore"
+          - ":hive-it-test-serde,:hive-it-qfile,:hive-jmh,:hive-it-minikdc"
     steps:
     - uses: actions/checkout@v3
     - name: Setup JDK 8
