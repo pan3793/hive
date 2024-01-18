@@ -15,17 +15,35 @@ jobs:
       fail-fast: false
       matrix:
         modules:
-          - ":hive-vector-code-gen,:hive-shims-common,:hive-shims-0.23,:hive-shims-scheduler,:hive-shims,:hive-common,:hive-service-rpc,:hive-serde"
-          - ":hive-metastore"
-          - ":hive-llap-common,:hive-llap-client,:hive-llap-tez,:hive-llap-server,:hive-service,:hive-jdbc,:hive-beeline,:hive-cli"
-          - ":hive-exec"
-          - ":hive-contrib,:hive-jdbc-handler"
-          - ":hive-hcatalog,:hive-hcatalog-core,:hive-hcatalog-pig-adapter,:hive-hcatalog-server-extensions,:hive-webhcat-java-client"
-          - ":hive-webhcat,:hive-hcatalog-streaming,:hive-hplsql,:hive-llap-ext-client,:hive-shims-aggregator,:hive-testutils,:hive-packaging"
-          - ":hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample"
-          - ":hive-it-unit"
-          - ":hive-it-unit-hadoop2,:hive-blobstore"
-          - ":hive-it-test-serde,:hive-it-qfile,:hive-jmh,:hive-it-minikdc"
+          - "-pl :hive-vector-code-gen,:hive-shims-common,:hive-shims-0.23,:hive-shims-scheduler,:hive-shims,:hive-common,:hive-service-rpc,:hive-serde"
+          - "-pl :hive-metastore"
+          - "-pl :hive-llap-common,:hive-llap-client,:hive-llap-tez,:hive-llap-server,:hive-service,:hive-jdbc,:hive-beeline,:hive-cli"
+          - "-pl :hive-exec"
+          - "-pl :hive-contrib,:hive-jdbc-handler"
+          - "-pl :hive-hcatalog,:hive-hcatalog-core,:hive-hcatalog-pig-adapter,:hive-hcatalog-server-extensions,:hive-webhcat-java-client"
+          - "-pl :hive-webhcat,:hive-hcatalog-streaming,:hive-hplsql,:hive-llap-ext-client,:hive-shims-aggregator,:hive-testutils,:hive-packaging"
+          - "-pl :hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample"
+          - "-pl :hive-it-unit"
+          - "-pl :hive-it-unit-hadoop2,:hive-blobstore"
+          - "-pl :hive-it-test-serde,:hive-jmh,:hive-it-minikdc"
+          - "-pl :hive-it-qfile -Dtest=ContribNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=DummyCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestBeeLineDriver"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestCompareCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestContribCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestContribNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestEncryptedHDFSCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestHBaseCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestHBaseNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestMiniLlapCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestMiniTezCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestMiniTezCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestMinimrCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestNegativeMinimrCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestPerfCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestParseNegativeDriver"
     steps:
     - uses: actions/checkout@v3
     - name: Setup JDK 8
@@ -47,7 +65,7 @@ jobs:
             org.apache.maven.plugins:maven-antrun-plugin:run@setup-metastore-scripts \
             org.apache.maven.plugins:maven-surefire-plugin:test \
             -Dsurefire.excludesFile=$PWD/.github/large-memory-tests.txt \
-            -pl "${{ matrix.modules }}"
+            ${{ matrix.modules }}
     - name: Upload test log
       if: failure()
       uses: actions/upload-artifact@v3
