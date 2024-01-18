@@ -1,5 +1,6 @@
 # hcatalog/core
 **/org/apache/hive/hcatalog/mapreduce/TestHCatMultiOutputFormat.java
+**/org/apache/hive/hcatalog/mapreduce/TestHCatPartitionPublish.java
 
 # itests/hive-unit
 **/org/apache/hive/beeline/TestBeeLineWithArgs.java
