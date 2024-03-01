@@ -1315,5 +1315,44 @@
         <module>itests</module>
       </modules>
     </profile>
+    <profile>
+      <id>github-deploy</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+              <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>com.github.github</groupId>
+            <artifactId>site-maven-plugin</artifactId>
+            <version>0.12</version>
+            <configuration>
+              <message>${project.groupId}:${project.artifactId}:${project.version}</message>
+              <noJekyll>true</noJekyll>
+              <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>
+              <branch>refs/heads/release-${project.version}</branch>
+              <merge>true</merge>
+              <includes>
+                <include>**/*</include>
+              </includes>
+              <repositoryName>mvn-repo</repositoryName>
+              <repositoryOwner>pan3793</repositoryOwner>
+              <oauth2Token>${env.GITHUB_OAUTH_KEY}</oauth2Token>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>site</goal>
+                </goals>
+                <phase>deploy</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
