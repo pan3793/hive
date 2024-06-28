@@ -130,9 +130,7 @@ public class MacroSemanticAnalyzer extends BaseSemanticAnalyzer {
       throw new SemanticException("At least one parameter name was used more than once "
           + macroColNames);
     }
-    SemanticAnalyzer sa = HiveConf.getBoolVar(conf, HiveConf.ConfVars.HIVE_CBO_ENABLED) ?
-        new CalcitePlanner(queryState) : new SemanticAnalyzer(queryState);
-    ;
+    SemanticAnalyzer sa = new SemanticAnalyzer(queryState);
     ExprNodeDesc body;
     if(isNoArgumentMacro) {
       body = sa.genExprNodeDesc((ASTNode)ast.getChild(1), rowResolver);

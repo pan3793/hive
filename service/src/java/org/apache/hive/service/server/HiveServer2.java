@@ -59,7 +59,6 @@ import org.apache.hadoop.hive.llap.registry.impl.LlapRegistryService;
 import org.apache.hadoop.hive.ql.exec.tez.TezSessionPoolManager;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.HiveMaterializedViewsRegistry;
 import org.apache.hadoop.hive.ql.session.ClearDanglingScratchDir;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
 import org.apache.hadoop.hive.shims.ShimLoader;
@@ -160,13 +159,8 @@ public class HiveServer2 extends CompositeService {
       LlapRegistryService.getClient(hiveConf);
     }
 
-    // Create views registry
-    try {
-      Hive sessionHive = Hive.get(hiveConf);
-      HiveMaterializedViewsRegistry.get().init(sessionHive);
-    } catch (HiveException e) {
-      throw new RuntimeException("Failed to get metastore connection", e);
-    }
+    // Skip creating HiveMaterializedViewsRegistry
+
     // Setup web UI
     try {
       int webUIPort =

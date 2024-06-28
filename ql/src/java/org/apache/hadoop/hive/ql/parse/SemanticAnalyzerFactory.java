@@ -313,12 +313,8 @@ public final class SemanticAnalyzerFactory {
       case HiveParser.TOK_COMMIT:
       case HiveParser.TOK_ROLLBACK:
       case HiveParser.TOK_SET_AUTOCOMMIT:
-      default: {
-        SemanticAnalyzer semAnalyzer = HiveConf
-            .getBoolVar(queryState.getConf(), HiveConf.ConfVars.HIVE_CBO_ENABLED) ?
-                new CalcitePlanner(queryState) : new SemanticAnalyzer(queryState);
-        return semAnalyzer;
-      }
+      default:
+        return new SemanticAnalyzer(queryState);
       }
     }
   }

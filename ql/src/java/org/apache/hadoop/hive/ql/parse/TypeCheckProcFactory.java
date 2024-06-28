@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.calcite.rel.RelNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.hadoop.hive.common.type.HiveChar;
@@ -55,7 +54,6 @@ import org.apache.hadoop.hive.ql.lib.RuleRegExp;
 import org.apache.hadoop.hive.ql.lib.ExpressionWalker;
 import org.apache.hadoop.hive.ql.optimizer.ConstantPropagateProcFactory;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSubquerySemanticException;
-import org.apache.hadoop.hive.ql.optimizer.calcite.translator.TypeConverter;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnListDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeConstantDesc;
@@ -63,7 +61,6 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDescUtils;
 import org.apache.hadoop.hive.ql.plan.ExprNodeFieldDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeGenericFuncDesc;
-import org.apache.hadoop.hive.ql.plan.ExprNodeSubQueryDesc;
 import org.apache.hadoop.hive.ql.udf.SettableUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDF;
 import org.apache.hadoop.hive.ql.udf.generic.GenericUDFBaseCompare;
@@ -1403,7 +1400,7 @@ public class TypeCheckProcFactory {
       if (!ctx.getallowSubQueryExpr())
         throw new CalciteSubquerySemanticException(SemanticAnalyzer.generateErrorMessage(sqNode,
             ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg("Currently SubQuery expressions are only allowed as " +
-                    "Where and Having Clause predicates")));
+                "Where and Having Clause predicates")));
 
       ExprNodeDesc desc = TypeCheckProcFactory.processGByExpr(nd, procCtx);
       if (desc != null) {
@@ -1411,62 +1408,19 @@ public class TypeCheckProcFactory {
       }
 
       //TOK_SUBQUERY_EXPR should have either 2 or 3 children
-      assert(expr.getChildren().size() == 3 || expr.getChildren().size() == 2);
+      assert (expr.getChildren().size() == 3 || expr.getChildren().size() == 2);
       //First child should be operand
-      assert(expr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_OP);
-
-      ASTNode subqueryOp = (ASTNode) expr.getChild(0);
-
-      boolean isIN = (subqueryOp.getChildCount() > 0) && (subqueryOp.getChild(0).getType() == HiveParser.KW_IN
-              || subqueryOp.getChild(0).getType() == HiveParser.TOK_SUBQUERY_OP_NOTIN);
-      boolean isEXISTS = (subqueryOp.getChildCount() > 0) && (subqueryOp.getChild(0).getType() == HiveParser.KW_EXISTS
-              || subqueryOp.getChild(0).getType() == HiveParser.TOK_SUBQUERY_OP_NOTEXISTS);
-      boolean isScalar = subqueryOp.getChildCount() == 0 ;
+      assert (expr.getChild(0).getType() == HiveParser.TOK_SUBQUERY_OP);
 
       // subqueryToRelNode might be null if subquery expression anywhere other than
       //  as expected in filter (where/having). We should throw an appropriate error
       // message
 
-      Map<ASTNode, RelNode> subqueryToRelNode = ctx.getSubqueryToRelNode();
-      if(subqueryToRelNode == null) {
-        throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
-                        " Currently SubQuery expressions are only allowed as " +
-                                "Where and Having Clause predicates"));
-      }
-
-      RelNode subqueryRel = subqueryToRelNode.get(expr);
-
-      //For now because subquery is only supported in filter
-      // we will create subquery expression of boolean type
-      if(isEXISTS) {
-        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryRel,
-                ExprNodeSubQueryDesc.SubqueryType.EXISTS);
-      }
-      else if(isIN) {
-        assert(nodeOutputs[2] != null);
-        ExprNodeDesc lhs = (ExprNodeDesc)nodeOutputs[2];
-        return new ExprNodeSubQueryDesc(TypeInfoFactory.booleanTypeInfo, subqueryRel,
-                ExprNodeSubQueryDesc.SubqueryType.IN, lhs);
-      }
-      else if(isScalar){
-        // only single subquery expr is supported
-        if(subqueryRel.getRowType().getFieldCount() != 1) {
-            throw new CalciteSubquerySemanticException(ErrorMsg.INVALID_SUBQUERY_EXPRESSION.getMsg(
-                    "More than one column expression in subquery"));
-        }
-        // figure out subquery expression column's type
-        TypeInfo subExprType = TypeConverter.convert(subqueryRel.getRowType().getFieldList().get(0).getType());
-        return new ExprNodeSubQueryDesc(subExprType, subqueryRel,
-                ExprNodeSubQueryDesc.SubqueryType.SCALAR);
-      }
-
-      /*
-       * Restriction.1.h :: SubQueries only supported in the SQL Where Clause.
-       */
-      ctx.setError(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(sqNode,
-              "Currently only IN & EXISTS SubQuery expressions are allowed"),
-              sqNode);
-      return null;
+      // Map<ASTNode, RelNode> subqueryToRelNode = ctx.getSubqueryToRelNode();
+      // assert (subqueryToRelNode == null);
+      throw new CalciteSubquerySemanticException(ErrorMsg.UNSUPPORTED_SUBQUERY_EXPRESSION.getMsg(
+          " Currently SubQuery expressions are only allowed as " +
+              "Where and Having Clause predicates"));
     }
   }
 

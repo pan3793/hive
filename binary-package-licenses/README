@@ -17,10 +17,8 @@ accumulo*
 airline
 ant*
 apache-curator
-avatica*
 avro
 bonecp
-calcite*
 classmate
 commons*
 compress-lzf
@@ -30,7 +28,6 @@ datanucleus*
 derby
 disruptor
 dropwizard-metrics-hadoop-metrics2-reporter
-eigenbase-properties
 emitter
 extendedset
 findbugs-annotations
@@ -67,7 +64,6 @@ maven*
 metrics*
 opencsv*
 parquet-hadoop-bundle
-aggdesigner-algorithm
 plexus-utils
 regexp
 server-metrics

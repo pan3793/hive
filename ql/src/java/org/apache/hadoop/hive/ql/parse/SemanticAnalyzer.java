@@ -52,7 +52,6 @@ import org.antlr.runtime.tree.TreeVisitor;
 import org.antlr.runtime.tree.TreeVisitorAction;
 import org.antlr.runtime.tree.TreeWizard;
 import org.antlr.runtime.tree.TreeWizard.ContextVisitor;
-import org.apache.calcite.rel.RelNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -133,11 +132,9 @@ import org.apache.hadoop.hive.ql.optimizer.Optimizer;
 import org.apache.hadoop.hive.ql.optimizer.Transform;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException;
 import org.apache.hadoop.hive.ql.optimizer.calcite.CalciteSemanticException.UnsupportedFeature;
-import org.apache.hadoop.hive.ql.optimizer.calcite.translator.HiveOpConverterPostProc;
 import org.apache.hadoop.hive.ql.optimizer.lineage.Generator;
 import org.apache.hadoop.hive.ql.optimizer.unionproc.UnionProcContext;
 import org.apache.hadoop.hive.ql.parse.BaseSemanticAnalyzer.TableSpec.SpecType;
-import org.apache.hadoop.hive.ql.parse.CalcitePlanner.ASTSearcher;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration.AnalyzeState;
 import org.apache.hadoop.hive.ql.parse.PTFInvocationSpec.OrderExpression;
 import org.apache.hadoop.hive.ql.parse.PTFInvocationSpec.OrderSpec;
@@ -339,9 +336,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
   protected TableMask tableMask;
 
   CreateTableDesc tableDesc;
-
-  /** Not thread-safe. */
-  final ASTSearcher astSearcher = new ASTSearcher();
 
   protected AnalyzeRewriteContext analyzeRewrite;
 
@@ -11147,9 +11141,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
         //change the location of position alias process here
         processPositionAlias(tree);
         genResolvedParseTree(tree, plannerCtx);
-        if (this instanceof CalcitePlanner) {
-          ((CalcitePlanner) this).resetCalciteConfiguration();
-        }
         sinkOp = genOPTree(tree, plannerCtx);
       }
     }
@@ -11218,7 +11209,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
             || postExecHooks.contains("org.apache.hadoop.hive.ql.hooks.LineageLogger")
             || postExecHooks.contains("org.apache.atlas.hive.hook.HiveHook")) {
           ArrayList<Transform> transformations = new ArrayList<Transform>();
-          transformations.add(new HiveOpConverterPostProc());
           transformations.add(new Generator());
           for (Transform t : transformations) {
             pCtx = t.transform(pCtx);
@@ -11513,17 +11503,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     // use default settings.
     return genExprNodeDesc(expr, input, true, false);
   }
-
-  public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input,
-                                      RowResolver outerRR, Map<ASTNode, RelNode> subqueryToRelNode,
-                                      boolean useCaching) throws SemanticException {
-
-    TypeCheckCtx tcCtx = new TypeCheckCtx(input, useCaching, false);
-    tcCtx.setOuterRR(outerRR);
-    tcCtx.setSubqueryToRelNode(subqueryToRelNode);
-    return genExprNodeDesc(expr, input, tcCtx);
-  }
-
 
   public ExprNodeDesc genExprNodeDesc(ASTNode expr, RowResolver input, boolean useCaching)
       throws SemanticException {
@@ -13510,4 +13489,71 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
     this.loadFileWork = loadFileWork;
   }
 
+  public static class ASTSearcher {
+    private final LinkedList<ASTNode> searchQueue = new LinkedList<ASTNode>();
+
+    /**
+     * Performs breadth-first search of the AST for a nested set of tokens. Tokens
+     * don't have to be each others' direct children, they can be separated by
+     * layers of other tokens. For each token in the list, the first one found is
+     * matched and there's no backtracking; thus, if AST has multiple instances of
+     * some token, of which only one matches, it is not guaranteed to be found. We
+     * use this for simple things. Not thread-safe - reuses searchQueue.
+     */
+    public ASTNode simpleBreadthFirstSearch(ASTNode ast, int... tokens) {
+      searchQueue.clear();
+      searchQueue.add(ast);
+      for (int i = 0; i < tokens.length; ++i) {
+        boolean found = false;
+        int token = tokens[i];
+        while (!searchQueue.isEmpty() && !found) {
+          ASTNode next = searchQueue.poll();
+          found = next.getType() == token;
+          if (found) {
+            if (i == tokens.length - 1)
+              return next;
+            searchQueue.clear();
+          }
+          for (int j = 0; j < next.getChildCount(); ++j) {
+            searchQueue.add((ASTNode) next.getChild(j));
+          }
+        }
+        if (!found)
+          return null;
+      }
+      return null;
+    }
+
+    public ASTNode depthFirstSearch(ASTNode ast, int token) {
+      searchQueue.clear();
+      searchQueue.add(ast);
+      while (!searchQueue.isEmpty()) {
+        ASTNode next = searchQueue.poll();
+        if (next.getType() == token) return next;
+        for (int j = 0; j < next.getChildCount(); ++j) {
+          searchQueue.add((ASTNode) next.getChild(j));
+        }
+      }
+      return null;
+    }
+
+    public ASTNode simpleBreadthFirstSearchAny(ASTNode ast, int... tokens) {
+      searchQueue.clear();
+      searchQueue.add(ast);
+      while (!searchQueue.isEmpty()) {
+        ASTNode next = searchQueue.poll();
+        for (int i = 0; i < tokens.length; ++i) {
+          if (next.getType() == tokens[i]) return next;
+        }
+        for (int i = 0; i < next.getChildCount(); ++i) {
+          searchQueue.add((ASTNode) next.getChild(i));
+        }
+      }
+      return null;
+    }
+
+    public void reset() {
+      searchQueue.clear();
+    }
+  }
 }

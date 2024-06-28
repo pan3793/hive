@@ -130,7 +130,6 @@ import org.apache.hadoop.hive.ql.metadata.CheckResult;
 import org.apache.hadoop.hive.ql.metadata.ForeignKeyInfo;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
-import org.apache.hadoop.hive.ql.metadata.HiveMaterializedViewsRegistry;
 import org.apache.hadoop.hive.ql.metadata.HiveMetaStoreChecker;
 import org.apache.hadoop.hive.ql.metadata.HiveUtils;
 import org.apache.hadoop.hive.ql.metadata.InvalidTableException;
@@ -4175,10 +4174,8 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
     // drop the table
     db.dropTable(dropTbl.getTableName(), dropTbl.getIfPurge());
     if (tbl != null) {
-      // Remove from cache if it is a materialized view
-      if (tbl.isMaterializedView()) {
-        HiveMaterializedViewsRegistry.get().dropMaterializedView(tbl);
-      }
+      // Skip removing from HiveMaterializedViewsRegistry even if it is a materialized view
+
       // We have already locked the table in DDLSemanticAnalyzer, don't do it again here
       addIfAbsentByName(new WriteEntity(tbl, WriteEntity.WriteType.DDL_NO_LOCK));
     }
@@ -4605,10 +4602,9 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       }
 
       db.createTable(tbl, crtView.getIfNotExists());
-      // Add to cache if it is a materialized view
-      if (tbl.isMaterializedView()) {
-        HiveMaterializedViewsRegistry.get().addMaterializedView(tbl);
-      }
+
+      // Skip adding to HiveMaterializedViewsRegistry even if it is a materialized view
+
       addIfAbsentByName(new WriteEntity(tbl, WriteEntity.WriteType.DDL_NO_LOCK));
 
       //set lineage info

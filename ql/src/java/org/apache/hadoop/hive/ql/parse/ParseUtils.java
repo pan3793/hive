@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import org.antlr.runtime.tree.CommonTree;
 import org.apache.hadoop.hive.ql.optimizer.calcite.translator.ASTBuilder;
-import org.apache.hadoop.hive.ql.parse.CalcitePlanner.ASTSearcher;
+import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer.ASTSearcher;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -343,9 +343,8 @@ public final class ParseUtils {
       return stack.empty() && otherStack.empty();
     }
 
-
     private static void handleSetColRefs(ASTNode tree) {
-      CalcitePlanner.ASTSearcher astSearcher = new CalcitePlanner.ASTSearcher();
+      ASTSearcher astSearcher = new ASTSearcher();
       while (true) {
         astSearcher.reset();
         ASTNode setCols = astSearcher.depthFirstSearch(tree, HiveParser.TOK_SETCOLREF);
