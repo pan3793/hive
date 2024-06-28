@@ -37,11 +37,11 @@ import java.util.Stack;
 import java.util.regex.Pattern;
 import org.apache.commons.lang3.ArrayUtils;
 
-import org.apache.calcite.util.Pair;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
@@ -1989,9 +1989,9 @@ public class Vectorizer implements PhysicalPlanResolver {
       }
     }
 
-    Pair<Boolean,Boolean> retPair =
+    ObjectPair<Boolean,Boolean> retPair =
         validateAggregationDescs(desc.getAggregators(), processingMode, hasKeys);
-    if (!retPair.left) {
+    if (!retPair.getFirst()) {
       return false;
     }
 
@@ -2000,7 +2000,7 @@ public class Vectorizer implements PhysicalPlanResolver {
     VectorGroupByDesc vectorDesc = new VectorGroupByDesc();
     desc.setVectorDesc(vectorDesc);
 
-    vectorDesc.setVectorOutput(retPair.right);
+    vectorDesc.setVectorOutput(retPair.getSecond());
 
     vectorDesc.setProcessingMode(processingMode);
 
@@ -2030,19 +2030,19 @@ public class Vectorizer implements PhysicalPlanResolver {
     return true;
   }
 
-  private Pair<Boolean,Boolean> validateAggregationDescs(List<AggregationDesc> descs,
+  private ObjectPair<Boolean,Boolean> validateAggregationDescs(List<AggregationDesc> descs,
       ProcessingMode processingMode, boolean hasKeys) {
     boolean outputIsPrimitive = true;
     for (AggregationDesc d : descs) {
-      Pair<Boolean,Boolean>  retPair = validateAggregationDesc(d, processingMode, hasKeys);
-      if (!retPair.left) {
+      ObjectPair<Boolean,Boolean>  retPair = validateAggregationDesc(d, processingMode, hasKeys);
+      if (!retPair.getFirst()) {
         return retPair;
       }
-      if (!retPair.right) {
+      if (!retPair.getSecond()) {
         outputIsPrimitive = false;
       }
     }
-    return new Pair<Boolean, Boolean>(true, outputIsPrimitive);
+    return new ObjectPair<Boolean, Boolean>(true, outputIsPrimitive);
   }
 
   private boolean validateExprNodeDescRecursive(ExprNodeDesc desc, String expressionTitle,
@@ -2184,13 +2184,13 @@ public class Vectorizer implements PhysicalPlanResolver {
     return outputObjInspector.getCategory();
   }
 
-  private Pair<Boolean,Boolean> validateAggregationDesc(AggregationDesc aggDesc, ProcessingMode processingMode,
+  private ObjectPair<Boolean,Boolean> validateAggregationDesc(AggregationDesc aggDesc, ProcessingMode processingMode,
       boolean hasKeys) {
 
     String udfName = aggDesc.getGenericUDAFName().toLowerCase();
     if (!supportedAggregationUdfs.contains(udfName)) {
       setExpressionIssue("Aggregation Function", "UDF " + udfName + " not supported");
-      return new Pair<Boolean,Boolean>(false, false);
+      return new ObjectPair<Boolean,Boolean>(false, false);
     }
     /*
     if (aggDesc.getDistinct()) {
@@ -2199,7 +2199,7 @@ public class Vectorizer implements PhysicalPlanResolver {
     }
     */
     if (aggDesc.getParameters() != null && !validateExprNodeDesc(aggDesc.getParameters(), "Aggregation Function UDF " + udfName + " parameter")) {
-      return new Pair<Boolean,Boolean>(false, false);
+      return new ObjectPair<Boolean,Boolean>(false, false);
     }
 
     // See if we can vectorize the aggregation.
@@ -2213,7 +2213,7 @@ public class Vectorizer implements PhysicalPlanResolver {
         LOG.debug("Vectorization of aggregation should have succeeded ", e);
       }
       setExpressionIssue("Aggregation Function", "Vectorization of aggreation should have succeeded " + e);
-      return new Pair<Boolean,Boolean>(false, false);
+      return new ObjectPair<Boolean,Boolean>(false, false);
     }
     if (LOG.isDebugEnabled()) {
       LOG.debug("Aggregation " + aggDesc.getExprString() + " --> " +
@@ -2226,10 +2226,10 @@ public class Vectorizer implements PhysicalPlanResolver {
         hasKeys &&
         !outputIsPrimitive) {
       setOperatorIssue("Vectorized Reduce MergePartial GROUP BY keys can only handle aggregate outputs that are primitive types");
-      return new Pair<Boolean,Boolean>(false, false);
+      return new ObjectPair<Boolean,Boolean>(false, false);
     }
 
-    return new Pair<Boolean,Boolean>(true, outputIsPrimitive);
+    return new ObjectPair<Boolean,Boolean>(true, outputIsPrimitive);
   }
 
   public static boolean validateDataType(String type, VectorExpressionDescriptor.Mode mode) {

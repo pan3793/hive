@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.calcite.util.Pair;
+import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
@@ -108,11 +108,11 @@ public class RedundantDynamicPruningConditionsRemoval extends Transform {
       CollectContext tsRemovalContext = new CollectContext();
       collect(ts.getConf().getFilterExpr(), tsRemovalContext);
 
-      for (Pair<ExprNodeDesc,ExprNodeDesc> pair : removalContext.dynamicListNodes) {
-        ExprNodeDesc child = pair.left;
+      for (ObjectPair<ExprNodeDesc,ExprNodeDesc> pair : removalContext.dynamicListNodes) {
+        ExprNodeDesc child = pair.getFirst();
         ExprNodeDesc columnDesc = child.getChildren().get(0);
         assert child.getChildren().get(1) instanceof ExprNodeDynamicListDesc;
-        ExprNodeDesc parent = pair.right;
+        ExprNodeDesc parent = pair.getSecond();
 
         String column = ExprNodeDescUtils.extractColName(columnDesc);
         if (column != null) {
@@ -139,9 +139,9 @@ public class RedundantDynamicPruningConditionsRemoval extends Transform {
               parent.getChildren().add(i, constNode);
             }
             // We remove it from the TS too if it was pushed
-            for (Pair<ExprNodeDesc,ExprNodeDesc> tsPair : tsRemovalContext.dynamicListNodes) {
-              ExprNodeDesc tsChild = tsPair.left;
-              ExprNodeDesc tsParent = tsPair.right;
+            for (ObjectPair<ExprNodeDesc,ExprNodeDesc> tsPair : tsRemovalContext.dynamicListNodes) {
+              ExprNodeDesc tsChild = tsPair.getFirst();
+              ExprNodeDesc tsParent = tsPair.getSecond();
               if (tsChild.isSame(child)) {
                 if (tsParent == null) {
                   ts.getConf().setFilterExpr(null);
@@ -173,7 +173,7 @@ public class RedundantDynamicPruningConditionsRemoval extends Transform {
     if (child instanceof ExprNodeGenericFuncDesc &&
             ((ExprNodeGenericFuncDesc)child).getGenericUDF() instanceof GenericUDFIn) {
       if (child.getChildren().get(1) instanceof ExprNodeDynamicListDesc) {
-        listContext.dynamicListNodes.add(new Pair<ExprNodeDesc,ExprNodeDesc>(child, parent));
+        listContext.dynamicListNodes.add(new ObjectPair<ExprNodeDesc,ExprNodeDesc>(child, parent));
       }
       return;
     }
@@ -220,11 +220,11 @@ public class RedundantDynamicPruningConditionsRemoval extends Transform {
 
   private class CollectContext implements NodeProcessorCtx {
 
-    private final List<Pair<ExprNodeDesc,ExprNodeDesc>> dynamicListNodes;
+    private final List<ObjectPair<ExprNodeDesc,ExprNodeDesc>> dynamicListNodes;
     private final List<ExprNodeDesc> comparatorNodes;
 
     public CollectContext() {
-      this.dynamicListNodes = Lists.<Pair<ExprNodeDesc,ExprNodeDesc>>newArrayList();
+      this.dynamicListNodes = Lists.<ObjectPair<ExprNodeDesc,ExprNodeDesc>>newArrayList();
       this.comparatorNodes = Lists.<ExprNodeDesc>newArrayList();
     }
 

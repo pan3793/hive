@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.hive.ql.parse;
 
-import org.apache.calcite.rel.RelNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
@@ -48,7 +47,7 @@ public class TypeCheckCtx implements NodeProcessorCtx {
   /**
    * Map from astnode of a subquery to it's logical plan.
    */
-  private Map<ASTNode, RelNode> subqueryToRelNode;
+  // private Map<ASTNode, RelNode> subqueryToRelNode;
 
   private final boolean useCaching;
 
@@ -120,7 +119,7 @@ public class TypeCheckCtx implements NodeProcessorCtx {
     this.allowIndexExpr = allowIndexExpr;
     this.allowSubQueryExpr = allowSubQueryExpr;
     this.outerRR = null;
-    this.subqueryToRelNode = null;
+    // this.subqueryToRelNode = null;
   }
 
   /**
@@ -151,21 +150,6 @@ public class TypeCheckCtx implements NodeProcessorCtx {
    */
   public RowResolver getOuterRR() {
     return outerRR;
-  }
-
-  /**
-   * @param subqueryToRelNode
-   *          the subqueryToRelNode to set
-   */
-  public void setSubqueryToRelNode(Map<ASTNode, RelNode> subqueryToRelNode) {
-    this.subqueryToRelNode = subqueryToRelNode;
-  }
-
-  /**
-   * @return the outerRR
-   */
-  public Map<ASTNode, RelNode> getSubqueryToRelNode() {
-    return subqueryToRelNode;
   }
 
   /**

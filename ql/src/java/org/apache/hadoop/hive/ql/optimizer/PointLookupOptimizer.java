@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
-import org.apache.calcite.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.hadoop.hive.common.ObjectPair;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
@@ -152,7 +152,7 @@ public class PointLookupOptimizer extends Transform {
       if (children.size() < minOrExpr) {
         return null;
       }
-      ListMultimap<String,Pair<ExprNodeColumnDesc, ExprNodeConstantDesc>> columnConstantsMap =
+      ListMultimap<String,ObjectPair<ExprNodeColumnDesc, ExprNodeConstantDesc>> columnConstantsMap =
               ArrayListMultimap.create();
       boolean modeAnd = false;
       for (int i = 0; i < children.size(); i++) {
@@ -207,7 +207,7 @@ public class PointLookupOptimizer extends Transform {
               ExprNodeColumnDesc ref = (ExprNodeColumnDesc) conjCall.getChildren().get(0);
               String refString = ref.toString();
               columnConstantsMap.put(refString,
-                      new Pair<ExprNodeColumnDesc,ExprNodeConstantDesc>(
+                      new ObjectPair<ExprNodeColumnDesc,ExprNodeConstantDesc>(
                               ref, (ExprNodeConstantDesc) conjCall.getChildren().get(1)));
               if (columnConstantsMap.get(refString).size() != i+1) {
                 // If we have not added to this column desc before, we bail out
@@ -218,7 +218,7 @@ public class PointLookupOptimizer extends Transform {
               ExprNodeColumnDesc ref = (ExprNodeColumnDesc) conjCall.getChildren().get(1);
               String refString = ref.toString();
               columnConstantsMap.put(refString,
-                      new Pair<ExprNodeColumnDesc,ExprNodeConstantDesc>(
+                      new ObjectPair<ExprNodeColumnDesc,ExprNodeConstantDesc>(
                               ref, (ExprNodeConstantDesc) conjCall.getChildren().get(0)));
               if (columnConstantsMap.get(refString).size() != i+1) {
                 // If we have not added to this column desc before, we bail out
@@ -246,14 +246,14 @@ public class PointLookupOptimizer extends Transform {
         List<ExprNodeDesc> constantFields = new ArrayList<ExprNodeDesc>(children.size());
 
         for (String keyString : columnConstantsMap.keySet()) {
-          Pair<ExprNodeColumnDesc, ExprNodeConstantDesc> columnConstant =
+          ObjectPair<ExprNodeColumnDesc, ExprNodeConstantDesc> columnConstant =
                   columnConstantsMap.get(keyString).get(i);
           if (i == 0) {
-            columns.add(columnConstant.left);
-            names.add(columnConstant.left.getColumn());
-            typeInfos.add(columnConstant.left.getTypeInfo());
+            columns.add(columnConstant.getFirst());
+            names.add(columnConstant.getFirst().getColumn());
+            typeInfos.add(columnConstant.getFirst().getTypeInfo());
           }
-          constantFields.add(columnConstant.right);
+          constantFields.add(columnConstant.getSecond());
         }
 
         if (i == 0) {

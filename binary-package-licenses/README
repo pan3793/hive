@@ -17,10 +17,8 @@ accumulo*
 airline
 ant*
 apache-curator
-avatica*
 avro
 bonecp
-calcite*
 classmate
 commons*
 compress-lzf

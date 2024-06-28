@@ -54,7 +54,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.jdo.JDODataStoreException;
 
-import org.apache.calcite.plan.RelOptMaterialization;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileChecksum;
@@ -1431,55 +1430,6 @@ public class Hive {
           return getMSC().getTables(dbName, ".*");
         }
       }
-    } catch (Exception e) {
-      throw new HiveException(e);
-    }
-  }
-
-  /**
-   * Get the materialized views that have been enabled for rewriting from the
-   * metastore. If the materialized view is in the cache, we do not need to
-   * parse it to generate a logical plan for the rewriting. Instead, we
-   * return the version present in the cache.
-   *
-   * @return the list of materialized views available for rewriting
-   * @throws HiveException
-   */
-  public List<RelOptMaterialization> getRewritingMaterializedViews() throws HiveException {
-    try {
-      // Final result
-      List<RelOptMaterialization> result = new ArrayList<>();
-      for (String dbName : getMSC().getAllDatabases()) {
-        // From metastore (for security)
-        List<String> tables = getMSC().getAllTables(dbName);
-        // Cached views (includes all)
-        Collection<RelOptMaterialization> cachedViews =
-            HiveMaterializedViewsRegistry.get().getRewritingMaterializedViews(dbName);
-        if (cachedViews.isEmpty()) {
-          // Bail out: empty list
-          continue;
-        }
-        Map<String, RelOptMaterialization> qualifiedNameToView =
-            new HashMap<String, RelOptMaterialization>();
-        for (RelOptMaterialization materialization : cachedViews) {
-          qualifiedNameToView.put(materialization.table.getQualifiedName().get(0), materialization);
-        }
-        for (String table : tables) {
-          // Compose qualified name
-          String fullyQualifiedName = dbName;
-          if (fullyQualifiedName != null && !fullyQualifiedName.isEmpty()) {
-            fullyQualifiedName = fullyQualifiedName + "." + table;
-          } else {
-            fullyQualifiedName = table;
-          }
-          RelOptMaterialization materialization = qualifiedNameToView.get(fullyQualifiedName);
-          if (materialization != null) {
-            // Add to final result set
-            result.add(materialization);
-          }
-        }
-      }
-      return result;
     } catch (Exception e) {
       throw new HiveException(e);
     }
