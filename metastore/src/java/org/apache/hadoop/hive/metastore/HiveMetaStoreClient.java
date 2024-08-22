@@ -391,6 +391,20 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
     client.rename_partition(dbname, name, part_vals, newPart);
   }
 
+  private <T extends TTransport> T configureThriftMaxMessageSize(T transport) {
+    int maxThriftMessageSize =
+        (int) HiveConf.getSizeVar(conf, ConfVars.HIVE_THRIFT_CLIENT_MAX_MESSAGE_SIZE);
+    if (maxThriftMessageSize > 0) {
+      if (transport.getConfiguration() == null) {
+        LOG.warn("TTransport {} is returning a null Configuration, Thrift max message size is not getting configured",
+            transport.getClass().getName());
+        return transport;
+      }
+      transport.getConfiguration().setMaxMessageSize(maxThriftMessageSize);
+    }
+    return transport;
+  }
+
   private void open() throws MetaException {
     isConnected = false;
     TTransportException tte = null;
@@ -479,6 +493,8 @@ public class HiveMetaStoreClient implements IMetaStoreClient {
               }
             }
           }
+
+          transport = configureThriftMaxMessageSize(transport);
 
           final TProtocol protocol;
           if (useCompactProtocol) {

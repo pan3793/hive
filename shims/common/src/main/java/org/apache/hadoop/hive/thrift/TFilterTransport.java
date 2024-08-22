@@ -100,16 +100,16 @@ import org.apache.thrift.transport.TTransportException;
 
   @Override
   public TConfiguration getConfiguration() {
-    return null;
+    return wrapped.getConfiguration();
   }
 
   @Override
   public void updateKnownMessageSize(long l) throws TTransportException {
-
+    wrapped.updateKnownMessageSize(l);
   }
 
   @Override
   public void checkReadBytesAvailable(long l) throws TTransportException {
-
+    wrapped.checkReadBytesAvailable(l);
   }
 }
