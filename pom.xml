@@ -189,13 +189,15 @@
   <repositories>
     <repository>
       <id>central</id>
-      <name>central</name>
-      <url>https://repo.maven.apache.org/maven2</url>
+      <name>google mirror of maven central</name>
+      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
       <layout>default</layout>
       <releases>
         <enabled>true</enabled>
-        <checksumPolicy>warn</checksumPolicy>
       </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
