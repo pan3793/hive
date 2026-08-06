@@ -35,6 +35,7 @@ import org.apache.hadoop.hive.ql.exec.LateralViewJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.OperatorFactory;
 import org.apache.hadoop.hive.ql.exec.PTFOperator;
+import org.apache.hadoop.hive.ql.exec.ColumnInfo;
 import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.RowSchema;
 import org.apache.hadoop.hive.ql.exec.SelectOperator;
@@ -46,6 +47,7 @@ import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
 import org.apache.hadoop.hive.ql.metadata.HiveStorageHandler;
 import org.apache.hadoop.hive.ql.metadata.HiveStoragePredicateHandler;
 import org.apache.hadoop.hive.ql.metadata.Table;
+import org.apache.hadoop.hive.ql.parse.ColumnAccessInfo;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.parse.WindowingSpec.Direction;
 import org.apache.hadoop.hive.ql.parse.WindowingSpec.WindowType;
@@ -835,6 +837,7 @@ public final class OpProcFactory {
         if (aliases == null || e.getKey() == null || aliases.contains(e.getKey())) {
           // e.getKey() (alias) can be null in case of constant expressions. see
           // input8.q
+          recordViewColumnAccess(op, e.getValue(), owi);
           ExprWalkerInfo extractPushdownPreds = ExprWalkerProcFactory
               .extractPushdownPreds(owi, op, e.getValue());
           if (!extractPushdownPreds.getNonFinalCandidates().isEmpty()) {
@@ -846,6 +849,56 @@ public final class OpProcFactory {
       }
       owi.putPrunedPreds((Operator<? extends OperatorDesc>) nd, ewi);
       return hasUnpushedPredicates;
+    }
+
+    /**
+     * Records the columns accessed on a view when predicates are pushed down
+     * through the view's projection (SelectOperator). Predicate pushdown moves
+     * the filter below the view's select, which makes the ColumnPruner unable
+     * to derive the view columns referenced by the predicate.
+     */
+    private void recordViewColumnAccess(Operator<? extends OperatorDesc> op,
+        List<ExprNodeDesc> preds, OpWalkerInfo owi) {
+      if (!(op instanceof SelectOperator)) {
+        return;
+      }
+      Map<SelectOperator, Table> viewProjectToTableSchema =
+          owi.getParseContext().getViewProjectToTableSchema();
+      if (viewProjectToTableSchema == null || !viewProjectToTableSchema.containsKey(op)) {
+        return;
+      }
+      ColumnAccessInfo columnAccessInfo = owi.getParseContext().getColumnAccessInfo();
+      if (columnAccessInfo == null) {
+        return;
+      }
+      Table view = viewProjectToTableSchema.get(op);
+      RowSchema outSchema = op.getSchema();
+      for (ExprNodeDesc pred : preds) {
+        List<ExprNodeDesc> columnRefs = new ArrayList<ExprNodeDesc>();
+        collectColumnRefs(pred, columnRefs);
+        for (ExprNodeDesc ref : columnRefs) {
+          if (!(ref instanceof ExprNodeColumnDesc)) {
+            continue;
+          }
+          String internalName = ((ExprNodeColumnDesc) ref).getColumn();
+          for (ColumnInfo ci : outSchema.getSignature()) {
+            if (internalName.equals(ci.getInternalName())) {
+              columnAccessInfo.add(view.getCompleteName(), ci.getAlias());
+            }
+          }
+        }
+      }
+    }
+
+    private void collectColumnRefs(ExprNodeDesc expr, List<ExprNodeDesc> columnRefs) {
+      if (expr instanceof ExprNodeColumnDesc) {
+        columnRefs.add(expr);
+      }
+      if (expr.getChildren() != null) {
+        for (ExprNodeDesc child : expr.getChildren()) {
+          collectColumnRefs(child, columnRefs);
+        }
+      }
     }
 
     protected ExprWalkerInfo mergeChildrenPred(Node nd, OpWalkerInfo owi,
