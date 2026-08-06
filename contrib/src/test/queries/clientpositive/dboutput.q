@@ -58,7 +58,7 @@ dboutput('jdbc:derby:../build/test_dboutput_db','','',
 
 FROM src WHERE key < 10;
 
-dfs -rmr ../build/test_dboutput_db;
-dfs -rmr derby.log;
+dfs -rm -r -f -skipTrash ../build/test_dboutput_db;
+dfs -rm -f -skipTrash derby.log;
 
 DROP TEMPORARY FUNCTION dboutput;
