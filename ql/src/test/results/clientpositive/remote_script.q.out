@@ -8,13 +8,13 @@ POSTHOOK: Output: database:default
 POSTHOOK: Output: default@tmp_tmp
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python newline.py' AS key, value FROM src limit 6
+'python3 newline.py' AS key, value FROM src limit 6
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python newline.py' AS key, value FROM src limit 6
+'python3 newline.py' AS key, value FROM src limit 6
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp

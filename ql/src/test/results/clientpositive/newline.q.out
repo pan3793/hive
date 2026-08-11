@@ -8,13 +8,13 @@ POSTHOOK: Output: database:default
 POSTHOOK: Output: default@tmp_tmp
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python newline.py' AS key, value FROM src limit 6
+'python3 newline.py' AS key, value FROM src limit 6
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python newline.py' AS key, value FROM src limit 6
+'python3 newline.py' AS key, value FROM src limit 6
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp
@@ -56,13 +56,13 @@ POSTHOOK: Output: database:default
 POSTHOOK: Output: default@tmp_tmp
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapednewline.py' AS key, value FROM src limit 5
+'python3 escapednewline.py' AS key, value FROM src limit 5
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapednewline.py' AS key, value FROM src limit 5
+'python3 escapednewline.py' AS key, value FROM src limit 5
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp
@@ -98,13 +98,13 @@ POSTHOOK: Input: default@tmp_tmp
 1\n2	NULL
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapedcarriagereturn.py' AS key, value FROM src limit 5
+'python3 escapedcarriagereturn.py' AS key, value FROM src limit 5
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapedcarriagereturn.py' AS key, value FROM src limit 5
+'python3 escapedcarriagereturn.py' AS key, value FROM src limit 5
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp
@@ -140,13 +140,13 @@ POSTHOOK: Input: default@tmp_tmp
 1\r2	NULL
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapedtab.py' AS key, value FROM src limit 5
+'python3 escapedtab.py' AS key, value FROM src limit 5
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python escapedtab.py' AS key, value FROM src limit 5
+'python3 escapedtab.py' AS key, value FROM src limit 5
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp
@@ -182,13 +182,13 @@ POSTHOOK: Input: default@tmp_tmp
 1\t2	NULL
 PREHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python doubleescapedtab.py' AS key, value FROM src limit 5
+'python3 doubleescapedtab.py' AS key, value FROM src limit 5
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src
 PREHOOK: Output: default@tmp_tmp
 POSTHOOK: query: insert overwrite table tmp_tmp
 SELECT TRANSFORM(key, value) USING
-'python doubleescapedtab.py' AS key, value FROM src limit 5
+'python3 doubleescapedtab.py' AS key, value FROM src limit 5
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tmp_tmp

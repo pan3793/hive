@@ -12,7 +12,7 @@ FROM (
 ) tmap
 INSERT OVERWRITE TABLE dest1
 REDUCE tmap.key, tmap.value
-USING 'python input20_script.py'
+USING 'python3 input20_script.py'
 AS key, value;
 
 FROM (
@@ -24,7 +24,7 @@ FROM (
 ) tmap
 INSERT OVERWRITE TABLE dest1
 REDUCE tmap.key, tmap.value
-USING 'python input20_script.py'
+USING 'python3 input20_script.py'
 AS key, value;
 
 SELECT * FROM dest1 SORT BY key, value;

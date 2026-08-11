@@ -10,7 +10,7 @@ STORED AS
   INPUTFORMAT 'org.apache.hadoop.hive.ql.io.RCFileInputFormat'
   OUTPUTFORMAT 'org.apache.hadoop.hive.ql.io.RCFileOutputFormat';
 
-FROM (FROM src MAP src.key,src.value USING 'python dumpdata_script.py' AS (key,value) WHERE src.key = 10) subq
+FROM (FROM src MAP src.key,src.value USING 'python3 dumpdata_script.py' AS (key,value) WHERE src.key = 10) subq
 INSERT OVERWRITE TABLE columnTable_Bigdata SELECT subq.key, subq.value;
 
 describe columnTable_Bigdata;

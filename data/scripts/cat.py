@@ -20,10 +20,20 @@ import sys, re
 import datetime
 import os
 
+try:
+  stdin = sys.stdin.buffer
+  stdout = sys.stdout.buffer
+  stderr = sys.stderr.buffer
+except AttributeError:
+  # Python 2: sys.stdin/stdout/stderr are already byte-oriented.
+  stdin = sys.stdin
+  stdout = sys.stdout
+  stderr = sys.stderr
+
 table_name=None
-if os.environ.has_key('hive_streaming_tablename'):
+if 'hive_streaming_tablename' in os.environ:
   table_name=os.environ['hive_streaming_tablename']
 
-for line in sys.stdin:
-  print line
-  print >> sys.stderr, "dummy"
+for line in stdin:
+  stdout.write(line)
+  stderr.write(b"dummy\n")
