@@ -20,10 +20,7 @@ package org.apache.hadoop.hive.ql.io.orc;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.apache.hadoop.hive.ql.io.AcidInputFormat;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.orc.OrcProto;
@@ -37,8 +34,6 @@ public class OrcNewSplit extends FileSplit {
   private OrcTail orcTail;
   private boolean hasFooter;
   private boolean isOriginal;
-  private boolean hasBase;
-  private final List<AcidInputFormat.DeltaMetaData> deltas = new ArrayList<>();
 
   protected OrcNewSplit(){
     //The FileSplit() constructor in hadoop 0.20 and 1.x is package private so can't use it.
@@ -53,8 +48,6 @@ public class OrcNewSplit extends FileSplit {
     this.orcTail = inner.getOrcTail();
     this.hasFooter = inner.hasFooter();
     this.isOriginal = inner.isOriginal();
-    this.hasBase = inner.hasBase();
-    this.deltas.addAll(inner.getDeltas());
   }
 
   @Override
@@ -62,14 +55,10 @@ public class OrcNewSplit extends FileSplit {
     //serialize path, offset, length using FileSplit
     super.write(out);
 
-    int flags = (hasBase ? OrcSplit.BASE_FLAG : 0) |
-        (isOriginal ? OrcSplit.ORIGINAL_FLAG : 0) |
+    int flags = (isOriginal ? OrcSplit.ORIGINAL_FLAG : 0) |
         (hasFooter ? OrcSplit.FOOTER_FLAG : 0);
     out.writeByte(flags);
-    out.writeInt(deltas.size());
-    for(AcidInputFormat.DeltaMetaData delta: deltas) {
-      delta.write(out);
-    }
+    out.writeInt(0);
     if (hasFooter) {
       OrcProto.FileTail fileTail = orcTail.getMinimalFileTail();
       byte[] tailBuffer = fileTail.toByteArray();
@@ -87,14 +76,12 @@ public class OrcNewSplit extends FileSplit {
     byte flags = in.readByte();
     hasFooter = (OrcSplit.FOOTER_FLAG & flags) != 0;
     isOriginal = (OrcSplit.ORIGINAL_FLAG & flags) != 0;
-    hasBase = (OrcSplit.BASE_FLAG & flags) != 0;
 
-    deltas.clear();
     int numDeltas = in.readInt();
     for(int i=0; i < numDeltas; i++) {
-      AcidInputFormat.DeltaMetaData dmd = new AcidInputFormat.DeltaMetaData();
-      dmd.readFields(in);
-      deltas.add(dmd);
+      in.readInt();
+      in.readLong();
+      in.readInt();
     }
     if (hasFooter) {
       int tailLen = WritableUtils.readVInt(in);
@@ -115,13 +102,5 @@ public class OrcNewSplit extends FileSplit {
 
   public boolean isOriginal() {
     return isOriginal;
-  }
-
-  public boolean hasBase() {
-    return hasBase;
-  }
-
-  public List<AcidInputFormat.DeltaMetaData> getDeltas() {
-    return deltas;
   }
 }

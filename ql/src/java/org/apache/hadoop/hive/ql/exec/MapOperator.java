@@ -658,7 +658,7 @@ public class MapOperator extends AbstractMapOperator {
             if(vcValues[i] == null) {
               vcValues[i] = new Object[RecordIdentifier.Field.values().length];
             }
-            RecordIdentifier.StructInfo.toArray(ctx.getIoCxt().getRecordIdentifier(), (Object[])vcValues[i]);
+            RecordIdentifier.StructInfo.toArray((RecordIdentifier) ctx.getIoCxt().getRecordIdentifier(), (Object[])vcValues[i]);
             ctx.getIoCxt().setRecordIdentifier(null);//so we don't accidentally cache the value; shouldn't
             //happen since IO layer either knows how to produce ROW__ID or not - but to be safe
           }

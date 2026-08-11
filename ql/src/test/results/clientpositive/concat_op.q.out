@@ -248,11 +248,9 @@ STAGE PLANS:
         TableScan
           alias: _dummy_table
           Row Limit Per Split: 1
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
           Select Operator
             expressions: 'abc' (type: string)
             outputColumnNames: _col0
-            Statistics: Num rows: 1 Data size: 87 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink
 
 PREHOOK: query: explain select 'a' || 'b' || 'c'
@@ -270,11 +268,9 @@ STAGE PLANS:
         TableScan
           alias: _dummy_table
           Row Limit Per Split: 1
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
           Select Operator
             expressions: 'abc' (type: string)
             outputColumnNames: _col0
-            Statistics: Num rows: 1 Data size: 87 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink
 
 PREHOOK: query: select true and false or false and true or true

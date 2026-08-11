@@ -57,9 +57,6 @@ public class DDLWork implements Serializable {
   private UnlockTableDesc unlockTblDesc;
   private ShowFunctionsDesc showFuncsDesc;
   private ShowLocksDesc showLocksDesc;
-  private ShowCompactionsDesc showCompactionsDesc;
-  private ShowTxnsDesc showTxnsDesc;
-  private AbortTxnsDesc abortTxnsDesc;
   private DescFunctionDesc descFunctionDesc;
   private ShowPartitionsDesc showPartsDesc;
   private ShowCreateDatabaseDesc showCreateDbDesc;
@@ -339,24 +336,6 @@ public class DDLWork implements Serializable {
     this(inputs, outputs);
 
     this.showLocksDesc = showLocksDesc;
-  }
-
-  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
-                 ShowCompactionsDesc showCompactionsDesc) {
-    this(inputs, outputs);
-    this.showCompactionsDesc = showCompactionsDesc;
-  }
-
-  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
-                 ShowTxnsDesc showTxnsDesc) {
-    this(inputs, outputs);
-    this.showTxnsDesc = showTxnsDesc;
-  }
-
-  public DDLWork(HashSet<ReadEntity> inputs, HashSet<WriteEntity> outputs,
-                 AbortTxnsDesc abortTxnsDesc) {
-    this(inputs, outputs);
-    this.abortTxnsDesc = abortTxnsDesc;
   }
 
    /**
@@ -775,21 +754,6 @@ public class DDLWork implements Serializable {
     return showLocksDesc;
   }
 
-  @Explain(displayName = "Show Compactions Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
-  public ShowCompactionsDesc getShowCompactionsDesc() {
-    return showCompactionsDesc;
-  }
-
-  @Explain(displayName = "Show Transactions Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
-  public ShowTxnsDesc getShowTxnsDesc() {
-    return showTxnsDesc;
-  }
-
-  @Explain(displayName = "Abort Transactions Operator", explainLevels = { Level.USER, Level.DEFAULT, Level.EXTENDED })
-  public AbortTxnsDesc getAbortTxnsDesc() {
-    return abortTxnsDesc;
-  }
-
   /**
    * @return the lockTblDesc
    */
@@ -828,18 +792,6 @@ public class DDLWork implements Serializable {
    */
   public void setShowLocksDesc(ShowLocksDesc showLocksDesc) {
     this.showLocksDesc = showLocksDesc;
-  }
-
-  public void setShowCompactionsDesc(ShowCompactionsDesc showCompactionsDesc) {
-    this.showCompactionsDesc = showCompactionsDesc;
-  }
-
-  public void setShowTxnsDesc(ShowTxnsDesc showTxnsDesc) {
-    this.showTxnsDesc = showTxnsDesc;
-  }
-
-  public void setAbortTxnsDesc(AbortTxnsDesc abortTxnsDesc) {
-    this.abortTxnsDesc = abortTxnsDesc;
   }
 
   /**

@@ -23,11 +23,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.io.AcidInputFormat;
 import org.apache.hadoop.hive.ql.io.ColumnarSplit;
 import org.apache.hadoop.hive.ql.io.LlapAwareSplit;
 import org.apache.hadoop.hive.ql.io.SyntheticFileId;
@@ -49,15 +46,12 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
   private OrcTail orcTail;
   private boolean hasFooter;
   private boolean isOriginal;
-  private boolean hasBase;
-  private final List<AcidInputFormat.DeltaMetaData> deltas = new ArrayList<>();
   private long projColsUncompressedSize;
   private transient Object fileKey;
   private long fileLen;
 
   static final int HAS_SYNTHETIC_FILEID_FLAG = 16;
   static final int HAS_LONG_FILEID_FLAG = 8;
-  static final int BASE_FLAG = 4;
   static final int ORIGINAL_FLAG = 2;
   static final int FOOTER_FLAG = 1;
 
@@ -69,19 +63,14 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
   }
 
   public OrcSplit(Path path, Object fileId, long offset, long length, String[] hosts,
-      OrcTail orcTail, boolean isOriginal, boolean hasBase,
-      List<AcidInputFormat.DeltaMetaData> deltas, long projectedDataSize, long fileLen) {
+      OrcTail orcTail, boolean isOriginal,
+      long projectedDataSize, long fileLen) {
     super(path, offset, length, hosts);
-    // For HDFS, we could avoid serializing file ID and just replace the path with inode-based
-    // path. However, that breaks bunch of stuff because Hive later looks up things by split path.
     this.fileKey = fileId;
     this.orcTail = orcTail;
     hasFooter = this.orcTail != null;
     this.isOriginal = isOriginal;
-    this.hasBase = hasBase;
-    this.deltas.addAll(deltas);
     this.projColsUncompressedSize = projectedDataSize <= 0 ? length : projectedDataSize;
-    // setting file length to Long.MAX_VALUE will let orc reader read file length from file system
     this.fileLen = fileLen <= 0 ? Long.MAX_VALUE : fileLen;
   }
 
@@ -106,16 +95,12 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
 
   private void writeAdditionalPayload(final DataOutputStream out) throws IOException {
     boolean isFileIdLong = fileKey instanceof Long, isFileIdWritable = fileKey instanceof Writable;
-    int flags = (hasBase ? BASE_FLAG : 0) |
-        (isOriginal ? ORIGINAL_FLAG : 0) |
+    int flags = (isOriginal ? ORIGINAL_FLAG : 0) |
         (hasFooter ? FOOTER_FLAG : 0) |
         (isFileIdLong ? HAS_LONG_FILEID_FLAG : 0) |
         (isFileIdWritable ? HAS_SYNTHETIC_FILEID_FLAG : 0);
     out.writeByte(flags);
-    out.writeInt(deltas.size());
-    for(AcidInputFormat.DeltaMetaData delta: deltas) {
-      delta.write(out);
-    }
+    out.writeInt(0);
     if (hasFooter) {
       OrcProto.FileTail fileTail = orcTail.getMinimalFileTail();
       byte[] tailBuffer = fileTail.toByteArray();
@@ -139,19 +124,17 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
     byte flags = in.readByte();
     hasFooter = (FOOTER_FLAG & flags) != 0;
     isOriginal = (ORIGINAL_FLAG & flags) != 0;
-    hasBase = (BASE_FLAG & flags) != 0;
     boolean hasLongFileId = (HAS_LONG_FILEID_FLAG & flags) != 0,
         hasWritableFileId = (HAS_SYNTHETIC_FILEID_FLAG & flags) != 0;
     if (hasLongFileId && hasWritableFileId) {
       throw new IOException("Invalid split - both file ID types present");
     }
 
-    deltas.clear();
     int numDeltas = in.readInt();
     for(int i=0; i < numDeltas; i++) {
-      AcidInputFormat.DeltaMetaData dmd = new AcidInputFormat.DeltaMetaData();
-      dmd.readFields(in);
-      deltas.add(dmd);
+      in.readInt();
+      in.readLong();
+      in.readInt();
     }
     if (hasFooter) {
       int tailLen = WritableUtils.readVInt(in);
@@ -183,24 +166,15 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
   }
 
   public boolean hasBase() {
-    return hasBase;
-  }
-
-  public List<AcidInputFormat.DeltaMetaData> getDeltas() {
-    return deltas;
+    return false;
   }
 
   public long getFileLength() {
     return fileLen;
   }
 
-  /**
-   * If this method returns true, then for sure it is ACID.
-   * However, if it returns false.. it could be ACID or non-ACID.
-   * @return
-   */
   public boolean isAcid() {
-    return hasBase || deltas.size() > 0;
+    return false;
   }
 
   public long getProjectedColumnsUncompressedSize() {
@@ -218,13 +192,12 @@ public class OrcSplit extends FileSplit implements ColumnarSplit, LlapAwareSplit
 
   @Override
   public boolean canUseLlapIo() {
-    return isOriginal && (deltas == null || deltas.isEmpty());
+    return isOriginal;
   }
 
   @Override
   public String toString() {
     return "OrcSplit [" + getPath() + ", start=" + getStart() + ", length=" + getLength()
-        + ", isOriginal=" + isOriginal + ", fileLength=" + fileLen + ", hasFooter=" + hasFooter +
-        ", hasBase=" + hasBase + ", deltas=" + deltas + "]";
+        + ", isOriginal=" + isOriginal + ", fileLength=" + fileLen + ", hasFooter=" + hasFooter + "]";
   }
 }

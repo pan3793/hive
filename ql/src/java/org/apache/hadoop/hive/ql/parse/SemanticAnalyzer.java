@@ -106,7 +106,6 @@ import org.apache.hadoop.hive.ql.exec.UnionOperator;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.hooks.ReadEntity;
 import org.apache.hadoop.hive.ql.hooks.WriteEntity;
-import org.apache.hadoop.hive.ql.io.AcidOutputFormat;
 import org.apache.hadoop.hive.ql.io.AcidUtils;
 import org.apache.hadoop.hive.ql.io.AcidUtils.Operation;
 import org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;
@@ -13387,12 +13386,6 @@ public class SemanticAnalyzer extends BaseSemanticAnalyzer {
       (deleting(dest) ? WriteEntity.WriteType.DELETE : WriteEntity.WriteType.INSERT);
   }
   private boolean isAcidOutputFormat(Class<? extends OutputFormat> of) {
-    Class<?>[] interfaces = of.getInterfaces();
-    for (Class<?> iface : interfaces) {
-      if (iface.equals(AcidOutputFormat.class)) {
-        return true;
-      }
-    }
     return false;
   }
 

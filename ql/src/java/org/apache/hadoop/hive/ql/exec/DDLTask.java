@@ -118,7 +118,6 @@ import org.apache.hadoop.hive.ql.io.orc.OrcSerde;
 import org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateTask;
 import org.apache.hadoop.hive.ql.io.rcfile.truncate.ColumnTruncateWork;
-import org.apache.hadoop.hive.ql.lockmgr.DbLockManager;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLock;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockManager;
 import org.apache.hadoop.hive.ql.lockmgr.HiveLockMode;
@@ -145,7 +144,6 @@ import org.apache.hadoop.hive.ql.parse.ExplainConfiguration.AnalyzeState;
 import org.apache.hadoop.hive.ql.parse.PreInsertTableDesc;
 import org.apache.hadoop.hive.ql.parse.ReplicationSpec;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
-import org.apache.hadoop.hive.ql.plan.AbortTxnsDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.ql.plan.AlterDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.AlterIndexDesc;
@@ -186,7 +184,6 @@ import org.apache.hadoop.hive.ql.plan.RenamePartitionDesc;
 import org.apache.hadoop.hive.ql.plan.RevokeDesc;
 import org.apache.hadoop.hive.ql.plan.RoleDDLDesc;
 import org.apache.hadoop.hive.ql.plan.ShowColumnsDesc;
-import org.apache.hadoop.hive.ql.plan.ShowCompactionsDesc;
 import org.apache.hadoop.hive.ql.plan.ShowConfDesc;
 import org.apache.hadoop.hive.ql.plan.ShowCreateDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.ShowCreateTableDesc;
@@ -199,7 +196,6 @@ import org.apache.hadoop.hive.ql.plan.ShowPartitionsDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTableStatusDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTablesDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTblPropertiesDesc;
-import org.apache.hadoop.hive.ql.plan.ShowTxnsDesc;
 import org.apache.hadoop.hive.ql.plan.SwitchDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.TruncateTableDesc;
 import org.apache.hadoop.hive.ql.plan.UnlockDatabaseDesc;
@@ -464,21 +460,6 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
       ShowLocksDesc showLocks = work.getShowLocksDesc();
       if (showLocks != null) {
         return showLocks(db, showLocks);
-      }
-
-      ShowCompactionsDesc compactionsDesc = work.getShowCompactionsDesc();
-      if (compactionsDesc != null) {
-        return showCompactions(db, compactionsDesc);
-      }
-
-      ShowTxnsDesc txnsDesc = work.getShowTxnsDesc();
-      if (txnsDesc != null) {
-        return showTxns(db, txnsDesc);
-      }
-
-      AbortTxnsDesc abortTxnsDesc = work.getAbortTxnsDesc();
-      if (abortTxnsDesc != null) {
-        return abortTxns(db, abortTxnsDesc);
       }
 
       LockTableDesc lockTbl = work.getLockTblDesc();
@@ -2795,167 +2776,10 @@ public class DDLTask extends Task<DDLWork> implements Serializable {
   }
   private int showLocksNewFormat(ShowLocksDesc showLocks, HiveLockManager lm)
       throws  HiveException {
-
-    DbLockManager lockMgr;
-    if (!(lm instanceof DbLockManager)) {
-      throw new RuntimeException("New lock format only supported with db lock manager.");
-    }
-    lockMgr = (DbLockManager)lm;
-
-    String dbName = showLocks.getDbName();
-    String tblName = showLocks.getTableName();
-    Map<String, String> partSpec = showLocks.getPartSpec();
-    if (dbName == null && tblName != null) {
-      dbName = SessionState.get().getCurrentDatabase();
-    }
-
-    ShowLocksRequest rqst = new ShowLocksRequest();
-    rqst.setDbname(dbName);
-    rqst.setTablename(tblName);
-    if (partSpec != null) {
-      List<String> keyList = new ArrayList<String>();
-      List<String> valList = new ArrayList<String>();
-      for (String partKey : partSpec.keySet()) {
-        String partVal = partSpec.remove(partKey);
-        keyList.add(partKey);
-        valList.add(partVal);
-      }
-      String partName = FileUtils.makePartName(keyList, valList);
-      rqst.setPartname(partName);
-    }
-
-    ShowLocksResponse rsp = lockMgr.getLocks(rqst);
-
-    // write the results in the file
-    DataOutputStream os = getOutputStream(showLocks.getResFile());
-    try {
-      dumpLockInfo(os, rsp);
-    } catch (FileNotFoundException e) {
-      LOG.warn("show function: " + stringifyException(e));
-      return 1;
-    } catch (IOException e) {
-      LOG.warn("show function: " + stringifyException(e));
-      return 1;
-    } catch (Exception e) {
-      throw new HiveException(e.toString());
-    } finally {
-      IOUtils.closeStream(os);
-    }
-    return 0;
+    throw new HiveException("New lock format not supported without DbLockManager");
   }
 
-  private int showCompactions(Hive db, ShowCompactionsDesc desc) throws HiveException {
-    // Call the metastore to get the status of all known compactions (completed get purged eventually)
-    ShowCompactResponse rsp = db.showCompactions();
-
-    // Write the results into the file
-    final String noVal = " --- ";
-
-    DataOutputStream os = getOutputStream(desc.getResFile());
-    try {
-      // Write a header
-      os.writeBytes("Database");
-      os.write(separator);
-      os.writeBytes("Table");
-      os.write(separator);
-      os.writeBytes("Partition");
-      os.write(separator);
-      os.writeBytes("Type");
-      os.write(separator);
-      os.writeBytes("State");
-      os.write(separator);
-      os.writeBytes("Worker");
-      os.write(separator);
-      os.writeBytes("Start Time");
-      os.write(separator);
-      os.writeBytes("Duration(ms)");
-      os.write(separator);
-      os.writeBytes("HadoopJobId");
-      os.write(terminator);
-
-      if (rsp.getCompacts() != null) {
-        for (ShowCompactResponseElement e : rsp.getCompacts()) {
-          os.writeBytes(e.getDbname());
-          os.write(separator);
-          os.writeBytes(e.getTablename());
-          os.write(separator);
-          String part = e.getPartitionname();
-          os.writeBytes(part == null ? noVal : part);
-          os.write(separator);
-          os.writeBytes(e.getType().toString());
-          os.write(separator);
-          os.writeBytes(e.getState());
-          os.write(separator);
-          String wid = e.getWorkerid();
-          os.writeBytes(wid == null ? noVal : wid);
-          os.write(separator);
-          os.writeBytes(e.isSetStart() ? Long.toString(e.getStart()) : noVal);
-          os.write(separator);
-          os.writeBytes(e.isSetEndTime() ? Long.toString(e.getEndTime() - e.getStart()) : noVal);
-          os.write(separator);
-          os.writeBytes(e.isSetHadoopJobId() ?  e.getHadoopJobId() : noVal);
-          os.write(terminator);
-        }
-      }
-    } catch (IOException e) {
-      LOG.warn("show compactions: " + stringifyException(e));
-      return 1;
-    } finally {
-      IOUtils.closeStream(os);
-    }
-    return 0;
-  }
-
-  private int showTxns(Hive db, ShowTxnsDesc desc) throws HiveException {
-    // Call the metastore to get the currently queued and running compactions.
-    GetOpenTxnsInfoResponse rsp = db.showTransactions();
-
-    // Write the results into the file
-    DataOutputStream os = getOutputStream(desc.getResFile());
-    try {
-      // Write a header
-      os.writeBytes("Transaction ID");
-      os.write(separator);
-      os.writeBytes("Transaction State");
-      os.write(separator);
-      os.writeBytes("Started Time");
-      os.write(separator);
-      os.writeBytes("Last Heartbeat Time");
-      os.write(separator);
-      os.writeBytes("User");
-      os.write(separator);
-      os.writeBytes("Hostname");
-      os.write(terminator);
-
-      for (TxnInfo txn : rsp.getOpen_txns()) {
-        os.writeBytes(Long.toString(txn.getId()));
-        os.write(separator);
-        os.writeBytes(txn.getState().toString());
-        os.write(separator);
-        os.writeBytes(Long.toString(txn.getStartedTime()));
-        os.write(separator);
-        os.writeBytes(Long.toString(txn.getLastHeartbeatTime()));
-        os.write(separator);
-        os.writeBytes(txn.getUser());
-        os.write(separator);
-        os.writeBytes(txn.getHostname());
-        os.write(terminator);
-      }
-    } catch (IOException e) {
-      LOG.warn("show transactions: " + stringifyException(e));
-      return 1;
-    } finally {
-      IOUtils.closeStream(os);
-    }
-    return 0;
-  }
-
-  private int abortTxns(Hive db, AbortTxnsDesc desc) throws HiveException {
-    db.abortTransactions(desc.getTxnids());
-    return 0;
-  }
-
-   /**
+  /**
    * Lock the table/partition specified
    * @param db
    *

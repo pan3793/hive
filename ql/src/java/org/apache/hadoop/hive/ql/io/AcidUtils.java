@@ -21,6 +21,7 @@ package org.apache.hadoop.hive.ql.io;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
 
 /**
  * Utilities that are shared by all of the ACID input and output formats. They
@@ -178,34 +180,11 @@ public class AcidUtils {
    * @param directory the partition directory
    * @param options the options for writing the bucket
    * @return the filename that should store the bucket
+   * @deprecated AcidOutputFormat.Options has been removed; this method is no longer supported.
    */
-  public static Path createFilename(Path directory,
-                                    AcidOutputFormat.Options options) {
-    String subdir;
-    if (options.getOldStyle()) {
-      return new Path(directory, String.format(LEGACY_FILE_BUCKET_DIGITS,
-          options.getBucket()) + "_0");
-    } else if (options.isWritingBase()) {
-      subdir = BASE_PREFIX + String.format(DELTA_DIGITS,
-          options.getMaximumTransactionId());
-    } else if(options.getStatementId() == -1) {
-      //when minor compaction runs, we collapse per statement delta files inside a single
-      //transaction so we no longer need a statementId in the file name
-      subdir = options.isWritingDeleteDelta() ?
-          deleteDeltaSubdir(options.getMinimumTransactionId(),
-                            options.getMaximumTransactionId())
-          : deltaSubdir(options.getMinimumTransactionId(),
-                        options.getMaximumTransactionId());
-    } else {
-      subdir = options.isWritingDeleteDelta() ?
-          deleteDeltaSubdir(options.getMinimumTransactionId(),
-                            options.getMaximumTransactionId(),
-                            options.getStatementId())
-          : deltaSubdir(options.getMinimumTransactionId(),
-                        options.getMaximumTransactionId(),
-                        options.getStatementId());
-    }
-    return createBucketFile(new Path(directory, subdir), options.getBucket());
+  @Deprecated
+  public static Path createFilename(Path directory, Object options) {
+    return null;
   }
 
   /**
@@ -228,51 +207,13 @@ public class AcidUtils {
    * @param bucketFile the path to a bucket file
    * @param conf the configuration
    * @return the options used to create that filename
+   * @deprecated AcidOutputFormat.Options has been removed; this method is no longer supported.
    */
-  public static AcidOutputFormat.Options
+  @Deprecated
+  public static Object
                     parseBaseOrDeltaBucketFilename(Path bucketFile,
                                                    Configuration conf) {
-    AcidOutputFormat.Options result = new AcidOutputFormat.Options(conf);
-    String filename = bucketFile.getName();
-    if (ORIGINAL_PATTERN.matcher(filename).matches()) {
-      int bucket =
-          Integer.parseInt(filename.substring(0, filename.indexOf('_')));
-      result
-          .setOldStyle(true)
-          .minimumTransactionId(0)
-          .maximumTransactionId(0)
-          .bucket(bucket)
-          .writingBase(true);
-    } else if (filename.startsWith(BUCKET_PREFIX)) {
-      int bucket =
-          Integer.parseInt(filename.substring(filename.indexOf('_') + 1));
-      if (bucketFile.getParent().getName().startsWith(BASE_PREFIX)) {
-        result
-            .setOldStyle(false)
-            .minimumTransactionId(0)
-            .maximumTransactionId(parseBase(bucketFile.getParent()))
-            .bucket(bucket)
-            .writingBase(true);
-      } else if (bucketFile.getParent().getName().startsWith(DELTA_PREFIX)) {
-        ParsedDelta parsedDelta = parsedDelta(bucketFile.getParent(), DELTA_PREFIX);
-        result
-            .setOldStyle(false)
-            .minimumTransactionId(parsedDelta.minTransaction)
-            .maximumTransactionId(parsedDelta.maxTransaction)
-            .bucket(bucket);
-      } else if (bucketFile.getParent().getName().startsWith(DELETE_DELTA_PREFIX)) {
-        ParsedDelta parsedDelta = parsedDelta(bucketFile.getParent(), DELETE_DELTA_PREFIX);
-        result
-            .setOldStyle(false)
-            .minimumTransactionId(parsedDelta.minTransaction)
-            .maximumTransactionId(parsedDelta.maxTransaction)
-            .bucket(bucket);
-      }
-    } else {
-      result.setOldStyle(true).bucket(-1).minimumTransactionId(0)
-          .maximumTransactionId(0);
-    }
-    return result;
+    return null;
   }
 
   public enum Operation {
@@ -482,7 +423,7 @@ public class AcidUtils {
     Path getBaseDirectory();
 
     /**
-     * Get the list of original files.  Not {@code null}.
+     * Get the list of original files.  Not {@code null}.  Must be sorted.
      * @return the list of original files (eg. 000000_0)
      */
     List<HdfsFileStatusWithId> getOriginalFiles();
@@ -608,22 +549,11 @@ public class AcidUtils {
    * transaction id pairs.  Assumes {@code deltas} is sorted.
    * @param deltas
    * @return the list of transaction ids to serialize
+   * @deprecated AcidInputFormat.DeltaMetaData has been removed; this method is no longer supported.
    */
-  public static List<AcidInputFormat.DeltaMetaData> serializeDeltas(List<ParsedDelta> deltas) {
-    List<AcidInputFormat.DeltaMetaData> result = new ArrayList<>(deltas.size());
-    AcidInputFormat.DeltaMetaData last = null;
-    for(ParsedDelta parsedDelta : deltas) {
-      if(last != null && last.getMinTxnId() == parsedDelta.getMinTransaction() && last.getMaxTxnId() == parsedDelta.getMaxTransaction()) {
-        last.getStmtIds().add(parsedDelta.getStatementId());
-        continue;
-      }
-      last = new AcidInputFormat.DeltaMetaData(parsedDelta.getMinTransaction(), parsedDelta.getMaxTransaction(), new ArrayList<Integer>());
-      result.add(last);
-      if(parsedDelta.statementId >= 0) {
-        last.getStmtIds().add(parsedDelta.getStatementId());
-      }
-    }
-    return result;
+  @Deprecated
+  public static List<?> serializeDeltas(List<ParsedDelta> deltas) {
+    return null;
   }
 
   /**
@@ -634,19 +564,11 @@ public class AcidUtils {
    * @param root the root directory
    * @param deltas list of begin/end transaction id pairs
    * @return the list of delta paths
+   * @deprecated AcidInputFormat.DeltaMetaData has been removed; this method is no longer supported.
    */
-  public static Path[] deserializeDeltas(Path root, final List<AcidInputFormat.DeltaMetaData> deltas) throws IOException {
-    List<Path> results = new ArrayList<Path>(deltas.size());
-    for(AcidInputFormat.DeltaMetaData dmd : deltas) {
-      if(dmd.getStmtIds().isEmpty()) {
-        results.add(new Path(root, deltaSubdir(dmd.getMinTxnId(), dmd.getMaxTxnId())));
-        continue;
-      }
-      for(Integer stmtId : dmd.getStmtIds()) {
-        results.add(new Path(root, deltaSubdir(dmd.getMinTxnId(), dmd.getMaxTxnId(), stmtId)));
-      }
-    }
-    return results.toArray(new Path[results.size()]);
+  @Deprecated
+  public static Path[] deserializeDeltas(Path root, final List<?> deltas) throws IOException {
+    return null;
   }
 
   /**
@@ -657,19 +579,11 @@ public class AcidUtils {
    * @param root the root directory
    * @param deleteDeltas list of begin/end transaction id pairs
    * @return the list of delta paths
+   * @deprecated AcidInputFormat.DeltaMetaData has been removed; this method is no longer supported.
    */
-  public static Path[] deserializeDeleteDeltas(Path root, final List<AcidInputFormat.DeltaMetaData> deleteDeltas) throws IOException {
-    List<Path> results = new ArrayList<Path>(deleteDeltas.size());
-    for(AcidInputFormat.DeltaMetaData dmd : deleteDeltas) {
-      if(dmd.getStmtIds().isEmpty()) {
-        results.add(new Path(root, deleteDeltaSubdir(dmd.getMinTxnId(), dmd.getMaxTxnId())));
-        continue;
-      }
-      for(Integer stmtId : dmd.getStmtIds()) {
-        results.add(new Path(root, deleteDeltaSubdir(dmd.getMinTxnId(), dmd.getMaxTxnId(), stmtId)));
-      }
-    }
-    return results.toArray(new Path[results.size()]);
+  @Deprecated
+  public static Path[] deserializeDeleteDeltas(Path root, final List<?> deleteDeltas) throws IOException {
+    return null;
   }
 
   public static ParsedDelta parsedDelta(Path deltaDir) {
@@ -825,7 +739,7 @@ public class AcidUtils {
       // Okay, we're going to need these originals.  Recurse through them and figure out what we
       // really need.
       for (FileStatus origDir : originalDirectories) {
-        findOriginals(fs, origDir, original, useFileIds);
+        findOriginals(fs, origDir, original, useFileIds, ignoreEmptyFiles);
       }
     }
 
@@ -893,7 +807,20 @@ public class AcidUtils {
     final Path base = bestBase.status == null ? null : bestBase.status.getPath();
     LOG.debug("in directory " + directory.toUri().toString() + " base = " + base + " deltas = " +
         deltas.size());
-
+    /**
+     * If this sort order is changed and there are tables that have been converted to transactional
+     * and have had any update/delete/merge operations performed but not yet MAJOR compacted, it
+     * may result in data loss since it may change how
+     * {@link org.apache.hadoop.hive.ql.io.orc.OrcRawRecordMerger.OriginalReaderPair} assigns 
+     * {@link RecordIdentifier#rowId} for read (that have happened) and compaction (yet to happen).
+     */
+    Collections.sort(original, new Comparator<HdfsFileStatusWithId>() {
+      @Override
+      public int compare(HdfsFileStatusWithId o1, HdfsFileStatusWithId o2) {
+        //this does "Path.uri.compareTo(that.uri)"
+        return o1.getFileStatus().compareTo(o2.getFileStatus());
+      }
+    });
     return new Directory(){
 
       @Override
@@ -1011,7 +938,7 @@ public class AcidUtils {
    * @throws IOException
    */
   private static void findOriginals(FileSystem fs, FileStatus stat,
-      List<HdfsFileStatusWithId> original, Ref<Boolean> useFileIds) throws IOException {
+      List<HdfsFileStatusWithId> original, Ref<Boolean> useFileIds, boolean ignoreEmptyFiles) throws IOException {
     assert stat.isDir();
     List<HdfsFileStatusWithId> childrenWithId = null;
     Boolean val = useFileIds.value;
@@ -1031,18 +958,22 @@ public class AcidUtils {
     if (childrenWithId != null) {
       for (HdfsFileStatusWithId child : childrenWithId) {
         if (child.getFileStatus().isDir()) {
-          findOriginals(fs, child.getFileStatus(), original, useFileIds);
+          findOriginals(fs, child.getFileStatus(), original, useFileIds, ignoreEmptyFiles);
         } else {
-          original.add(child);
+          if(!ignoreEmptyFiles || child.getFileStatus().getLen() > 0) {
+            original.add(child);
+          }
         }
       }
     } else {
       List<FileStatus> children = HdfsUtils.listLocatedStatus(fs, stat.getPath(), hiddenFileFilter);
       for (FileStatus child : children) {
         if (child.isDir()) {
-          findOriginals(fs, child, original, useFileIds);
+          findOriginals(fs, child, original, useFileIds, ignoreEmptyFiles);
         } else {
-          original.add(createOriginalObj(null, child));
+          if(!ignoreEmptyFiles || child.getLen() > 0) {
+            original.add(createOriginalObj(null, child));
+          }
         }
       }
     }

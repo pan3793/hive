@@ -128,14 +128,4 @@ public class TestQBCompact {
     Assert.assertEquals(1, parts.size());
     Assert.assertEquals("today", parts.get("ds"));
   }
-
-  @Test
-  public void showCompactions() throws Exception {
-    parseAndAnalyze("show compactions");
-  }
-
-  @Test
-  public void showTxns() throws Exception {
-    parseAndAnalyze("show transactions");
-  }
 }

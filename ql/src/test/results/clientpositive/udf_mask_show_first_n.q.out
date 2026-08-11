@@ -38,11 +38,9 @@ STAGE PLANS:
         TableScan
           alias: _dummy_table
           Row Limit Per Split: 1
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
           Select Operator
             expressions: 'TestXxxxxx1000' (type: string)
             outputColumnNames: _col0
-            Statistics: Num rows: 1 Data size: 98 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink
 
 PREHOOK: query: select mask_show_first_n('TestString-123', 4, 'X', 'x', '0', ':'),

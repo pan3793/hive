@@ -307,7 +307,7 @@ public final class SemanticAnalyzerFactory {
       case HiveParser.TOK_UPDATE_TABLE:
       case HiveParser.TOK_DELETE_FROM:
       case HiveParser.TOK_MERGE:
-        return new UpdateDeleteSemanticAnalyzer(queryState);
+        throw new SemanticException("UPDATE/DELETE/MERGE not supported without ACID transactions");
 
       case HiveParser.TOK_START_TRANSACTION:
       case HiveParser.TOK_COMMIT:

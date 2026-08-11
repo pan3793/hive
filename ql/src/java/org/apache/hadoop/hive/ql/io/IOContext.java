@@ -48,7 +48,7 @@ public class IOContext {
   /**
    * supports {@link org.apache.hadoop.hive.ql.metadata.VirtualColumn#ROWID}
    */
-  private  RecordIdentifier ri;
+  private Object ri;
 
   public static enum Comparison {
     GREATER,
@@ -168,11 +168,11 @@ public class IOContext {
     this.genericUDFClassName = genericUDFClassName;
   }
 
-  public RecordIdentifier getRecordIdentifier() {
+  public Object getRecordIdentifier() {
     return this.ri;
   }
 
-  public void setRecordIdentifier(RecordIdentifier ri) {
+  public void setRecordIdentifier(Object ri) {
     this.ri = ri;
   }
 

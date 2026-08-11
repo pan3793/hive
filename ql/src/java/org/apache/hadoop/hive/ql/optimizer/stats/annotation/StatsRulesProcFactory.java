@@ -127,8 +127,6 @@ public class StatsRulesProcFactory {
       Table table = tsop.getConf().getTableMetadata();
       if (table == null || SemanticAnalyzer.DUMMY_DATABASE.equals(table.getDbName())
           || SemanticAnalyzer.DUMMY_TABLE.equals(table.getTableName())) {
-        // The dummy table is a virtual in-memory table with no metastore metadata;
-        // there is nothing to collect statistics for.
         return null;
       }
 

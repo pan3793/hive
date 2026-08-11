@@ -236,13 +236,10 @@ STAGE PLANS:
           TableScan
             alias: _dummy_table
             Row Limit Per Split: 1
-            Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
             Select Operator
-              Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
               Reduce Output Operator
                 key expressions: 1 (type: int)
                 sort order: +
-                Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
       Map Vectorization:
           enabled: false
 #### A masked pattern was here ####
@@ -252,7 +249,6 @@ STAGE PLANS:
           enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
           Group By Operator
             aggregations: count(1)
             Group By Vectorization:
@@ -261,7 +257,6 @@ STAGE PLANS:
                 projectedOutputColumns: null
             mode: hash
             outputColumnNames: _col0
-            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
             File Output Operator
               compressed: false
               table:
@@ -283,7 +278,6 @@ STAGE PLANS:
                   native: false
                   nativeConditionsMet: hive.vectorized.execution.reducesink.new.enabled IS true, No TopN IS true, No DISTINCT columns IS true, BinarySortableSerDe for keys IS true, LazyBinarySerDe for values IS true
                   nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
-              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
               value expressions: _col0 (type: bigint)
       Execution mode: vectorized
       Map Vectorization:
@@ -307,10 +301,8 @@ STAGE PLANS:
               projectedOutputColumns: null
           mode: mergepartial
           outputColumnNames: _col0
-          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
           File Output Operator
             compressed: false
-            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
             table:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -361,14 +353,11 @@ STAGE PLANS:
           TableScan
             alias: _dummy_table
             Row Limit Per Split: 1
-            Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: COMPLETE
             Select Operator
               expressions: 1 (type: int)
               outputColumnNames: _col0
-              Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
               File Output Operator
                 compressed: false
-                Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
                 table:
                     input format: org.apache.hadoop.mapred.TextInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat

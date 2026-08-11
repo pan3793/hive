@@ -74,7 +74,6 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.authorization.AuthorizationParseUtils;
 import org.apache.hadoop.hive.ql.parse.authorization.HiveAuthorizationTaskFactory;
 import org.apache.hadoop.hive.ql.parse.authorization.HiveAuthorizationTaskFactoryImpl;
-import org.apache.hadoop.hive.ql.plan.AbortTxnsDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc;
 import org.apache.hadoop.hive.ql.plan.AddPartitionDesc.OnePartitionDesc;
 import org.apache.hadoop.hive.ql.plan.AlterDatabaseDesc;
@@ -113,7 +112,6 @@ import org.apache.hadoop.hive.ql.plan.PrincipalDesc;
 import org.apache.hadoop.hive.ql.plan.RenamePartitionDesc;
 import org.apache.hadoop.hive.ql.plan.RoleDDLDesc;
 import org.apache.hadoop.hive.ql.plan.ShowColumnsDesc;
-import org.apache.hadoop.hive.ql.plan.ShowCompactionsDesc;
 import org.apache.hadoop.hive.ql.plan.ShowConfDesc;
 import org.apache.hadoop.hive.ql.plan.ShowCreateDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.ShowCreateTableDesc;
@@ -126,7 +124,6 @@ import org.apache.hadoop.hive.ql.plan.ShowPartitionsDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTableStatusDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTablesDesc;
 import org.apache.hadoop.hive.ql.plan.ShowTblPropertiesDesc;
-import org.apache.hadoop.hive.ql.plan.ShowTxnsDesc;
 import org.apache.hadoop.hive.ql.plan.StatsWork;
 import org.apache.hadoop.hive.ql.plan.SwitchDatabaseDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
@@ -2470,35 +2467,15 @@ public class DDLSemanticAnalyzer extends BaseSemanticAnalyzer {
    * @throws SemanticException Parsing failed.
    */
   private void analyzeShowCompactions(ASTNode ast) throws SemanticException {
-    ShowCompactionsDesc desc = new ShowCompactionsDesc(ctx.getResFile());
-    rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(), desc), conf));
-    setFetchTask(createFetchTask(desc.getSchema()));
+    throw new SemanticException("SHOW COMPACTIONS not supported without ACID transactions");
   }
 
-  /**
-   * Add a task to execute "SHOW COMPACTIONS"
-   * @param ast The parsed command tree.
-   * @throws SemanticException Parsing failed.
-   */
   private void analyzeShowTxns(ASTNode ast) throws SemanticException {
-    ShowTxnsDesc desc = new ShowTxnsDesc(ctx.getResFile());
-    rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(), desc), conf));
-    setFetchTask(createFetchTask(desc.getSchema()));
+    throw new SemanticException("SHOW TRANSACTIONS not supported without ACID transactions");
   }
 
-  /**
-   * Add a task to execute "ABORT TRANSACTIONS"
-   * @param ast The parsed command tree
-   * @throws SemanticException Parsing failed
-   */
   private void analyzeAbortTxns(ASTNode ast) throws SemanticException {
-    List<Long> txnids = new ArrayList<Long>();
-    int numChildren = ast.getChildCount();
-    for (int i = 0; i < numChildren; i++) {
-      txnids.add(Long.parseLong(ast.getChild(i).getText()));
-    }
-    AbortTxnsDesc desc = new AbortTxnsDesc(txnids);
-    rootTasks.add(TaskFactory.get(new DDLWork(getInputs(), getOutputs(), desc), conf));
+    throw new SemanticException("ABORT TRANSACTIONS not supported without ACID transactions");
   }
 
    /**

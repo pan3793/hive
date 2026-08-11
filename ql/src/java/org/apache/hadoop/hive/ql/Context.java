@@ -126,9 +126,8 @@ public class Context {
 
   private final String stagingDir;
 
-  private Heartbeater heartbeater;
-
   private boolean skipTableMasking;
+  private Heartbeater heartbeater;
 
   // Identify whether the query involves an UPDATE, DELETE or MERGE
   private boolean isUpdateDeleteMerge;
@@ -933,18 +932,18 @@ public class Context {
     return opContext;
   }
 
+  public void checkHeartbeaterLockException() throws LockException {
+    if (getHeartbeater() != null && getHeartbeater().getLockException() != null) {
+      throw getHeartbeater().getLockException();
+    }
+  }
+
   public Heartbeater getHeartbeater() {
     return heartbeater;
   }
 
   public void setHeartbeater(Heartbeater heartbeater) {
     this.heartbeater = heartbeater;
-  }
-
-  public void checkHeartbeaterLockException() throws LockException {
-    if (getHeartbeater() != null && getHeartbeater().getLockException() != null) {
-      throw getHeartbeater().getLockException();
-    }
   }
 
   public boolean isSkipTableMasking() {

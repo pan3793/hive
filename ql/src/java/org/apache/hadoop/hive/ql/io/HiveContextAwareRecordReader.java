@@ -115,13 +115,11 @@ public abstract class HiveContextAwareRecordReader<K, V> implements RecordReader
     try {
       boolean retVal = doNext(key, value);
       if(retVal) {
-        if(key instanceof RecordIdentifier) {
-          //supports AcidInputFormat which uses the KEY pass ROW__ID info
-          ioCxtRef.setRecordIdentifier((RecordIdentifier)key);
+        if(key instanceof org.apache.hadoop.hive.ql.io.RecordIdentifier) {
+          ioCxtRef.setRecordIdentifier(key);
         }
-        else if(recordReader instanceof AcidInputFormat.AcidRecordReader) {
-          //supports AcidInputFormat which do not use the KEY pass ROW__ID info
-          ioCxtRef.setRecordIdentifier(((AcidInputFormat.AcidRecordReader) recordReader).getRecordIdentifier());
+        else {
+          ioCxtRef.setRecordIdentifier(null);
         }
       }
       return retVal;

@@ -216,27 +216,10 @@ public final class TransactionalValidationListener extends MetaStorePreEventList
   }
 
   // Check if table is bucketed and InputFormatClass/OutputFormatClass should implement
-  // AcidInputFormat/AcidOutputFormat
+  // AcidInputFormat/AcidOutputFormat have been removed; ACID execution layer
+  // is no longer available, so no table can conform to ACID requirements.
   private boolean conformToAcid(Table table) throws MetaException {
-    StorageDescriptor sd = table.getSd();
-    if (sd.getBucketColsSize() < 1) {
-      return false;
-    }
-
-    try {
-      Class inputFormatClass = Class.forName(sd.getInputFormat());
-      Class outputFormatClass = Class.forName(sd.getOutputFormat());
-
-      if (inputFormatClass == null || outputFormatClass == null ||
-          !Class.forName("org.apache.hadoop.hive.ql.io.AcidInputFormat").isAssignableFrom(inputFormatClass) ||
-          !Class.forName("org.apache.hadoop.hive.ql.io.AcidOutputFormat").isAssignableFrom(outputFormatClass)) {
-        return false;
-      }
-    } catch (ClassNotFoundException e) {
-      throw new MetaException("Invalid input/output format for table");
-    }
-
-    return true;
+    return false;
   }
 
   private void initializeTransactionalProperties(Table table) throws MetaException {

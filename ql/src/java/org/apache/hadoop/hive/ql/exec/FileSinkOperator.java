@@ -34,9 +34,7 @@ import org.apache.hadoop.hive.ql.io.HiveFileFormatUtils;
 import org.apache.hadoop.hive.ql.io.HiveKey;
 import org.apache.hadoop.hive.ql.io.HiveOutputFormat;
 import org.apache.hadoop.hive.ql.io.HivePartitioner;
-import org.apache.hadoop.hive.ql.io.RecordUpdater;
 import org.apache.hadoop.hive.ql.io.StatsProvidingRecordWriter;
-import org.apache.hadoop.hive.ql.io.StreamingOutputFormat;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.HiveFatalException;
 import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
@@ -147,9 +145,8 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
     Path[] outPaths;
     Path[] finalPaths;
     RecordWriter[] outWriters;
-    RecordUpdater[] updaters;
     Stat stat;
-    int acidLastBucket = -1;
+    int acidLastBucket = Integer.MIN_VALUE;
     int acidFileOffset = -1;
 
     public FSPaths(Path specPath) {
@@ -158,7 +155,6 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
       outPaths = new Path[numFiles];
       finalPaths = new Path[numFiles];
       outWriters = new RecordWriter[numFiles];
-      updaters = new RecordUpdater[numFiles];
       if (isDebugEnabled) {
         LOG.debug("Created slots for  " + numFiles);
       }
@@ -193,15 +189,6 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
             throw new HiveException(e);
           }
         }
-      }
-      try {
-        for (int i = 0; i < updaters.length; i++) {
-          if (updaters[i] != null) {
-            updaters[i].close(abort);
-          }
-        }
-      } catch (IOException e) {
-        throw new HiveException(e);
       }
     }
 
@@ -622,13 +609,6 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
         statsFromRecordWriter[filesIdx] = fsp.outWriters[filesIdx] instanceof
             StatsProvidingRecordWriter;
         // increment the CREATED_FILES counter
-      } else if (conf.getWriteType() == AcidUtils.Operation.INSERT) {
-        // Only set up the updater for insert.  For update and delete we don't know unitl we see
-        // the row.
-        ObjectInspector inspector = bDynParts ? subSetOI : outputObjInspector;
-        int acidBucketNum = Integer.parseInt(Utilities.getTaskIdFromFilename(taskId));
-        fsp.updaters[filesIdx] = HiveFileFormatUtils.getAcidRecordUpdater(jc, conf.getTableInfo(),
-            acidBucketNum, conf, fsp.outPaths[filesIdx], inspector, reporter, -1);
       }
       if (reporter != null) {
         reporter.incrCounter(HiveConf.getVar(hconf, HiveConf.ConfVars.HIVECOUNTERGROUP),
@@ -760,37 +740,8 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
       // pass the row rather than recordValue.
       if (conf.getWriteType() == AcidUtils.Operation.NOT_ACID) {
         rowOutWriters[writerOffset].write(recordValue);
-      } else if (conf.getWriteType() == AcidUtils.Operation.INSERT) {
-        fpaths.updaters[writerOffset].insert(conf.getTransactionId(), row);
       } else {
-        // TODO I suspect we could skip much of the stuff above this in the function in the case
-        // of update and delete.  But I don't understand all of the side effects of the above
-        // code and don't want to skip over it yet.
-
-        // Find the bucket id, and switch buckets if need to
-        ObjectInspector rowInspector = bDynParts ? subSetOI : outputObjInspector;
-        Object recId = ((StructObjectInspector)rowInspector).getStructFieldData(row, recIdField);
-        int bucketNum =
-            bucketInspector.get(recIdInspector.getStructFieldData(recId, bucketField));
-        if (fpaths.acidLastBucket != bucketNum) {
-          fpaths.acidLastBucket = bucketNum;
-          // Switch files
-          fpaths.updaters[conf.getDpSortState().equals(DPSortState.PARTITION_BUCKET_SORTED) ? 0 : ++fpaths.acidFileOffset] = HiveFileFormatUtils.getAcidRecordUpdater(
-              jc, conf.getTableInfo(), bucketNum, conf, fpaths.outPaths[conf.getDpSortState().equals(DPSortState.PARTITION_BUCKET_SORTED) ? 0 :fpaths.acidFileOffset],
-              rowInspector, reporter, 0);
-          if (isDebugEnabled) {
-            LOG.debug("Created updater for bucket number " + bucketNum + " using file " +
-                fpaths.outPaths[conf.getDpSortState().equals(DPSortState.PARTITION_BUCKET_SORTED) ? 0 :fpaths.acidFileOffset]);
-          }
-        }
-
-        if (conf.getWriteType() == AcidUtils.Operation.UPDATE) {
-          fpaths.updaters[conf.getDpSortState().equals(DPSortState.PARTITION_BUCKET_SORTED) ? 0 :fpaths.acidFileOffset].update(conf.getTransactionId(), row);
-        } else if (conf.getWriteType() == AcidUtils.Operation.DELETE) {
-          fpaths.updaters[conf.getDpSortState().equals(DPSortState.PARTITION_BUCKET_SORTED) ? 0 :fpaths.acidFileOffset].delete(conf.getTransactionId(), row);
-        } else {
-          throw new HiveException("Unknown write type " + conf.getWriteType().toString());
-        }
+        throw new HiveException("Non-ACID write is not supported for operation type " + conf.getWriteType());
       }
     } catch (IOException e) {
       throw new HiveException(e);
@@ -800,11 +751,6 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
   }
 
   protected boolean areAllTrue(boolean[] statsFromRW) {
-    // If we are doing an acid operation they will always all be true as RecordUpdaters always
-    // collect stats
-    if (conf.getWriteType() != AcidUtils.Operation.NOT_ACID) {
-      return true;
-    }
     for(boolean b : statsFromRW) {
       if (!b) {
         return false;
@@ -957,8 +903,6 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
               if (outWriter != null) {
                 stats = ((StatsProvidingRecordWriter) outWriter).getStats();
               }
-            } else if (prevFsp.updaters[0] != null) {
-              stats = prevFsp.updaters[0].getStats();
             }
             if (stats != null) {
                 prevFsp.stat.addToStat(StatsSetupConst.RAW_DATA_SIZE, stats.getRawDataSize());
@@ -1020,7 +964,7 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
           HiveConf.getVar(hconf, ConfVars.HIVE_EXECUTION_ENGINE));
       if (skipFiles) {
         Class<?> clazz = conf.getTableInfo().getOutputFileFormatClass();
-        skipFiles = !StreamingOutputFormat.class.isAssignableFrom(clazz);
+        skipFiles = false;
       }
       if (!skipFiles) {
         createBucketFiles(fsp);
@@ -1053,25 +997,13 @@ public class FileSinkOperator extends TerminalOperator<FileSinkDesc> implements
         // record writer already gathers the statistics, it can simply return the
         // accumulated statistics which will be aggregated in case of spray writers
         if (conf.isGatherStats() && isCollectRWStats) {
-          if (conf.getWriteType() == AcidUtils.Operation.NOT_ACID) {
-            for (int idx = 0; idx < fsp.outWriters.length; idx++) {
-              RecordWriter outWriter = fsp.outWriters[idx];
-              if (outWriter != null) {
-                SerDeStats stats = ((StatsProvidingRecordWriter) outWriter).getStats();
-                if (stats != null) {
-                  fsp.stat.addToStat(StatsSetupConst.RAW_DATA_SIZE, stats.getRawDataSize());
-                  fsp.stat.addToStat(StatsSetupConst.ROW_COUNT, stats.getRowCount());
-                }
-              }
-            }
-          } else {
-            for (int i = 0; i < fsp.updaters.length; i++) {
-              if (fsp.updaters[i] != null) {
-                SerDeStats stats = fsp.updaters[i].getStats();
-                if (stats != null) {
-                  fsp.stat.addToStat(StatsSetupConst.RAW_DATA_SIZE, stats.getRawDataSize());
-                  fsp.stat.addToStat(StatsSetupConst.ROW_COUNT, stats.getRowCount());
-                }
+          for (int idx = 0; idx < fsp.outWriters.length; idx++) {
+            RecordWriter outWriter = fsp.outWriters[idx];
+            if (outWriter != null) {
+              SerDeStats stats = ((StatsProvidingRecordWriter) outWriter).getStats();
+              if (stats != null) {
+                fsp.stat.addToStat(StatsSetupConst.RAW_DATA_SIZE, stats.getRawDataSize());
+                fsp.stat.addToStat(StatsSetupConst.ROW_COUNT, stats.getRowCount());
               }
             }
           }

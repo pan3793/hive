@@ -306,50 +306,6 @@ public final class HiveFileFormatUtils {
     return (HiveOutputFormat<?, ?>) outputFormat;
   }
 
-  public static RecordUpdater getAcidRecordUpdater(JobConf jc, TableDesc tableInfo, int bucket,
-                                                   FileSinkDesc conf, Path outPath,
-                                                   ObjectInspector inspector,
-                                                   Reporter reporter, int rowIdColNum)
-      throws HiveException, IOException {
-    HiveOutputFormat<?, ?> hiveOutputFormat = getHiveOutputFormat(jc, tableInfo);
-    AcidOutputFormat<?, ?> acidOutputFormat = null;
-    if (hiveOutputFormat instanceof AcidOutputFormat) {
-      acidOutputFormat = (AcidOutputFormat)hiveOutputFormat;
-    } else {
-      throw new HiveException("Unable to create RecordUpdater for HiveOutputFormat that does not " +
-          "implement AcidOutputFormat");
-    }
-    // TODO not 100% sure about this.  This call doesn't set the compression type in the conf
-    // file the way getHiveRecordWriter does, as ORC appears to read the value for itself.  Not
-    // sure if this is correct or not.
-    return getRecordUpdater(jc, acidOutputFormat,
-        bucket, inspector, tableInfo.getProperties(), outPath, reporter, rowIdColNum, conf);
-  }
-
-
-  private static RecordUpdater getRecordUpdater(JobConf jc,
-                                                AcidOutputFormat<?, ?> acidOutputFormat,
-                                                int bucket,
-                                                ObjectInspector inspector,
-                                                Properties tableProp,
-                                                Path outPath,
-                                                Reporter reporter,
-                                                int rowIdColNum,
-                                                FileSinkDesc conf) throws IOException {
-    return acidOutputFormat.getRecordUpdater(outPath, new AcidOutputFormat.Options(jc)
-        .isCompressed(conf.getCompressed())
-        .tableProperties(tableProp)
-        .reporter(reporter)
-        .writingBase(false)
-        .minimumTransactionId(conf.getTransactionId())
-        .maximumTransactionId(conf.getTransactionId())
-        .bucket(bucket)
-        .inspector(inspector)
-        .recordIdColumn(rowIdColNum)
-        .statementId(conf.getStatementId())
-        .finalDestination(conf.getDestPath()));
-  }
-
   public static PartitionDesc getPartitionDescFromPathRecursively(
       Map<Path, PartitionDesc> pathToPartitionInfo, Path dir,
       Map<Map<Path, PartitionDesc>, Map<Path, PartitionDesc>> cacheMap)

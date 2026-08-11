@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hive.ql.lockmgr.DbTxnManager;
 import org.apache.hadoop.hive.ql.plan.Explain.Level;
 
 
