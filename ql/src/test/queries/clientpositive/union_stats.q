@@ -1,3 +1,4 @@
+-- SORT_QUERY_RESULTS
 explain extended create table t as select * from src union all select * from src;
 
 create table t as select * from src union all select * from src;

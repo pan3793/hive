@@ -1,3 +1,4 @@
+-- SORT_QUERY_RESULTS
 set hive.explain.user=true;
 create table bug_201_input_a (
        userid                                       int

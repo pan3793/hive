@@ -135,8 +135,8 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@l_test1
 POSTHOOK: Input: default@l_test2
 #### A masked pattern was here ####
-2	table_2	2016-08-11
 1	table_1	2016-08-11
+2	table_2	2016-08-11
 PREHOOK: query: explain
 select 
     id,
@@ -256,8 +256,8 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@l_test1
 POSTHOOK: Input: default@l_test2
 #### A masked pattern was here ####
-2	999	table_2	2016-08-11
 1	999	table_1	2016-08-11
+2	999	table_2	2016-08-11
 PREHOOK: query: explain
 select 
     id,
@@ -385,8 +385,8 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@l_test1
 POSTHOOK: Input: default@l_test2
 #### A masked pattern was here ####
-2	999	666	table_2	2016-08-11
 1	999	666	table_1	2016-08-11
+2	999	666	table_2	2016-08-11
 PREHOOK: query: explain
 select 
     id,
@@ -514,5 +514,5 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@l_test1
 POSTHOOK: Input: default@l_test2
 #### A masked pattern was here ####
-2	999	table_2	2016-08-11	2016-08-11
 1	999	table_1	2016-08-11	2016-11-11
+2	999	table_2	2016-08-11	2016-08-11

@@ -1,3 +1,4 @@
+-- SORT_QUERY_RESULTS
 create table l_test1 (id bigint,val string,trans_date string) row format delimited fields terminated by ' ' ;
 insert into l_test1 values (1, "table_1", "2016-08-11");
 

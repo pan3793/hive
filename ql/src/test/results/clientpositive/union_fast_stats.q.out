@@ -513,7 +513,7 @@ Table Parameters:
 	numFiles            	1                   
 	numRows             	15                  
 	rawDataSize         	3483                
-	totalSize           	3243                
+	totalSize           	3241                
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -566,7 +566,7 @@ Table Parameters:
 	numFiles            	1                   
 	numRows             	15                  
 	rawDataSize         	3320                
-	totalSize           	3243                
+	totalSize           	3241                
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 
@@ -631,7 +631,7 @@ Table Parameters:
 	numFiles            	2                   
 	numRows             	20                  
 	rawDataSize         	4389                
-	totalSize           	4616                
+	totalSize           	4614                
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 

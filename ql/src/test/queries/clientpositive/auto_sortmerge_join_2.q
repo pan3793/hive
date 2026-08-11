@@ -1,6 +1,13 @@
+-- SORT_QUERY_RESULTS
 set hive.strict.checks.bucketing=false;
 
 set hive.mapred.mode=nonstrict;
+-- disable the local-task heap-percentage check: uncollected garbage in
+-- the shared test JVM can push usage past any threshold, causing a
+-- spurious MapredLocalTask failure + BackupTask fallback in the output;
+-- the followby.gby variant applies when the join feeds a group by
+set hive.mapjoin.localtask.max.memory.usage=1.0;
+set hive.mapjoin.followby.gby.localtask.max.memory.usage=1.0;
 -- small 1 part, 4 bucket & big 2 part, 2 bucket
 CREATE TABLE bucket_small (key string, value string) partitioned by (ds string) CLUSTERED BY (key) SORTED BY (key) INTO 4 BUCKETS STORED AS TEXTFILE;
 load data local inpath '../../data/files/smallsrcsortbucket1outof4.txt' INTO TABLE bucket_small partition(ds='2008-04-08');

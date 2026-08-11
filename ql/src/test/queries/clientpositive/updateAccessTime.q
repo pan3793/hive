@@ -1,22 +1,24 @@
 set hive.mapred.mode=nonstrict;
 drop table tstsrc;
-
-set hive.exec.pre.hooks = org.apache.hadoop.hive.ql.hooks.PreExecutePrinter,org.apache.hadoop.hive.ql.hooks.EnforceReadOnlyTables,org.apache.hadoop.hive.ql.hooks.UpdateInputAccessTimeHook$PreExec;
-
-create table tstsrc as select * from src;
-desc extended tstsrc;
-select count(1) from tstsrc;
-desc extended tstsrc;
-drop table tstsrc;
-
 drop table tstsrcpart;
+
+-- build the test copies BEFORE enabling UpdateInputAccessTimeHook:
+-- reading src/srcpart with the hook active alters them, which wipes the
+-- column stats the init script computed and other tests rely on
+create table tstsrc as select * from src;
 create table tstsrcpart like srcpart;
 
 set hive.exec.dynamic.partition.mode=nonstrict;
 set hive.exec.dynamic.partition=true;
 
-
 insert overwrite table tstsrcpart partition (ds, hr) select key, value, ds, hr from srcpart;
+
+set hive.exec.pre.hooks = org.apache.hadoop.hive.ql.hooks.PreExecutePrinter,org.apache.hadoop.hive.ql.hooks.EnforceReadOnlyTables,org.apache.hadoop.hive.ql.hooks.UpdateInputAccessTimeHook$PreExec;
+
+desc extended tstsrc;
+select count(1) from tstsrc;
+desc extended tstsrc;
+drop table tstsrc;
 
 desc extended tstsrcpart;
 desc extended tstsrcpart partition (ds='2008-04-08', hr='11');

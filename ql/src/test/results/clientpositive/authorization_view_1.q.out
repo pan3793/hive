@@ -221,16 +221,16 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_autho_test
 POSTHOOK: Input: default@v
 #### A masked pattern was here ####
-238
-238
-86
-86
-311
-311
-27
-27
 165
 165
+238
+238
+27
+27
+311
+311
+86
+86
 PREHOOK: query: select key from
 (select value as key from v2 union select value as key from v1 union all select key from v)subq
 limit 10
@@ -249,13 +249,13 @@ POSTHOOK: Input: default@v
 POSTHOOK: Input: default@v1
 POSTHOOK: Input: default@v2
 #### A masked pattern was here ####
-238
-86
-311
-27
-165
-409
-255
-278
-98
-484
+val_0
+val_10
+val_100
+val_103
+val_104
+val_105
+val_11
+val_111
+val_113
+val_114

@@ -1,3 +1,4 @@
+-- SORT_QUERY_RESULTS
 set hive.strict.checks.cartesian.product=false;
 set hive.auto.convert.join=true;
 set hive.auto.convert.sortmerge.join=true;

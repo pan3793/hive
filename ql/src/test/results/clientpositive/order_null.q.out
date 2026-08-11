@@ -54,32 +54,32 @@ POSTHOOK: type: QUERY
 POSTHOOK: Output: default@src_null
 POSTHOOK: Lineage: src_null.a EXPRESSION [(values__tmp__table__6)values__tmp__table__6.FieldSchema(name:tmp_values_col1, type:string, comment:), ]
 POSTHOOK: Lineage: src_null.b SIMPLE [(values__tmp__table__6)values__tmp__table__6.FieldSchema(name:tmp_values_col2, type:string, comment:), ]
-PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc
+PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc, b asc
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_null
 #### A masked pattern was here ####
-POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc
+POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc, b asc
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_null
 #### A masked pattern was here ####
 NULL	NULL
 1	A
-2	B
-2	A
 2	NULL
+2	A
+2	B
 3	NULL
-PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc
+PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc, b asc
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_null
 #### A masked pattern was here ####
-POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc
+POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc, b asc
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_null
 #### A masked pattern was here ####
 3	NULL
-2	B
-2	A
 2	NULL
+2	A
+2	B
 1	A
 NULL	NULL
 PREHOOK: query: SELECT x.* FROM src_null x ORDER BY b asc, a asc nulls last
@@ -110,33 +110,33 @@ POSTHOOK: Input: default@src_null
 NULL	NULL
 2	NULL
 3	NULL
-PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc nulls first
+PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc nulls first, b asc
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_null
 #### A masked pattern was here ####
-POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc nulls first
+POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a asc nulls first, b asc
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_null
 #### A masked pattern was here ####
 NULL	NULL
 1	A
-2	B
-2	A
 2	NULL
+2	A
+2	B
 3	NULL
-PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc nulls first
+PREHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc nulls first, b asc
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_null
 #### A masked pattern was here ####
-POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc nulls first
+POSTHOOK: query: SELECT x.* FROM src_null x ORDER BY a desc nulls first, b asc
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src_null
 #### A masked pattern was here ####
 NULL	NULL
 3	NULL
-2	B
-2	A
 2	NULL
+2	A
+2	B
 1	A
 PREHOOK: query: SELECT x.* FROM src_null x ORDER BY b asc nulls last, a
 PREHOOK: type: QUERY

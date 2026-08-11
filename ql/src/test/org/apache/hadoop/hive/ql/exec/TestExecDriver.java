@@ -141,7 +141,11 @@ public class TestExecDriver extends TestCase {
         db.dropTable(MetaStoreUtils.DEFAULT_DATABASE_NAME, src, true, true);
         db.createTable(src, cols, null, TextInputFormat.class,
             HiveIgnoreKeyTextOutputFormat.class);
-        db.loadTable(hadoopDataFile[i], src, false, true, false, false, false);
+        // replace=true: the metastore is in-memory Derby, so a table dir left
+        // in the shared warehouse by another test JVM (TestOperators triggers
+        // this class's static setup) survives dropTable; an appending load
+        // would then collide into kv1_copy_1.txt and double the data
+        db.loadTable(hadoopDataFile[i], src, true, true, false, false, false);
         i++;
       }
 

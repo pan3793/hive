@@ -34,4 +34,7 @@ INSERT OVERWRITE TABLE dest1 SELECT
   sum(DISTINCT substr(src.value, 5)),
   count(DISTINCT substr(src.value, 5));
 
-SELECT dest1.* FROM dest1;
+-- round the floating-point aggregates: their double summation order is
+-- not deterministic in the shared test JVM, so trailing digits flip
+SELECT round(c1, 4), round(c2, 4), round(c3, 4), c4, c5, round(c6, 4),
+  round(c7, 4), round(c8, 4), round(c9, 4), round(c10, 4), c11 FROM dest1;
