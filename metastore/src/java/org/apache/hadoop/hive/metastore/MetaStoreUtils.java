@@ -1331,7 +1331,10 @@ public class MetaStoreUtils {
     while (true) {
       try {
         Socket socket = new Socket();
-        socket.connect(new InetSocketAddress(port), 5000);
+        // Connect to an explicit host (aligned with HIVE-20794): macOS
+        // rejects connects to the wildcard address with EADDRNOTAVAIL,
+        // Linux treats it as loopback
+        socket.connect(new InetSocketAddress("localhost", port), 5000);
         socket.close();
         return;
       } catch (Exception e) {
