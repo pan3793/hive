@@ -907,13 +907,32 @@ public class QTestUtil {
       if(cliDriver == null) {
         cliDriver = new CliDriver();
       }
-      SessionState.get().getConf().setBoolean("hive.test.shutdown.phase", true);
-      int result = cliDriver.processLine(cleanupCommands);
-      if (result != 0) {
-        LOG.error("Failed during cleanup processLine with code={}. Ignoring", result);
-        // TODO Convert this to an Assert.fail once HIVE-14682 is fixed
+      // Redirect the session output to stdout while running the cleanup script, so that
+      // cleanup output does not pollute the qfile-results file of the last test.
+      SessionState ss = SessionState.get();
+      PrintStream oldOut = ss == null ? null : ss.out;
+      PrintStream oldErr = ss == null ? null : ss.err;
+      PrintStream oldInfo = ss == null ? null : ss.info;
+      if (ss != null && ss.out != null && ss.out != System.out) {
+        ss.out = System.out;
+        ss.err = System.out;
+        ss.info = System.out;
       }
-      SessionState.get().getConf().setBoolean("hive.test.shutdown.phase", false);
+      try {
+        SessionState.get().getConf().setBoolean("hive.test.shutdown.phase", true);
+        int result = cliDriver.processLine(cleanupCommands);
+        if (result != 0) {
+          LOG.error("Failed during cleanup processLine with code={}. Ignoring", result);
+          // TODO Convert this to an Assert.fail once HIVE-14682 is fixed
+        }
+        SessionState.get().getConf().setBoolean("hive.test.shutdown.phase", false);
+      } finally {
+        if (ss != null) {
+          ss.out = oldOut;
+          ss.err = oldErr;
+          ss.info = oldInfo;
+        }
+      }
     } else {
       LOG.info("No cleanup script detected. Skipping.");
     }
