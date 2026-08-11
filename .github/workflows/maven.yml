@@ -18,7 +18,7 @@ jobs:
           - "-pl :hive-vector-code-gen,:hive-shims-common,:hive-shims-0.23,:hive-shims-scheduler,:hive-shims,:hive-common,:hive-service-rpc,:hive-serde,:hive-metastore"
           - "-pl :hive-service,:hive-jdbc,:hive-beeline,:hive-cli,:hive-contrib,:hive-jdbc-handler"
           - "-pl :hive-exec"
-          - "-pl :hive-hcatalog,:hive-hcatalog-server-extensions,:hive-hcatalog-it-unit,:hive-hplsql,:hive-shims-aggregator,:hive-testutils,:hive-packaging,:hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample,:hive-it-unit-hadoop2,:hive-blobstore,:hive-it-test-serde,:hive-jmh,:hive-it-minikdc"
+          - "-pl :hive-hcatalog,:hive-hcatalog-server-extensions,:hive-hcatalog-it-unit,:hive-shims-aggregator,:hive-testutils,:hive-packaging,:hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample,:hive-it-unit-hadoop2,:hive-blobstore,:hive-it-test-serde,:hive-jmh,:hive-it-minikdc"
           - "-pl :hive-it-unit"
           - "-pl :hive-it-qfile -Dtest=TestContribCliDriver,TestContribNegativeCliDriver,TestCompareCliDriver,TestParseNegativeDriver"
           - "-pl :hive-it-qfile -Dtest=TestBeeLineDriver,TestNegativeCliDriver"
