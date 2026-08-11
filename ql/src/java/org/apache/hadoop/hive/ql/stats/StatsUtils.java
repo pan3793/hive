@@ -107,7 +107,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.hive.serde2.typeinfo.VarcharTypeInfo;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hive.common.util.AnnotationUtils;
-import org.apache.tez.mapreduce.hadoop.MRJobConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1592,7 +1591,7 @@ public class StatsUtils {
   public static long getAvailableMemory(Configuration conf) {
     int memory = HiveConf.getIntVar(conf, HiveConf.ConfVars.HIVETEZCONTAINERSIZE);
     if (memory <= 0) {
-      memory = conf.getInt(MRJobConfig.MAP_MEMORY_MB, MRJobConfig.DEFAULT_MAP_MEMORY_MB);
+      memory = conf.getInt("mapreduce.map.memory.mb", 1024);
       if (memory <= 0) {
         memory = 1024;
       }

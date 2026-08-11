@@ -30,7 +30,6 @@ import org.apache.hadoop.hive.ql.exec.SerializationUtilities;
 import org.apache.hadoop.hive.ql.exec.StatsTask;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.Task;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
@@ -44,9 +43,7 @@ import org.apache.hadoop.hive.ql.lib.TaskGraphWalker;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.MapWork;
-import org.apache.hadoop.hive.ql.plan.MergeJoinWork;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,12 +71,6 @@ public class SerializeFilter implements PhysicalPlanResolver {
       if (currTask instanceof StatsTask) {
         currTask = ((StatsTask) currTask).getWork().getSourceTask();
       }
-      if (currTask instanceof TezTask) {
-        TezWork work = ((TezTask) currTask).getWork();
-        for (BaseWork w : work.getAllWork()) {
-          evaluateWork(w);
-        }
-      }
       return null;
     }
 
@@ -89,16 +80,8 @@ public class SerializeFilter implements PhysicalPlanResolver {
         evaluateMapWork((MapWork) w);
       } else if (w instanceof ReduceWork) {
         evaluateReduceWork((ReduceWork) w);
-      } else if (w instanceof MergeJoinWork) {
-        evaluateMergeWork((MergeJoinWork) w);
       } else {
         LOG.info("We are not going to evaluate this work type: " + w.getClass().getCanonicalName());
-      }
-    }
-
-    private void evaluateMergeWork(MergeJoinWork w) throws SemanticException {
-      for (BaseWork baseWork : w.getBaseWorkList()) {
-        evaluateOperators(baseWork, pctx);
       }
     }
 

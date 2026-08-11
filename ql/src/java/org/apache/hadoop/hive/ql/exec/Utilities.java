@@ -57,8 +57,6 @@ import org.apache.hadoop.hive.ql.exec.mr.ExecDriver;
 import org.apache.hadoop.hive.ql.exec.mr.ExecMapper;
 import org.apache.hadoop.hive.ql.exec.mr.ExecReducer;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
-import org.apache.hadoop.hive.ql.exec.tez.DagUtils;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedInputFormatInterface;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizedRowBatchCtx;
@@ -94,7 +92,6 @@ import org.apache.hadoop.hive.ql.plan.DynamicPartitionCtx;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
-import org.apache.hadoop.hive.ql.plan.MergeJoinWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.PartitionDesc;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
@@ -320,39 +317,6 @@ public final class Utilities {
       return null;
     }
     return (ReduceWork) getBaseWork(conf, REDUCE_PLAN_NAME);
-  }
-
-  public static Path setMergeWork(JobConf conf, MergeJoinWork mergeJoinWork, Path mrScratchDir,
-      boolean useCache) {
-    for (BaseWork baseWork : mergeJoinWork.getBaseWorkList()) {
-      setBaseWork(conf, baseWork, mrScratchDir, baseWork.getName() + MERGE_PLAN_NAME, useCache);
-      String prefixes = conf.get(DagUtils.TEZ_MERGE_WORK_FILE_PREFIXES);
-      if (prefixes == null) {
-        prefixes = baseWork.getName();
-      } else {
-        prefixes = prefixes + "," + baseWork.getName();
-      }
-      conf.set(DagUtils.TEZ_MERGE_WORK_FILE_PREFIXES, prefixes);
-    }
-
-    // nothing to return
-    return null;
-  }
-
-  public static BaseWork getMergeWork(Configuration jconf) {
-    if ((jconf.get(DagUtils.TEZ_MERGE_CURRENT_MERGE_FILE_PREFIX) == null)
-        || (jconf.get(DagUtils.TEZ_MERGE_CURRENT_MERGE_FILE_PREFIX).isEmpty())) {
-      return null;
-    }
-    return getMergeWork(jconf, jconf.get(DagUtils.TEZ_MERGE_CURRENT_MERGE_FILE_PREFIX));
-  }
-
-  public static BaseWork getMergeWork(Configuration jconf, String prefix) {
-    if (prefix == null || prefix.isEmpty()) {
-      return null;
-    }
-
-    return getBaseWork(jconf, prefix + MERGE_PLAN_NAME);
   }
 
   public static void cacheBaseWork(Configuration conf, String name, BaseWork work,
@@ -2305,26 +2269,6 @@ public final class Utilities {
     return true;
   }
 
-  public static List<TezTask> getTezTasks(List<Task<? extends Serializable>> tasks) {
-    List<TezTask> tezTasks = new ArrayList<TezTask>();
-    if (tasks != null) {
-      getTezTasks(tasks, tezTasks);
-    }
-    return tezTasks;
-  }
-
-  private static void getTezTasks(List<Task<? extends Serializable>> tasks, List<TezTask> tezTasks) {
-    for (Task<? extends Serializable> task : tasks) {
-      if (task instanceof TezTask && !tezTasks.contains(task)) {
-        tezTasks.add((TezTask) task);
-      }
-
-      if (task.getDependentTasks() != null) {
-        getTezTasks(task.getDependentTasks(), tezTasks);
-      }
-    }
-  }
-
   public static List<ExecDriver> getMRTasks(List<Task<? extends Serializable>> tasks) {
     List<ExecDriver> mrTasks = new ArrayList<ExecDriver>();
     if (tasks != null) {
@@ -2918,18 +2862,6 @@ public final class Utilities {
     return highestSamplePercentage;
   }
 
-  /**
-   * On Tez we're not creating dummy files when getting/setting input paths.
-   * We let Tez handle the situation. We're also setting the paths in the AM
-   * so we don't want to depend on scratch dir and context.
-   */
-  public static List<Path> getInputPathsTez(JobConf job, MapWork work) throws Exception {
-    String scratchDir = job.get(DagUtils.TEZ_TMP_DIR_KEY);
-
-    List<Path> paths = getInputPaths(job, work, new Path(scratchDir), null, true);
-
-    return paths;
-  }
 
   /**
    * Computes a list of all input paths needed to compute the given MapWork. All aliases

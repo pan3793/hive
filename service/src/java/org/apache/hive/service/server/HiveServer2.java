@@ -54,9 +54,6 @@ import org.apache.hadoop.hive.common.cli.CommonCliOptions;
 import org.apache.hadoop.hive.common.metrics.common.MetricsFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.llap.coordinator.LlapCoordinator;
-import org.apache.hadoop.hive.llap.registry.impl.LlapRegistryService;
-import org.apache.hadoop.hive.ql.exec.tez.TezSessionPoolManager;
 import org.apache.hadoop.hive.ql.metadata.Hive;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.session.ClearDanglingScratchDir;
@@ -68,7 +65,6 @@ import org.apache.hive.common.util.HiveStringUtils;
 import org.apache.hive.common.util.HiveVersionInfo;
 import org.apache.hive.common.util.ShutdownHookManager;
 import org.apache.hive.http.HttpServer;
-import org.apache.hive.http.LlapServlet;
 import org.apache.hive.service.CompositeService;
 import org.apache.hive.service.ServiceException;
 import org.apache.hive.service.cli.CLIService;
@@ -144,21 +140,6 @@ public class HiveServer2 extends CompositeService {
     } catch (Throwable t) {
       throw new Error("Unable to intitialize HiveServer2", t);
     }
-    if (HiveConf.getBoolVar(hiveConf, ConfVars.LLAP_HS2_ENABLE_COORDINATOR)) {
-      // See method comment.
-      try {
-        LlapCoordinator.initializeInstance(hiveConf);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    // Trigger the creation of LLAP registry client, if in use. Clients may be using a different
-    // cluster than the default one, but at least for the default case we'd have it covered.
-    String llapHosts = HiveConf.getVar(hiveConf, HiveConf.ConfVars.LLAP_DAEMON_SERVICE_HOSTS);
-    if (llapHosts != null && !llapHosts.isEmpty()) {
-      LlapRegistryService.getClient(hiveConf);
-    }
-
     // Skip creating HiveMaterializedViewsRegistry
 
     // Setup web UI
@@ -215,7 +196,6 @@ public class HiveServer2 extends CompositeService {
             builder.setSPNEGOKeytab(spnegoKeytab);
             builder.setUseSPNEGO(true);
           }
-          builder.addServlet("llap", LlapServlet.class);
           builder.setContextRootRewriteTarget("/hiveserver2.jsp");
           webServer = builder.build();
           webServer.addServlet("query_page", "/query_page", QueryProfileServlet.class);
@@ -536,16 +516,6 @@ public class HiveServer2 extends CompositeService {
         LOG.error("Error removing znode for this HiveServer2 instance from ZooKeeper.", e);
       }
     }
-    // There should already be an instance of the session pool manager.
-    // If not, ignoring is fine while stopping HiveServer2.
-    if (hiveConf != null && hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_TEZ_INITIALIZE_DEFAULT_SESSIONS)) {
-      try {
-        TezSessionPoolManager.getInstance().stop();
-      } catch (Exception e) {
-        LOG.error("Tez session pool manager stop had an error during stop of HiveServer2. "
-            + "Shutting down HiveServer2 anyway.", e);
-      }
-    }
   }
 
   @VisibleForTesting
@@ -574,13 +544,6 @@ public class HiveServer2 extends CompositeService {
               TimeUnit.MILLISECONDS);
       HiveServer2 server = null;
       try {
-        // Initialize the pool before we start the server; don't start yet.
-        TezSessionPoolManager sessionPool = null;
-        if (hiveConf.getBoolVar(ConfVars.HIVE_SERVER2_TEZ_INITIALIZE_DEFAULT_SESSIONS)) {
-          sessionPool = TezSessionPoolManager.getInstance();
-          sessionPool.setupPool(hiveConf);
-        }
-
         // Cleanup the scratch dir before starting
         ServerUtils.cleanUpScratchDir(hiveConf);
         // Schedule task to cleanup dangling scratch dir periodically,
@@ -598,10 +561,6 @@ public class HiveServer2 extends CompositeService {
         } catch (Throwable t) {
           LOG.warn("Could not initiate the JvmPauseMonitor thread." + " GCs and Pauses may not be " +
             "warned upon.", t);
-        }
-
-        if (sessionPool != null) {
-          sessionPool.startPool();
         }
 
         break;

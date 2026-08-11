@@ -51,7 +51,6 @@ import org.apache.hadoop.hive.conf.Validator.StringSet;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.DriverContext;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorGroupByOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorizationContext;
@@ -90,7 +89,6 @@ import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.ql.plan.VectorReduceSinkInfo;
 import org.apache.hadoop.hive.ql.plan.VectorReduceSinkDesc;
 import org.apache.hadoop.hive.ql.plan.VectorGroupByDesc;
@@ -509,34 +507,6 @@ public class ExplainTask extends Task<ExplainWork> implements Serializable {
         }
       }
       else if (ent.getValue() instanceof List) {
-        if (ent.getValue() != null && !((List<?>)ent.getValue()).isEmpty()
-            && ((List<?>)ent.getValue()).get(0) != null &&
-            ((List<?>)ent.getValue()).get(0) instanceof TezWork.Dependency) {
-          if (out != null) {
-            boolean isFirst = true;
-            for (TezWork.Dependency dep: (List<TezWork.Dependency>)ent.getValue()) {
-              if (!isFirst) {
-                out.print(", ");
-              } else {
-                out.print("<- ");
-                isFirst = false;
-              }
-              out.print(dep.getName());
-              out.print(" (");
-              out.print(dep.getType());
-              out.print(")");
-            }
-            out.println();
-          }
-          if (jsonOutput) {
-            for (TezWork.Dependency dep: (List<TezWork.Dependency>)ent.getValue()) {
-              JSONObject jsonDep = new JSONObject(new LinkedHashMap<>());
-              jsonDep.put("parent", dep.getName());
-              jsonDep.put("type", dep.getType());
-              json.accumulate(ent.getKey().toString(), jsonDep);
-            }
-          }
-        } else {
           if (out != null) {
             out.print(ent.getValue().toString());
             out.println();
@@ -544,7 +514,6 @@ public class ExplainTask extends Task<ExplainWork> implements Serializable {
           if (jsonOutput) {
             json.put(ent.getKey().toString(), ent.getValue().toString());
           }
-        }
       }
       else if (ent.getValue() instanceof Map) {
         String stringValue = getBasictypeKeyedMap((Map)ent.getValue()).toString();

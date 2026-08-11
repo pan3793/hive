@@ -34,26 +34,22 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.llap.registry.impl.LlapRegistryService;
 import org.apache.hadoop.hive.ql.QueryPlan;
 import org.apache.hadoop.hive.ql.QueryState;
 import org.apache.hadoop.hive.ql.exec.ExplainTask;
 import org.apache.hadoop.hive.ql.exec.TaskFactory;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.log.PerfLogger;
 import org.apache.hadoop.hive.ql.parse.ExplainConfiguration;
 import org.apache.hadoop.hive.ql.plan.ExplainWork;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineDomain;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEntity;
 import org.apache.hadoop.yarn.api.records.timeline.TimelineEvent;
 import org.apache.hadoop.yarn.client.api.TimelineClient;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hive.common.util.ShutdownHookManager;
-import org.apache.tez.dag.api.TezConfiguration;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,10 +76,10 @@ public class ATSHook implements ExecuteWithHookContext {
 
   private enum OtherInfoTypes {
     QUERY, STATUS, TEZ, MAPRED, INVOKER_INFO, SESSION_ID, THREAD_NAME, VERSION,
-    CLIENT_IP_ADDRESS, HIVE_ADDRESS, HIVE_INSTANCE_TYPE, CONF, PERF, LLAP_APP_ID
+    CLIENT_IP_ADDRESS, HIVE_ADDRESS, HIVE_INSTANCE_TYPE, CONF, PERF
   };
   private enum ExecutionMode {
-    MR, TEZ, LLAP, SPARK, NONE
+    MR, NONE
   };
   private enum PrimaryFilterTypes {
     user, requestuser, operationid, executionmode, tablesread, tableswritten, queue
@@ -178,10 +174,10 @@ public class ATSHook implements ExecuteWithHookContext {
           // so if exists, honor it. So we get the same ACLS for Tez ATS entries and
           // Hive entries
           domainReaders = Utilities.getAclStringWithHiveModification(hookContext.getConf(),
-              TezConfiguration.TEZ_AM_VIEW_ACLS, addHs2User, requestuser, loginUser);
+              "tez.am.view-acls", addHs2User, requestuser, loginUser);
 
           domainWriters = Utilities.getAclStringWithHiveModification(hookContext.getConf(),
-              TezConfiguration.TEZ_AM_MODIFY_ACLS, addHs2User, requestuser, loginUser);
+              "tez.am.modify-acls", addHs2User, requestuser, loginUser);
           SessionState.get().setATSDomainId(domainId);
           create = true;
         }
@@ -249,7 +245,7 @@ public class ATSHook implements ExecuteWithHookContext {
                 requestuser = hookContext.getUgi().getUserName() ;
               }
               int numMrJobs = Utilities.getMRTasks(plan.getRootTasks()).size();
-              int numTezJobs = Utilities.getTezTasks(plan.getRootTasks()).size();
+              int numTezJobs = 0;
               if (numMrJobs + numTezJobs <= 0) {
                 return; // ignore client only queries
               }
@@ -280,13 +276,12 @@ public class ATSHook implements ExecuteWithHookContext {
                   hiveInstanceAddress = InetAddress.getLocalHost().getHostAddress();
                 }
                 String hiveInstanceType = hookContext.isHiveServerQuery() ? "HS2" : "CLI";
-                ApplicationId llapId = determineLlapId(conf, plan);
                 fireAndForget(
                     createPreHookEvent(queryId, query, explainPlan, queryStartTime,
                         user, requestuser, numMrJobs, numTezJobs, opId,
                         hookContext.getIpAddress(), hiveInstanceAddress, hiveInstanceType,
                         hookContext.getSessionId(), logID, hookContext.getThreadId(), executionMode,
-                        tablesRead, tablesWritten, conf, llapId, domainId));
+                        tablesRead, tablesWritten, conf, domainId));
                 break;
               case POST_EXEC_HOOK:
                 fireAndForget(createPostHookEvent(queryId, currentTime, user, requestuser, true, opId, durations, domainId));
@@ -320,20 +315,10 @@ public class ATSHook implements ExecuteWithHookContext {
 
   protected ExecutionMode getExecutionMode(QueryPlan plan) {
     int numMRJobs = Utilities.getMRTasks(plan.getRootTasks()).size();
-    int numTezJobs = Utilities.getTezTasks(plan.getRootTasks()).size();
 
     ExecutionMode mode = ExecutionMode.MR;
-    if (0 == (numMRJobs + numTezJobs)) {
+    if (0 == numMRJobs) {
       mode = ExecutionMode.NONE;
-    } else if (numTezJobs > 0) {
-      mode = ExecutionMode.TEZ;
-      // Need to go in and check if any of the tasks is running in LLAP mode.
-      for (TezTask tezTask : Utilities.getTezTasks(plan.getRootTasks())) {
-        if (tezTask.getWork().getLlapMode()) {
-          mode = ExecutionMode.LLAP;
-          break;
-        }
-      }
     }
 
     return mode;
@@ -343,7 +328,7 @@ public class ATSHook implements ExecuteWithHookContext {
       long startTime, String user, String requestuser, int numMrJobs, int numTezJobs, String opId,
       String clientIpAddress, String hiveInstanceAddress, String hiveInstanceType,
       String sessionID, String logID, String threadId, String executionMode,
-      List<String> tablesRead, List<String> tablesWritten, HiveConf conf, ApplicationId llapAppId,
+      List<String> tablesRead, List<String> tablesWritten, HiveConf conf,
       String domainId)
           throws Exception {
 
@@ -401,9 +386,6 @@ public class ATSHook implements ExecuteWithHookContext {
     atsEntity.addOtherInfo(OtherInfoTypes.HIVE_ADDRESS.name(), hiveInstanceAddress);
     atsEntity.addOtherInfo(OtherInfoTypes.HIVE_INSTANCE_TYPE.name(), hiveInstanceType);
     atsEntity.addOtherInfo(OtherInfoTypes.CONF.name(), confObj.toString());
-    if (llapAppId != null) {
-      atsEntity.addOtherInfo(OtherInfoTypes.LLAP_APP_ID.name(), llapAppId.toString());
-    }
     atsEntity.setDomainId(domainId);
 
     return atsEntity;
@@ -451,25 +433,5 @@ public class ATSHook implements ExecuteWithHookContext {
         }
       }
     });
-  }
-
-  private ApplicationId determineLlapId(final HiveConf conf, QueryPlan plan) throws IOException {
-    // Note: for now, LLAP is only supported in Tez tasks. Will never come to MR; others may
-    //       be added here, although this is only necessary to have extra debug information.
-    for (TezTask tezTask : Utilities.getTezTasks(plan.getRootTasks())) {
-      if (!tezTask.getWork().getLlapMode()) continue;
-      // In HS2, the client should have been cached already for the common case.
-      // Otherwise, this may actually introduce delay to compilation for the first query.
-      String hosts = HiveConf.getVar(conf, HiveConf.ConfVars.LLAP_DAEMON_SERVICE_HOSTS);
-      if (hosts != null && !hosts.isEmpty()) {
-        ApplicationId llapId = LlapRegistryService.getClient(conf).getApplicationId();
-        LOG.info("The query will use LLAP instance " + llapId + " (" + hosts + ")");
-        return llapId;
-      } else {
-        LOG.info("Cannot determine LLAP instance on client - service hosts are not set");
-        return null;
-      }
-    }
-    return null;
   }
 }

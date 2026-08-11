@@ -40,8 +40,6 @@ import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.StatsTask;
 import org.apache.hadoop.hive.ql.exec.Task;
-import org.apache.hadoop.hive.ql.exec.tez.DagUtils;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
@@ -56,11 +54,7 @@ import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.MapWork;
-import org.apache.hadoop.hive.ql.plan.MergeJoinWork;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
-import org.apache.hadoop.hive.ql.plan.TezEdgeProperty;
-import org.apache.hadoop.hive.ql.plan.TezEdgeProperty.EdgeType;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 
 /**
  * MemoryDecider is a simple physical optimizer that adjusts the memory layout of tez tasks.
@@ -95,12 +89,6 @@ public class MemoryDecider implements PhysicalPlanResolver {
       if (currTask instanceof StatsTask) {
         currTask = ((StatsTask) currTask).getWork().getSourceTask();
       }
-      if (currTask instanceof TezTask) {
-        TezWork work = ((TezTask) currTask).getWork();
-        for (BaseWork w : work.getAllWork()) {
-          evaluateWork(w);
-        }
-      }
       return null;
     }
 
@@ -110,16 +98,8 @@ public class MemoryDecider implements PhysicalPlanResolver {
         evaluateMapWork((MapWork) w);
       } else if (w instanceof ReduceWork) {
         evaluateReduceWork((ReduceWork) w);
-      } else if (w instanceof MergeJoinWork) {
-        evaluateMergeWork((MergeJoinWork) w);
       } else {
         LOG.info("We are not going to evaluate this work type: " + w.getClass().getCanonicalName());
-      }
-    }
-
-    private void evaluateMergeWork(MergeJoinWork w) throws SemanticException {
-      for (BaseWork baseWork : w.getBaseWorkList()) {
-        evaluateOperators(baseWork, pctx);
       }
     }
 

@@ -20,7 +20,6 @@ package org.apache.hadoop.hive.ql.io;
 
 import com.google.common.collect.Lists;
 
-import org.apache.hadoop.hive.llap.DebugUtils;
 
 import java.util.Arrays;
 
@@ -103,7 +102,7 @@ public abstract class BatchToRowReader<StructType, UnionType>
       Arrays.fill(included, true);
     }
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Including the columns " + DebugUtils.toString(included));
+      LOG.debug("Including the columns " + Arrays.toString(included));
     }
     this.included = included;
   }

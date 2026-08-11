@@ -42,8 +42,6 @@ import org.apache.hadoop.hive.common.FileUtils;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.io.HiveIOExceptionHandlerUtil;
-import org.apache.hadoop.hive.llap.io.api.LlapIo;
-import org.apache.hadoop.hive.llap.io.api.LlapProxy;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
@@ -208,89 +206,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
   public static InputFormat<WritableComparable, Writable> wrapForLlap(
       InputFormat<WritableComparable, Writable> inputFormat, Configuration conf,
       PartitionDesc part) throws HiveException {
-    if (!HiveConf.getBoolVar(conf, ConfVars.LLAP_IO_ENABLED, LlapProxy.isDaemon())) {
-      return inputFormat; // LLAP not enabled, no-op.
-    }
-    String ifName = inputFormat.getClass().getCanonicalName();
-    boolean isSupported = inputFormat instanceof LlapWrappableInputFormatInterface;
-    boolean isVectorized = Utilities.getUseVectorizedInputFileFormat(conf);
-    if (!isVectorized) {
-      // Pretend it's vectorized if the non-vector wrapped is enabled.
-      isVectorized = HiveConf.getBoolVar(conf, ConfVars.LLAP_IO_NONVECTOR_WRAPPER_ENABLED)
-          && (Utilities.getPlanPath(conf) != null);
-    }
-    boolean isSerdeBased = false;
-    if (isVectorized && !isSupported
-        && HiveConf.getBoolVar(conf, ConfVars.LLAP_IO_ENCODE_ENABLED)) {
-      // See if we can use re-encoding to read the format thru IO elevator.
-      String formatList = HiveConf.getVar(conf, ConfVars.LLAP_IO_ENCODE_FORMATS);
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Checking " + ifName + " against " + formatList);
-      }
-      String[] formats = StringUtils.getStrings(formatList);
-      if (formats != null) {
-        for (String format : formats) {
-          // TODO: should we check isAssignableFrom?
-          if (ifName.equals(format)) {
-            if (LOG.isInfoEnabled()) {
-              LOG.info("Using SerDe-based LLAP reader for " + ifName);
-            }
-            isSupported = isSerdeBased = true;
-            break;
-          }
-        }
-      }
-    }
-    if (!isSupported || !isVectorized) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Not using llap for " + ifName + ": supported = "
-          + isSupported + ", vectorized = " + isVectorized);
-      }
-      return inputFormat;
-    }
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Wrapping " + ifName);
-    }
-
-    @SuppressWarnings("unchecked")
-    LlapIo<VectorizedRowBatch> llapIo = LlapProxy.getIo();
-    if (llapIo == null) {
-      if (LOG.isInfoEnabled()) {
-        LOG.info("Not using LLAP IO because it is not initialized");
-      }
-      return inputFormat;
-    }
-    Deserializer serde = null;
-    if (isSerdeBased) {
-      if (part == null) {
-        if (LOG.isInfoEnabled()) {
-          LOG.info("Not using LLAP IO because there's no partition spec for SerDe-based IF");
-        }
-        return inputFormat;
-      }
-      VectorPartitionDesc vpart =  part.getVectorPartitionDesc();
-      if (vpart != null) {
-        VectorMapOperatorReadType old = vpart.getVectorMapOperatorReadType();
-        if (old != VectorMapOperatorReadType.VECTORIZED_INPUT_FILE_FORMAT) {
-          if (LOG.isInfoEnabled()) {
-            LOG.info("Resetting VectorMapOperatorReadType from " + old + " for partition "
-              + part.getTableName() + " " + part.getPartSpec());
-          }
-          vpart.setVectorMapOperatorReadType(
-              VectorMapOperatorReadType.VECTORIZED_INPUT_FILE_FORMAT);
-        }
-      }
-      try {
-        serde = part.getDeserializer(conf);
-      } catch (Exception e) {
-        throw new HiveException("Error creating SerDe for LLAP IO", e);
-      }
-    }
-    InputFormat<?, ?> wrappedIf = llapIo.getInputFormat(inputFormat, serde);
-    if (wrappedIf == null) {
-      return inputFormat; // We cannot wrap; the cause is logged inside.
-    }
-    return castInputFormat(wrappedIf);
+    return inputFormat; // LLAP IO has been removed.
   }
 
 
@@ -384,15 +300,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
 
   protected void init(JobConf job) {
     if (mrwork == null || pathToPartitionInfo == null) {
-      if (HiveConf.getVar(job, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
-        mrwork = (MapWork) Utilities.getMergeWork(job);
-        if (mrwork == null) {
-          mrwork = Utilities.getMapWork(job);
-        }
-      } else {
-        mrwork = Utilities.getMapWork(job);
-      }
-
+      mrwork = Utilities.getMapWork(job);
       pathToPartitionInfo = mrwork.getPathToPartitionInfo();
     }
   }
@@ -437,17 +345,7 @@ public class HiveInputFormat<K extends WritableComparable, V extends Writable>
     Path[] dirs;
     dirs = FileInputFormat.getInputPaths(job);
     if (dirs.length == 0) {
-      // on tez we're avoiding to duplicate the file info in FileInputFormat.
-      if (HiveConf.getVar(job, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
-        try {
-          List<Path> paths = Utilities.getInputPathsTez(job, mrwork);
-          dirs = paths.toArray(new Path[paths.size()]);
-        } catch (Exception e) {
-          throw new IOException("Could not create input files", e);
-        }
-      } else {
-        throw new IOException("No input paths specified in job");
-      }
+      throw new IOException("No input paths specified in job");
     }
     StringInternUtils.internUriStringsInPathArray(dirs);
     return dirs;

@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hive.common.util.HashCodeUtil;
-import org.apache.tez.runtime.library.api.KeyValueReader;
 
 import com.google.common.annotations.VisibleForTesting;
 

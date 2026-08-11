@@ -112,7 +112,6 @@ import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.StatsWork;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.serde2.SerDeException;
 import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoFactory;
@@ -863,13 +862,6 @@ public final class GenMapRedUtils {
           setKeyAndValueDesc(work.getReduceWork(), op);
         }
       }
-    } else if (task != null && (task.getWork() instanceof TezWork)) {
-      TezWork work = (TezWork)task.getWork();
-      for (BaseWork w : work.getAllWorkUnsorted()) {
-        if (w instanceof MapWork) {
-          ((MapWork)w).deriveExplainAttributes();
-        }
-      }
     }
 
     if (task.getChildTasks() == null) {
@@ -895,13 +887,6 @@ public final class GenMapRedUtils {
     } else if (task instanceof ExecDriver) {
       MapredWork work = (MapredWork) task.getWork();
       work.getMapWork().deriveLlap(conf, true);
-    } else if (task != null && (task.getWork() instanceof TezWork)) {
-      TezWork work = (TezWork)task.getWork();
-      for (BaseWork w : work.getAllWorkUnsorted()) {
-        if (w instanceof MapWork) {
-          ((MapWork)w).deriveLlap(conf, false);
-        }
-      }
     }
 
     if (task.getChildTasks() == null) {
@@ -922,13 +907,6 @@ public final class GenMapRedUtils {
     } else if (task instanceof ExecDriver) {
       MapredWork work = (MapredWork) task.getWork();
       work.getMapWork().internTable(interner);
-    } else if (task != null && (task.getWork() instanceof TezWork)) {
-      TezWork work = (TezWork)task.getWork();
-      for (BaseWork w : work.getAllWorkUnsorted()) {
-        if (w instanceof MapWork) {
-          ((MapWork)w).internTable(interner);
-        }
-      }
     }
     if (task.getNumChild() > 0) {
       for (Task childTask : task.getChildTasks()) {
@@ -1303,23 +1281,11 @@ public final class GenMapRedUtils {
 
       cplan = GenMapRedUtils.createMergeTask(fsInputDesc, finalName,
           dpCtx != null && dpCtx.getNumDPCols() > 0, fsInput.getCompilationOpContext());
-      if (conf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
-        work = new TezWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID), conf);
-        cplan.setName("File Merge");
-        ((TezWork) work).add(cplan);
-      } else {
-        work = cplan;
-      }
+      work = cplan;
     } else {
       cplan = createMRWorkForMergingFiles(conf, tsMerge, fsInputDesc);
-      if (conf.getVar(ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
-        work = new TezWork(conf.getVar(HiveConf.ConfVars.HIVEQUERYID), conf);
-        cplan.setName("File Merge");
-        ((TezWork)work).add(cplan);
-      } else {
-        work = new MapredWork();
-        ((MapredWork)work).setMapWork(cplan);
-      }
+      work = new MapredWork();
+      ((MapredWork)work).setMapWork(cplan);
     }
     // use CombineHiveInputFormat for map-only merging
     cplan.setInputformat("org.apache.hadoop.hive.ql.io.CombineHiveInputFormat");
@@ -1464,11 +1430,6 @@ public final class GenMapRedUtils {
       mrWork.getMapWork().setGatheringStats(true);
       if (mrWork.getReduceWork() != null) {
         mrWork.getReduceWork().setGatheringStats(true);
-      }
-    } else { // must be TezWork
-      TezWork work = (TezWork) currTask.getWork();
-      for (BaseWork w: work.getAllWork()) {
-        w.setGatheringStats(true);
       }
     }
 
@@ -1817,12 +1778,6 @@ public final class GenMapRedUtils {
       }
 
       if ((mvTask != null) && !mvTask.isLocal() && fsOp.getConf().canBeMerged()) {
-
-        if (currTask.getWork() instanceof TezWork) {
-          // tez blurs the boundary between map and reduce, thus it has it's own
-          // config
-          return hconf.getBoolVar(ConfVars.HIVEMERGETEZFILES);
-        }
 
         if (fsOp.getConf().isLinkedFileSink()) {
           // If the user has HIVEMERGEMAPREDFILES set to false, the idea was the

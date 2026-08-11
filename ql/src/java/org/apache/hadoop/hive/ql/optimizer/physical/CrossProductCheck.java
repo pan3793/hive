@@ -32,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.AbstractMapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.ConditionalTask;
-import org.apache.hadoop.hive.ql.exec.CommonMergeJoinOperator;
 import org.apache.hadoop.hive.ql.exec.JoinOperator;
 import org.apache.hadoop.hive.ql.exec.MapJoinOperator;
 import org.apache.hadoop.hive.ql.exec.Operator;
@@ -40,7 +39,6 @@ import org.apache.hadoop.hive.ql.exec.ReduceSinkOperator;
 import org.apache.hadoop.hive.ql.exec.TableScanOperator;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.DefaultRuleDispatcher;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
@@ -57,12 +55,10 @@ import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.MapJoinDesc;
 import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
-import org.apache.hadoop.hive.ql.plan.MergeJoinWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceSinkDesc;
 import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.ql.session.SessionState;
 
 /*
@@ -118,11 +114,6 @@ public class CrossProductCheck implements PhysicalPlanResolver, Dispatcher {
         dispatch(tsk, stack, nodeOutputs);
       }
 
-    } else if (currTask instanceof TezTask) {
-      TezTask tzTask = (TezTask) currTask;
-      TezWork tzWrk = tzTask.getWork();
-      checkMapJoins(tzWrk);
-      checkTezReducer(tzWrk);
     }
     return null;
   }
@@ -152,44 +143,6 @@ public class CrossProductCheck implements PhysicalPlanResolver, Dispatcher {
     }
   }
 
-  private void checkMapJoins(TezWork tzWrk) throws SemanticException {
-    for(BaseWork wrk : tzWrk.getAllWork() ) {
-
-      if ( wrk instanceof MergeJoinWork ) {
-        wrk = ((MergeJoinWork)wrk).getMainWork();
-      }
-
-      List<String> warnings = new MapJoinCheck(wrk.getName()).analyze(wrk);
-      if ( !warnings.isEmpty() ) {
-        for(String w : warnings) {
-          warn(w);
-        }
-      }
-    }
-  }
-
-  private void checkTezReducer(TezWork tzWrk) throws SemanticException {
-    for(BaseWork wrk : tzWrk.getAllWork() ) {
-
-      if ( wrk instanceof MergeJoinWork ) {
-        wrk = ((MergeJoinWork)wrk).getMainWork();
-      }
-
-      if ( !(wrk instanceof ReduceWork ) ) {
-        continue;
-      }
-      ReduceWork rWork = (ReduceWork) wrk;
-      Operator<? extends OperatorDesc> reducer = ((ReduceWork)wrk).getReducer();
-      if ( reducer instanceof JoinOperator || reducer instanceof CommonMergeJoinOperator ) {
-        Map<Integer, ExtractReduceSinkInfo.Info> rsInfo =
-            new HashMap<Integer, ExtractReduceSinkInfo.Info>();
-        for(Map.Entry<Integer, String> e : rWork.getTagToInput().entrySet()) {
-          rsInfo.putAll(getReducerInfo(tzWrk, rWork.getName(), e.getValue()));
-        }
-        checkForCrossProduct(rWork.getName(), reducer, rsInfo);
-      }
-    }
-  }
 
   private void checkMRReducer(String taskName, MapredWork mrWrk) throws SemanticException {
     ReduceWork rWrk = mrWrk.getReduceWork();
@@ -197,7 +150,7 @@ public class CrossProductCheck implements PhysicalPlanResolver, Dispatcher {
       return;
     }
     Operator<? extends OperatorDesc> reducer = rWrk.getReducer();
-    if ( reducer instanceof JoinOperator|| reducer instanceof CommonMergeJoinOperator ) {
+    if (reducer instanceof JoinOperator) {
       BaseWork prntWork = mrWrk.getMapWork();
       checkForCrossProduct(taskName, reducer,
           new ExtractReduceSinkInfo(null).analyze(prntWork));
@@ -226,12 +179,6 @@ public class CrossProductCheck implements PhysicalPlanResolver, Dispatcher {
           taskName);
       warn(warning);
     }
-  }
-
-  private Map<Integer, ExtractReduceSinkInfo.Info> getReducerInfo(TezWork tzWrk, String vertex, String prntVertex)
-      throws SemanticException {
-    BaseWork prntWork = tzWrk.getWorkMap().get(prntVertex);
-    return new ExtractReduceSinkInfo(vertex).analyze(prntWork);
   }
 
   /*

@@ -26,7 +26,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.CompilationOpContext;
-import org.apache.hadoop.hive.ql.exec.vector.VectorAppMasterEventOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorFileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorFilterOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorGroupByOperator;
@@ -40,12 +39,9 @@ import org.apache.hadoop.hive.ql.exec.vector.reducesink.VectorReduceSinkCommonOp
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.plan.AbstractOperatorDesc;
 import org.apache.hadoop.hive.ql.plan.AbstractVectorDesc;
-import org.apache.hadoop.hive.ql.plan.AppMasterEventDesc;
 import org.apache.hadoop.hive.ql.plan.CollectDesc;
-import org.apache.hadoop.hive.ql.plan.CommonMergeJoinDesc;
 import org.apache.hadoop.hive.ql.plan.DemuxDesc;
 import org.apache.hadoop.hive.ql.plan.DummyStoreDesc;
-import org.apache.hadoop.hive.ql.plan.DynamicPruningEventDesc;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
 import org.apache.hadoop.hive.ql.plan.FileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.FilterDesc;
@@ -111,17 +107,12 @@ public final class OperatorFactory {
     opvec.put(DummyStoreDesc.class, DummyStoreOperator.class);
     opvec.put(DemuxDesc.class, DemuxOperator.class);
     opvec.put(MuxDesc.class, MuxOperator.class);
-    opvec.put(AppMasterEventDesc.class, AppMasterEventOperator.class);
-    opvec.put(DynamicPruningEventDesc.class, AppMasterEventOperator.class);
     opvec.put(RCFileMergeDesc.class, RCFileMergeOperator.class);
     opvec.put(OrcFileMergeDesc.class, OrcFileMergeOperator.class);
-    opvec.put(CommonMergeJoinDesc.class, CommonMergeJoinOperator.class);
     opvec.put(ListSinkDesc.class, ListSinkOperator.class);
   }
 
   static {
-    vectorOpvec.put(AppMasterEventDesc.class, VectorAppMasterEventOperator.class);
-    vectorOpvec.put(DynamicPruningEventDesc.class, VectorAppMasterEventOperator.class);
     vectorOpvec.put(SelectDesc.class, VectorSelectOperator.class);
     vectorOpvec.put(GroupByDesc.class, VectorGroupByOperator.class);
     vectorOpvec.put(MapJoinDesc.class, VectorMapJoinOperator.class);

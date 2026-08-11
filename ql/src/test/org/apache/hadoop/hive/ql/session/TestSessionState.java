@@ -131,9 +131,7 @@ public class TestSessionState {
   @Test
   public void testClose() throws Exception {
     SessionState ss = SessionState.get();
-    assertNull(ss.getTezSession());
     ss.close();
-    assertNull(ss.getTezSession());
   }
 
   class RegisterJarRunnable implements Runnable {

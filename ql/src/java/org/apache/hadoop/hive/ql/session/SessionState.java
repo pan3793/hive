@@ -62,8 +62,6 @@ import org.apache.hadoop.hive.ql.MapRedStats;
 import org.apache.hadoop.hive.ql.exec.AddToClassPathAction;
 import org.apache.hadoop.hive.ql.exec.Registry;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.exec.tez.TezSessionPoolManager;
-import org.apache.hadoop.hive.ql.exec.tez.TezSessionState;
 import org.apache.hadoop.hive.ql.history.HiveHistory;
 import org.apache.hadoop.hive.ql.history.HiveHistoryImpl;
 import org.apache.hadoop.hive.ql.history.HiveHistoryProxyHandler;
@@ -210,7 +208,6 @@ public class SessionState {
 
   private Map<String, List<String>> localMapRedErrors;
 
-  private TezSessionState tezSessionState;
 
   private String currentDatabase;
 
@@ -552,8 +549,6 @@ public class SessionState {
 
   public static void endStart(SessionState startSs)
       throws CancellationException, InterruptedException {
-    if (startSs.tezSessionState == null) return;
-    startSs.tezSessionState.endOpen();
   }
 
   synchronized private static void start(SessionState startSs, boolean isAsync, LogHelper console) {
@@ -607,31 +602,6 @@ public class SessionState {
       throw new RuntimeException(e);
     }
 
-    String engine = HiveConf.getVar(startSs.getConf(), HiveConf.ConfVars.HIVE_EXECUTION_ENGINE);
-    if (!engine.equals("tez") || startSs.isHiveServerQuery) return;
-
-    try {
-      if (startSs.tezSessionState == null) {
-        startSs.setTezSession(new TezSessionState(startSs.getSessionId()));
-      }
-      if (startSs.tezSessionState.isOpen()) {
-        return;
-      }
-      if (startSs.tezSessionState.isOpening()) {
-        if (!isAsync) {
-          startSs.tezSessionState.endOpen();
-        }
-        return;
-      }
-      // Neither open nor opening.
-      if (!isAsync) {
-        startSs.tezSessionState.open(startSs.sessionConf); // should use conf on session start-up
-      } else {
-        startSs.tezSessionState.beginOpen(startSs.sessionConf, null, console);
-      }
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
   }
 
   /**
@@ -1566,15 +1536,6 @@ public class SessionState {
       detachSession();
     }
 
-    try {
-      if (tezSessionState != null) {
-        TezSessionPoolManager.closeIfNotDefault(tezSessionState, false);
-      }
-    } catch (Exception e) {
-      LOG.info("Error closing tez session", e);
-    } finally {
-      setTezSession(null);
-    }
 
     try {
       registry.closeCUDFLoaders();
@@ -1641,23 +1602,6 @@ public class SessionState {
     } else {
       return PerfLogger.getPerfLogger(ss.getConf(), resetPerfLogger);
     }
-  }
-
-  public TezSessionState getTezSession() {
-    return tezSessionState;
-  }
-
-  /** Called from TezTask to attach a TezSession to use to the threadlocal. Ugly pattern... */
-  public void setTezSession(TezSessionState session) {
-    if (tezSessionState == session) return; // The same object.
-    if (tezSessionState != null) {
-      tezSessionState.markFree();
-      tezSessionState = null;
-    }
-    if (session != null) {
-      session.markInUse();
-    }
-    tezSessionState = session;
   }
 
   public String getUserName() {

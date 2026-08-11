@@ -26,7 +26,6 @@ import com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.hive.ql.exec.CollectOperator;
-import org.apache.hadoop.hive.ql.exec.CommonMergeJoinOperator;
 import org.apache.hadoop.hive.ql.exec.DemuxOperator;
 import org.apache.hadoop.hive.ql.exec.FileSinkOperator;
 import org.apache.hadoop.hive.ql.exec.FilterOperator;
@@ -87,7 +86,6 @@ public class OperatorComparatorFactory {
     comparatorMapping.put(LimitOperator.class, new LimitOperatorComparator());
     comparatorMapping.put(LateralViewJoinOperator.class, new LateralViewJoinOperatorComparator());
     comparatorMapping.put(VectorGroupByOperator.class, new VectorGroupByOperatorComparator());
-    comparatorMapping.put(CommonMergeJoinOperator.class, new MapJoinOperatorComparator());
     comparatorMapping.put(VectorFilterOperator.class, new FilterOperatorComparator());
     comparatorMapping.put(UDTFOperator.class, new UDTFOperatorComparator());
     comparatorMapping.put(VectorSelectOperator.class, new VectorSelectOperatorComparator());

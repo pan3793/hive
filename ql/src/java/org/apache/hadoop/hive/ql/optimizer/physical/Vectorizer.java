@@ -46,7 +46,6 @@ import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.exec.*;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
 import org.apache.hadoop.hive.ql.exec.persistence.MapJoinKey;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.exec.vector.VectorExpressionDescriptor;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.VectorMapJoinInnerBigOnlyLongOperator;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.VectorMapJoinInnerBigOnlyMultiKeyOperator;
@@ -96,7 +95,6 @@ import org.apache.hadoop.hive.ql.metadata.VirtualColumn;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.AbstractOperatorDesc;
 import org.apache.hadoop.hive.ql.plan.AggregationDesc;
-import org.apache.hadoop.hive.ql.plan.AppMasterEventDesc;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.Explain;
 import org.apache.hadoop.hive.ql.plan.ExprNodeColumnDesc;
@@ -112,7 +110,6 @@ import org.apache.hadoop.hive.ql.plan.MapWork;
 import org.apache.hadoop.hive.ql.plan.MapredWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
 import org.apache.hadoop.hive.ql.plan.SelectDesc;
-import org.apache.hadoop.hive.ql.plan.VectorAppMasterEventDesc;
 import org.apache.hadoop.hive.ql.plan.VectorFileSinkDesc;
 import org.apache.hadoop.hive.ql.plan.VectorFilterDesc;
 import org.apache.hadoop.hive.ql.plan.VectorTableScanDesc;
@@ -127,7 +124,6 @@ import org.apache.hadoop.hive.ql.plan.ReduceWork;
 import org.apache.hadoop.hive.ql.plan.SMBJoinDesc;
 import org.apache.hadoop.hive.ql.plan.TableDesc;
 import org.apache.hadoop.hive.ql.plan.TableScanDesc;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.ql.plan.VectorGroupByDesc;
 import org.apache.hadoop.hive.ql.plan.VectorMapJoinDesc;
 import org.apache.hadoop.hive.ql.plan.VectorMapJoinDesc.HashTableImplementationType;
@@ -528,23 +524,6 @@ public class Vectorizer implements PhysicalPlanResolver {
           setReduceWorkExplainConditions(reduceWork);
 
           // We do not vectorize MR Reduce.
-        }
-      } else if (currTask instanceof TezTask) {
-        TezWork work = ((TezTask) currTask).getWork();
-        for (BaseWork baseWork: work.getAllWork()) {
-          if (baseWork instanceof MapWork) {
-            convertMapWork((MapWork) baseWork, true);
-          } else if (baseWork instanceof ReduceWork) {
-            ReduceWork reduceWork = (ReduceWork) baseWork;
-
-            // Always set the EXPLAIN conditions.
-            setReduceWorkExplainConditions(reduceWork);
-
-            // We are only vectorizing Reduce under Tez/Spark.
-            if (isReduceVectorizationEnabled) {
-              convertReduceWork(reduceWork);
-            }
-          }
         }
       }
 
@@ -3436,16 +3415,6 @@ public class Vectorizer implements PhysicalPlanResolver {
           limitDesc.setVectorDesc(vectorLimitDesc);
           vectorOp = OperatorFactory.getVectorOperator(
               op.getCompilationOpContext(), limitDesc, vContext, op);
-          isNative = true;
-        }
-        break;
-      case EVENT:
-        {
-          AppMasterEventDesc eventDesc = (AppMasterEventDesc) op.getConf();
-          VectorAppMasterEventDesc vectorEventDesc = new VectorAppMasterEventDesc();
-          eventDesc.setVectorDesc(vectorEventDesc);
-          vectorOp = OperatorFactory.getVectorOperator(
-              op.getCompilationOpContext(), eventDesc, vContext, op);
           isNative = true;
         }
         break;

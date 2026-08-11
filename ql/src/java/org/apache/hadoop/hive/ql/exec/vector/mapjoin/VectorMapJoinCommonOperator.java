@@ -49,7 +49,6 @@ import org.apache.hadoop.hive.ql.exec.vector.expressions.VectorExpression;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.optimized.VectorMapJoinOptimizedCreateHashTable;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.hashtable.VectorMapJoinHashTable;
 import org.apache.hadoop.hive.ql.exec.vector.mapjoin.hashtable.VectorMapJoinTableContainer;
-import org.apache.hadoop.hive.ql.exec.vector.mapjoin.fast.VectorMapJoinFastHashTableLoader;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.ExprNodeDesc;
@@ -366,13 +365,12 @@ private static final Logger LOG = LoggerFactory.getLogger(CLASS_NAME);
     HashTableLoader hashTableLoader;
     switch (vectorDesc.hashTableImplementationType()) {
     case OPTIMIZED:
-      // Use the Tez hash table loader.
+      // Use the MR hash table loader.
       hashTableLoader = HashTableLoaderFactory.getLoader(hconf);
       break;
     case FAST:
-      // Use our specialized hash table loader.
-      hashTableLoader = new VectorMapJoinFastHashTableLoader();
-      break;
+      // FAST hash table loader is only implemented for the Tez engine, which has been removed.
+      throw new RuntimeException("Unsupported vector map join hash table implementation type " + hashTableImplementationType.name());
     default:
       throw new RuntimeException("Unknown vector map join hash table implementation type " + hashTableImplementationType.name());
     }

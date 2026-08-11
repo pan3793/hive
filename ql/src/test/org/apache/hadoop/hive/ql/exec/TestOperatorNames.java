@@ -20,7 +20,6 @@ package org.apache.hadoop.hive.ql.exec;
 
 import junit.framework.TestCase;
 
-import org.apache.hadoop.hive.ql.exec.vector.VectorAppMasterEventOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorFilterOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorGroupByOperator;
 import org.apache.hadoop.hive.ql.exec.vector.VectorLimitOperator;
@@ -87,10 +86,6 @@ public class TestOperatorNames extends TestCase {
 
     assertEquals(MapJoinOperator.getOperatorName(), new MapJoinOperator().getName());
     assertEquals(MapJoinOperator.getOperatorName(), new VectorMapJoinOperator().getName());
-
-    assertEquals(AppMasterEventOperator.getOperatorName(), new AppMasterEventOperator().getName());
-    assertEquals(AppMasterEventOperator.getOperatorName(),
-        new VectorAppMasterEventOperator().getName());
 
     assertEquals(SMBMapJoinOperator.getOperatorName(), new SMBMapJoinOperator().getName());
     assertEquals(SMBMapJoinOperator.getOperatorName(), new VectorSMBMapJoinOperator().getName());

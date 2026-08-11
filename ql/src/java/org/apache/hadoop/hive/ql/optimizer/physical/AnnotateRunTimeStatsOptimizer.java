@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.ql.ErrorMsg;
 import org.apache.hadoop.hive.ql.exec.Operator;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.mr.MapRedTask;
-import org.apache.hadoop.hive.ql.exec.tez.TezTask;
 import org.apache.hadoop.hive.ql.lib.DefaultGraphWalker;
 import org.apache.hadoop.hive.ql.lib.Dispatcher;
 import org.apache.hadoop.hive.ql.lib.GraphWalker;
@@ -46,7 +45,6 @@ import org.apache.hadoop.hive.ql.parse.ParseContext;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.BaseWork;
 import org.apache.hadoop.hive.ql.plan.OperatorDesc;
-import org.apache.hadoop.hive.ql.plan.TezWork;
 import org.apache.hadoop.hive.ql.stats.StatsCollectionContext;
 import org.apache.hadoop.hive.ql.stats.StatsPublisher;
 import org.apache.hadoop.hive.ql.stats.fs.FSStatsPublisher;
@@ -71,11 +69,8 @@ public class AnnotateRunTimeStatsOptimizer implements PhysicalPlanResolver {
 
       if (currTask instanceof MapRedTask) {
         MapRedTask mr = (MapRedTask) currTask;
-        ops.addAll(mr.getWork().getAllOperators());
-      } else if (currTask instanceof TezTask) {
-        TezWork work = ((TezTask) currTask).getWork();
-        for (BaseWork w : work.getAllWork()) {
-          ops.addAll(w.getAllOperators());
+        for (Operator<? extends OperatorDesc> op : mr.getWork().getAllOperators()) {
+          ops.add(op);
         }
       }
 

@@ -94,9 +94,6 @@ import org.apache.hadoop.tools.DistCpOptions;
 import org.apache.hadoop.tools.DistCpOptions.FileAttribute;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
-import org.apache.tez.dag.api.TezConfiguration;
-import org.apache.tez.runtime.library.api.TezRuntimeConfiguration;
-import org.apache.tez.test.MiniTezCluster;
 
 /**
  * Implemention of shims against Hadoop 0.23.0.
@@ -330,127 +327,6 @@ public class Hadoop23Shims extends HadoopShimsSecure {
       conf.setInt(MRJobConfig.MAP_MEMORY_MB, 128);
       conf.setInt(MRJobConfig.REDUCE_MEMORY_MB, 128);
       conf.setInt(MRJobConfig.MR_AM_VMEM_MB, 128);
-    }
-  }
-
-  @Override
-  public HadoopShims.MiniMrShim getLocalMiniTezCluster(Configuration conf, boolean usingLlap) {
-    return new MiniTezLocalShim(conf, usingLlap);
-  }
-
-  public class MiniTezLocalShim extends Hadoop23Shims.MiniMrShim {
-    private final Configuration conf;
-    private final boolean isLlap;
-
-    public MiniTezLocalShim(Configuration conf, boolean usingLlap) {
-      this.conf = conf;
-      this.isLlap = usingLlap;
-      setupConfiguration(conf);
-    }
-
-    @Override
-    public int getJobTrackerPort() throws UnsupportedOperationException {
-      throw new UnsupportedOperationException("No JobTracker port for local mode");
-    }
-
-    @Override
-    public void setupConfiguration(Configuration conf) {
-      conf.setBoolean(TezConfiguration.TEZ_LOCAL_MODE, true);
-
-      conf.setBoolean(TezRuntimeConfiguration.TEZ_RUNTIME_OPTIMIZE_LOCAL_FETCH, true);
-
-      conf.setBoolean(TezConfiguration.TEZ_IGNORE_LIB_URIS, true);
-
-      // TODO Force fs to file://, setup staging dir?
-      //      conf.set("fs.defaultFS", "file:///");
-      //      conf.set(TezConfiguration.TEZ_AM_STAGING_DIR, "/tmp");
-
-      if (!isLlap) { // Conf for non-llap
-        conf.setBoolean("hive.llap.io.enabled", false);
-      } else { // Conf for llap
-        conf.set("hive.llap.execution.mode", "only");
-      }
-    }
-
-    @Override
-    public void shutdown() throws IOException {
-      // Nothing to do
-    }
-  }
-
-  /**
-   * Returns a shim to wrap MiniMrTez
-   */
-  @Override
-  public MiniMrShim getMiniTezCluster(Configuration conf, int numberOfTaskTrackers,
-      String nameNode, boolean usingLlap) throws IOException {
-    return new MiniTezShim(conf, numberOfTaskTrackers, nameNode, usingLlap);
-  }
-
-  /**
-   * Shim for MiniTezCluster
-   */
-  public class MiniTezShim extends Hadoop23Shims.MiniMrShim {
-
-    private final MiniTezCluster mr;
-    private final Configuration conf;
-    private final boolean isLlap;
-
-    public MiniTezShim(Configuration conf, int numberOfTaskTrackers, String nameNode,
-                       boolean usingLlap) throws IOException {
-      mr = new MiniTezCluster("hive", numberOfTaskTrackers);
-      conf.setInt(YarnConfiguration.YARN_MINICLUSTER_NM_PMEM_MB, 512);
-      conf.setInt(YarnConfiguration.RM_SCHEDULER_MINIMUM_ALLOCATION_MB, 128);
-      conf.setInt(YarnConfiguration.RM_SCHEDULER_MAXIMUM_ALLOCATION_MB, 512);
-      // Overrides values from the hive/tez-site.
-      conf.setInt("hive.tez.container.size", 128);
-      conf.setInt(TezConfiguration.TEZ_AM_RESOURCE_MEMORY_MB, 128);
-      conf.setInt(TezConfiguration.TEZ_TASK_RESOURCE_MEMORY_MB, 128);
-      conf.setInt(TezRuntimeConfiguration.TEZ_RUNTIME_IO_SORT_MB, 24);
-      conf.setInt(TezRuntimeConfiguration.TEZ_RUNTIME_UNORDERED_OUTPUT_BUFFER_SIZE_MB, 10);
-      conf.setFloat(TezRuntimeConfiguration.TEZ_RUNTIME_SHUFFLE_FETCH_BUFFER_PERCENT, 0.4f);
-      conf.set("fs.defaultFS", nameNode);
-      conf.set("tez.am.log.level", "DEBUG");
-      conf.set(MRJobConfig.MR_AM_STAGING_DIR, "/apps_staging_dir");
-      mr.init(conf);
-      mr.start();
-      this.conf = mr.getConfig();
-      this.isLlap = usingLlap;
-    }
-
-    @Override
-    public int getJobTrackerPort() throws UnsupportedOperationException {
-      String address = conf.get("yarn.resourcemanager.address");
-      address = StringUtils.substringAfterLast(address, ":");
-
-      if (StringUtils.isBlank(address)) {
-        throw new IllegalArgumentException("Invalid YARN resource manager port.");
-      }
-
-      return Integer.parseInt(address);
-    }
-
-    @Override
-    public void shutdown() throws IOException {
-      mr.stop();
-    }
-
-    @Override
-    public void setupConfiguration(Configuration conf) {
-      Configuration config = mr.getConfig();
-      for (Map.Entry<String, String> pair: config) {
-        conf.set(pair.getKey(), pair.getValue());
-      }
-      // Overrides values from the hive/tez-site.
-      conf.setInt("hive.tez.container.size", 128);
-      conf.setInt(TezConfiguration.TEZ_AM_RESOURCE_MEMORY_MB, 128);
-      conf.setInt(TezConfiguration.TEZ_TASK_RESOURCE_MEMORY_MB, 128);
-      conf.setInt(TezRuntimeConfiguration.TEZ_RUNTIME_IO_SORT_MB, 24);
-      conf.setInt(TezRuntimeConfiguration.TEZ_RUNTIME_UNORDERED_OUTPUT_BUFFER_SIZE_MB, 10);
-      conf.setFloat(TezRuntimeConfiguration.TEZ_RUNTIME_SHUFFLE_FETCH_BUFFER_PERCENT, 0.4f);
-      if (isLlap) {
-        conf.set("hive.llap.execution.mode", "all");
-      }
     }
   }
 

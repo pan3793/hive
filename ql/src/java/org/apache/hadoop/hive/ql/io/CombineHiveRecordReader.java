@@ -73,15 +73,7 @@ public class CombineHiveRecordReader<K extends WritableComparable, V extends Wri
     try {
       // TODO: refactor this out
       if (pathToPartInfo == null) {
-        MapWork mrwork;
-        if (HiveConf.getVar(conf, HiveConf.ConfVars.HIVE_EXECUTION_ENGINE).equals("tez")) {
-          mrwork = (MapWork) Utilities.getMergeWork(jobConf);
-          if (mrwork == null) {
-            mrwork = Utilities.getMapWork(jobConf);
-          }
-        } else {
-          mrwork = Utilities.getMapWork(jobConf);
-        }
+        MapWork mrwork = Utilities.getMapWork(jobConf);
         pathToPartInfo = mrwork.getPathToPartitionInfo();
       }
 
