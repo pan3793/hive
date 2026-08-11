@@ -72,7 +72,6 @@
         <include>jdbc-handler/**/*</include>
         <include>find-bugs/**/*</include>
         <include>hbase-handler/**/*</include>
-        <include>hcatalog/**/*</include>
         <include>hplsql/**/*</include>
         <include>itests/**/*</include>
         <include>jdbc/**/*</include>

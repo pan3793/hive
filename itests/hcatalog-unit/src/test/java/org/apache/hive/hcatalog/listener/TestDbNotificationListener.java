@@ -95,7 +95,7 @@ import org.apache.hadoop.hive.metastore.messaging.MessageDeserializer;
 import org.apache.hadoop.hive.metastore.messaging.MessageFactory;
 import org.apache.hadoop.hive.ql.Driver;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hive.hcatalog.data.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -129,7 +129,7 @@ public class TestDbNotificationListener {
         Map<String, String> parameters = event.getParameters();
         if (parameters.containsKey(MetaStoreEventListenerConstants.DB_NOTIFICATION_EVENT_ID_KEY_NAME)) {
           Pair<EventType, String> pair =
-              new Pair<>(eventType, parameters.get(MetaStoreEventListenerConstants.DB_NOTIFICATION_EVENT_ID_KEY_NAME));
+              Pair.of(eventType, parameters.get(MetaStoreEventListenerConstants.DB_NOTIFICATION_EVENT_ID_KEY_NAME));
           eventsIds.push(pair);
         }
       }
@@ -139,8 +139,8 @@ public class TestDbNotificationListener {
       if (!eventsIds.isEmpty()) {
         Pair<EventType, String> pair = eventsIds.pop();
 
-        assertEquals("Last event type does not match.", eventType, pair.first);
-        assertEquals("Last event ID does not match.", Long.toString(id), pair.second);
+        assertEquals("Last event type does not match.", eventType, pair.getLeft());
+        assertEquals("Last event ID does not match.", Long.toString(id), pair.getRight());
       } else {
         assertTrue("List of events is empty.",false);
       }
