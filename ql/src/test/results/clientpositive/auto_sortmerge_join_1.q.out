@@ -119,28 +119,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -243,8 +239,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_1:b]
-        /bucket_big/ds=2008-04-09 [$hdt$_1:b]
+        /bucket_big/ds=2008-04-08 [b]
+        /bucket_big/ds=2008-04-09 [b]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -316,28 +312,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -440,8 +432,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -513,7 +505,7 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        b 
           Fetch Operator
             limit: -1
             Partition Description:
@@ -565,7 +557,7 @@ STAGE PLANS:
                     name: default.bucket_small
                   name: default.bucket_small
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        b 
           TableScan
             alias: b
             Statistics: Num rows: 1 Data size: 114 Basic stats: COMPLETE Column stats: NONE
@@ -574,15 +566,11 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 1 Data size: 114 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 114 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
+              HashTable Sink Operator
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
 
   Stage: Stage-3
     Map Reduce
@@ -595,27 +583,23 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Local Work:
         Map Reduce Local Work
       Path -> Alias:
@@ -768,8 +752,8 @@ STAGE PLANS:
               name: default.bucket_small
             name: default.bucket_small
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -801,7 +785,7 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
             Partition Description:
@@ -902,7 +886,7 @@ STAGE PLANS:
                     name: default.bucket_big
                   name: default.bucket_big
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
@@ -911,15 +895,11 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
+              HashTable Sink Operator
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
 
   Stage: Stage-4
     Map Reduce
@@ -932,27 +912,23 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 1 Data size: 114 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 114 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Local Work:
         Map Reduce Local Work
       Path -> Alias:
@@ -1105,7 +1081,7 @@ STAGE PLANS:
               name: default.bucket_small
             name: default.bucket_small
       Truncated Path -> Alias:
-        /bucket_small/ds=2008-04-08 [$hdt$_1:b]
+        /bucket_small/ds=2008-04-08 [b]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -1145,28 +1121,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1269,8 +1241,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator

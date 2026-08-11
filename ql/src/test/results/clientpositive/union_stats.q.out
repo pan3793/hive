@@ -129,7 +129,7 @@ STAGE PLANS:
               name: default.src
             name: default.src
       Truncated Path -> Alias:
-        /src [null-subquery1:$hdt$_0-subquery1:src, null-subquery2:$hdt$_0-subquery2:src]
+        /src [null-subquery1:_u1-subquery1:src, null-subquery2:_u1-subquery2:src]
 
   Stage: Stage-7
     Conditional Operator
@@ -188,7 +188,7 @@ STAGE PLANS:
       Path -> Partition:
 #### A masked pattern was here ####
           Partition
-            base file name: -ext-10004
+            base file name: -ext-10003
             input format: org.apache.hadoop.mapred.TextInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
             properties:
@@ -242,7 +242,7 @@ STAGE PLANS:
       Path -> Partition:
 #### A masked pattern was here ####
           Partition
-            base file name: -ext-10004
+            base file name: -ext-10003
             input format: org.apache.hadoop.mapred.TextInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat
             properties:

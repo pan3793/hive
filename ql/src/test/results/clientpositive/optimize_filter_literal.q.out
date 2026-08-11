@@ -128,7 +128,7 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@tab
 POSTHOOK: Input: default@tab@ds=2008-04-08
 #### A masked pattern was here ####
-Warning: Shuffle Join JOIN[13][tables = [$hdt$_1, $hdt$_2, $hdt$_0]] in Stage 'Stage-1:MAPRED' is a cross product
+Warning: Shuffle Join JOIN[9][tables = [a, b]] in Stage 'Stage-1:MAPRED' is a cross product
 PREHOOK: query: select * from
 (select * from tab where tab.key = 0)a
 full outer join

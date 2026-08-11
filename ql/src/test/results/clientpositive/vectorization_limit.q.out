@@ -19,7 +19,7 @@ STAGE PLANS:
             alias: alltypesorc
             Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((UDFToDouble(cbigint) < cdouble) and (cint > 0)) (type: boolean)
+              predicate: ((cbigint < cdouble) and (cint > 0)) (type: boolean)
               Statistics: Num rows: 1365 Data size: 293479 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: cbigint (type: bigint), cdouble (type: double)
@@ -205,25 +205,24 @@ STAGE PLANS:
                 native: true
                 projectedOutputColumns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
             Select Operator
-              expressions: ctinyint (type: tinyint), (cdouble + 1.0) (type: double)
-              outputColumnNames: _col0, _col1
+              expressions: ctinyint (type: tinyint), cdouble (type: double)
+              outputColumnNames: ctinyint, cdouble
               Select Vectorization:
                   className: VectorSelectOperator
                   native: true
-                  projectedOutputColumns: [0, 12]
-                  selectExpressions: DoubleColAddDoubleScalar(col 5, val 1.0) -> 12:double
+                  projectedOutputColumns: [0, 5]
               Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
-                aggregations: avg(_col1)
+                aggregations: avg((cdouble + 1))
                 Group By Vectorization:
-                    aggregators: VectorUDAFAvgDouble(col 12) -> struct<count:bigint,sum:double>
+                    aggregators: VectorUDAFAvgDouble(DoubleColAddLongScalar(col 5, val 1) -> 12:double) -> struct<count:bigint,sum:double>
                     className: VectorGroupByOperator
                     vectorOutput: false
                     keyExpressions: col 0
                     native: false
                     projectedOutputColumns: [0]
-                    vectorOutputConditionsNotMet: Vector output of VectorUDAFAvgDouble(col 12) -> struct<count:bigint,sum:double> output type STRUCT requires PRIMITIVE IS false
-                keys: _col0 (type: tinyint)
+                    vectorOutputConditionsNotMet: Vector output of VectorUDAFAvgDouble(DoubleColAddLongScalar(col 5, val 1) -> 12:double) -> struct<count:bigint,sum:double> output type STRUCT requires PRIMITIVE IS false
+                keys: ctinyint (type: tinyint)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE

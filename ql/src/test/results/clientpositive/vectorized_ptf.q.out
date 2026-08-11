@@ -1,21 +1,12 @@
-PREHOOK: query: -- SORT_QUERY_RESULTS
-
-DROP TABLE part_staging
+PREHOOK: query: DROP TABLE part_staging
 PREHOOK: type: DROPTABLE
-POSTHOOK: query: -- SORT_QUERY_RESULTS
-
-DROP TABLE part_staging
+POSTHOOK: query: DROP TABLE part_staging
 POSTHOOK: type: DROPTABLE
 PREHOOK: query: DROP TABLE part_orc
 PREHOOK: type: DROPTABLE
 POSTHOOK: query: DROP TABLE part_orc
 POSTHOOK: type: DROPTABLE
-PREHOOK: query: -- NOTE: This test is a copy of ptf.
--- NOTE: We cannot vectorize "pure" table functions (e.g. NOOP) -- given their blackbox nature. So only queries without table functions and
--- NOTE: with windowing will be vectorized.
-
--- data setup
-CREATE TABLE part_staging( 
+PREHOOK: query: CREATE TABLE part_staging( 
     p_partkey INT,
     p_name STRING,
     p_mfgr STRING,
@@ -29,12 +20,7 @@ CREATE TABLE part_staging(
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@part_staging
-POSTHOOK: query: -- NOTE: This test is a copy of ptf.
--- NOTE: We cannot vectorize "pure" table functions (e.g. NOOP) -- given their blackbox nature. So only queries without table functions and
--- NOTE: with windowing will be vectorized.
-
--- data setup
-CREATE TABLE part_staging( 
+POSTHOOK: query: CREATE TABLE part_staging( 
     p_partkey INT,
     p_name STRING,
     p_mfgr STRING,
@@ -118,9 +104,7 @@ POSTHOOK: Lineage: part_orc.p_partkey SIMPLE [(part_staging)part_staging.FieldSc
 POSTHOOK: Lineage: part_orc.p_retailprice SIMPLE [(part_staging)part_staging.FieldSchema(name:p_retailprice, type:double, comment:null), ]
 POSTHOOK: Lineage: part_orc.p_size SIMPLE [(part_staging)part_staging.FieldSchema(name:p_size, type:int, comment:null), ]
 POSTHOOK: Lineage: part_orc.p_type SIMPLE [(part_staging)part_staging.FieldSchema(name:p_type, type:string, comment:null), ]
-PREHOOK: query: --1. test1
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -130,9 +114,7 @@ from noop(on part_orc
   order by p_name
   )
 PREHOOK: type: QUERY
-POSTHOOK: query: --1. test1
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -142,6 +124,10 @@ from noop(on part_orc
   order by p_name
   )
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -165,6 +151,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -176,6 +170,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -196,6 +191,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -215,6 +211,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -243,6 +243,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -266,6 +267,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -275,6 +285,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -284,6 +295,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -292,6 +304,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -412,24 +428,24 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	3401.3500000000004
 Manufacturer#5	almond antique sky peru orange	2	3	3	5190.08
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	6208.18
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	7672.66
-PREHOOK: query: -- 2. testJoinWithNoop
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,
 p_size, p_size - lag(p_size,1,p_size) over (partition by p_mfgr order by p_name) as deltaSz
 from noop (on (select p1.* from part_orc p1 join part_orc p2 on p1.p_partkey = p2.p_partkey) j
 distribute by j.p_mfgr
 sort by j.p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 2. testJoinWithNoop
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,
 p_size, p_size - lag(p_size,1,p_size) over (partition by p_mfgr order by p_name) as deltaSz
 from noop (on (select p1.* from part_orc p1 join part_orc p2 on p1.p_partkey = p2.p_partkey) j
 distribute by j.p_mfgr
 sort by j.p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -473,6 +489,9 @@ STAGE PLANS:
                 Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
                 tag: 1
                 auto parallelism: false
+      Map Vectorization:
+          enabled: false
+          enabledConditionsNotMet: Vectorized map work only works with 1 TableScanOperator IS false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -484,6 +503,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -504,6 +524,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -523,6 +544,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [j:p1, j:p2]
       Needs Tagging: true
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Join Operator
           condition map:
@@ -541,6 +566,7 @@ STAGE PLANS:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                 properties:
+                  column.name.delimiter ,
                   columns _col1,_col2,_col5
                   columns.types string,string,int
                   escape.delim \
@@ -564,6 +590,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -573,6 +608,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -582,6 +618,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -590,6 +627,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -618,6 +659,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -641,6 +683,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -650,6 +701,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -659,6 +711,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -667,6 +720,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -770,22 +827,22 @@ Manufacturer#5	almond antique medium spring khaki	6	-25
 Manufacturer#5	almond antique sky peru orange	2	-4
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	44
 Manufacturer#5	almond azure blanched chiffon midnight	23	-23
-PREHOOK: query: -- 3. testOnlyPTF
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size
 from noop(on part_orc
 partition by p_mfgr
 order by p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 3. testOnlyPTF
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size
 from noop(on part_orc
 partition by p_mfgr
 order by p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-0 depends on stages: Stage-1
@@ -808,6 +865,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -819,6 +884,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -839,6 +905,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -858,6 +925,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -950,9 +1021,7 @@ Manufacturer#5	almond antique medium spring khaki	6
 Manufacturer#5	almond antique sky peru orange	2
 Manufacturer#5	almond aquamarine dodger light gainsboro	46
 Manufacturer#5	almond azure blanched chiffon midnight	23
-PREHOOK: query: -- 4. testPTFAlias
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -962,9 +1031,7 @@ from noop(on part_orc
   order by p_name
   ) abc
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 4. testPTFAlias
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -974,6 +1041,10 @@ from noop(on part_orc
   order by p_name
   ) abc
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -997,6 +1068,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1008,6 +1087,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -1028,6 +1108,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -1047,6 +1128,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -1075,6 +1160,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -1098,6 +1184,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1107,6 +1202,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -1116,6 +1212,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -1124,6 +1221,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -1244,9 +1345,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	3401.35
 Manufacturer#5	almond antique sky peru orange	2	3	3	5190.08
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	6208.18
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	7672.66
-PREHOOK: query: -- 5. testPTFAndWhereWithWindowing
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -1256,9 +1355,7 @@ from noop(on part_orc
           order by p_name 
           )
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 5. testPTFAndWhereWithWindowing
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -1268,6 +1365,10 @@ from noop(on part_orc
           order by p_name 
           )
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -1291,6 +1392,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1302,6 +1411,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -1322,6 +1432,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -1341,6 +1452,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -1369,6 +1484,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -1392,6 +1508,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1401,6 +1526,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -1410,6 +1536,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -1418,6 +1545,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -1539,9 +1670,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	6	-25
 Manufacturer#5	almond antique sky peru orange	2	3	3	2	-4
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	46	44
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	23	-23
-PREHOOK: query: -- 6. testSWQAndPTFAndGBy
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -1552,9 +1681,7 @@ from noop(on part_orc
           ) 
 group by p_mfgr, p_name, p_size
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 6. testSWQAndPTFAndGBy
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -1565,6 +1692,10 @@ from noop(on part_orc
           ) 
 group by p_mfgr, p_name, p_size
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -1588,6 +1719,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1599,6 +1738,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -1619,6 +1759,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -1638,6 +1779,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -1675,6 +1820,7 @@ STAGE PLANS:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                       properties:
+                        column.name.delimiter ,
                         columns _col0,_col1,_col2
                         columns.types string,string,int
                         escape.delim \
@@ -1697,6 +1843,15 @@ STAGE PLANS:
               Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
               tag: -1
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1706,6 +1861,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2
               columns.types string,string,int
               escape.delim \
@@ -1715,6 +1871,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2
                 columns.types string,string,int
                 escape.delim \
@@ -1723,6 +1880,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Group By Operator
           keys: KEY._col0 (type: string), KEY._col1 (type: string), KEY._col2 (type: int)
@@ -1846,24 +2007,24 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	6	-25
 Manufacturer#5	almond antique sky peru orange	2	3	3	2	-4
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	46	44
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	23	-23
-PREHOOK: query: -- 7. testJoin
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select abc.* 
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name 
 ) abc join part_orc p1 on abc.p_partkey = p1.p_partkey
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 7. testJoin
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select abc.* 
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name 
 ) abc join part_orc p1 on abc.p_partkey = p1.p_partkey
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -1887,6 +2048,14 @@ STAGE PLANS:
               value expressions: p_partkey (type: int), p_brand (type: string), p_type (type: string), p_size (type: int), p_container (type: string), p_retailprice (type: double), p_comment (type: string)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1898,6 +2067,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -1918,6 +2088,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -1937,6 +2108,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col0 (type: int), KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col1 (type: string), VALUE._col2 (type: string), VALUE._col3 (type: int), VALUE._col4 (type: string), VALUE._col5 (type: double), VALUE._col6 (type: string)
@@ -1969,6 +2144,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
                       columns.types int,string,string,string,string,int,string,double,string
                       escape.delim \
@@ -2008,6 +2184,9 @@ STAGE PLANS:
                 Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
                 tag: 1
                 auto parallelism: false
+      Map Vectorization:
+          enabled: false
+          enabledConditionsNotMet: Vectorized map work only works with 1 TableScanOperator IS false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2017,6 +2196,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
               columns.types int,string,string,string,string,int,string,double,string
               escape.delim \
@@ -2026,6 +2206,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
                 columns.types int,string,string,string,string,int,string,double,string
                 escape.delim \
@@ -2039,6 +2220,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -2059,6 +2241,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -2079,6 +2262,10 @@ STAGE PLANS:
         /part_orc [p1]
 #### A masked pattern was here ####
       Needs Tagging: true
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Join Operator
           condition map:
@@ -2161,24 +2348,24 @@ POSTHOOK: Input: default@part_orc
 85768	almond antique chartreuse lavender yellow	Manufacturer#1	Brand#12	LARGE BRUSHED STEEL	34	SM BAG	1753.76	refull
 86428	almond aquamarine burnished black steel	Manufacturer#1	Brand#12	STANDARD ANODIZED STEEL	28	WRAP BAG	1414.42	arefully 
 90681	almond antique chartreuse khaki white	Manufacturer#3	Brand#31	MEDIUM BURNISHED TIN	17	SM CASE	1671.68	are slyly after the sl
-PREHOOK: query: -- 8. testJoinRight
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select abc.* 
 from part_orc p1 join noop(on part_orc 
 partition by p_mfgr 
 order by p_name 
 ) abc on abc.p_partkey = p1.p_partkey
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 8. testJoinRight
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select abc.* 
 from part_orc p1 join noop(on part_orc 
 partition by p_mfgr 
 order by p_name 
 ) abc on abc.p_partkey = p1.p_partkey
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-2 is a root stage
   Stage-1 depends on stages: Stage-2
@@ -2202,6 +2389,14 @@ STAGE PLANS:
               value expressions: p_partkey (type: int), p_brand (type: string), p_type (type: string), p_size (type: int), p_container (type: string), p_retailprice (type: double), p_comment (type: string)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2213,6 +2408,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -2233,6 +2429,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -2252,6 +2449,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col0 (type: int), KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col1 (type: string), VALUE._col2 (type: string), VALUE._col3 (type: int), VALUE._col4 (type: string), VALUE._col5 (type: double), VALUE._col6 (type: string)
@@ -2284,6 +2485,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
                       columns.types int,string,string,string,string,int,string,double,string
                       escape.delim \
@@ -2323,6 +2525,9 @@ STAGE PLANS:
               tag: 1
               value expressions: _col1 (type: string), _col2 (type: string), _col3 (type: string), _col4 (type: string), _col5 (type: int), _col6 (type: string), _col7 (type: double), _col8 (type: string)
               auto parallelism: false
+      Map Vectorization:
+          enabled: false
+          enabledConditionsNotMet: Vectorized map work only works with 1 TableScanOperator IS false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2332,6 +2537,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
               columns.types int,string,string,string,string,int,string,double,string
               escape.delim \
@@ -2341,6 +2547,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2,_col3,_col4,_col5,_col6,_col7,_col8
                 columns.types int,string,string,string,string,int,string,double,string
                 escape.delim \
@@ -2354,6 +2561,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -2374,6 +2582,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -2394,6 +2603,10 @@ STAGE PLANS:
         /part_orc [p1]
 #### A masked pattern was here ####
       Needs Tagging: true
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Join Operator
           condition map:
@@ -2480,24 +2693,24 @@ POSTHOOK: Input: default@part_orc
 85768	almond antique chartreuse lavender yellow	Manufacturer#1	Brand#12	LARGE BRUSHED STEEL	34	SM BAG	1753.76	refull
 86428	almond aquamarine burnished black steel	Manufacturer#1	Brand#12	STANDARD ANODIZED STEEL	28	WRAP BAG	1414.42	arefully 
 90681	almond antique chartreuse khaki white	Manufacturer#3	Brand#31	MEDIUM BURNISHED TIN	17	SM CASE	1671.68	are slyly after the sl
-PREHOOK: query: -- 9. testNoopWithMap
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name, p_size desc) as r
 from noopwithmap(on part_orc
 partition by p_mfgr
 order by p_name, p_size desc)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 9. testNoopWithMap
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name, p_size desc) as r
 from noopwithmap(on part_orc
 partition by p_mfgr
 order by p_name, p_size desc)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -2535,6 +2748,12 @@ STAGE PLANS:
                 Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
                 tag: -1
                 auto parallelism: false
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          notVectorizedReason: PTF Operator (PTF) not supported
+          vectorized: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2546,6 +2765,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -2566,6 +2786,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -2585,6 +2806,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), KEY.reducesinkkey2 (type: int)
@@ -2614,6 +2839,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -2636,6 +2862,15 @@ STAGE PLANS:
               Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
               tag: -1
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2645,6 +2880,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -2654,6 +2890,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -2662,6 +2899,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), KEY.reducesinkkey2 (type: int)
@@ -2763,9 +3004,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2
 Manufacturer#5	almond antique sky peru orange	2	3
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4
 Manufacturer#5	almond azure blanched chiffon midnight	23	5
-PREHOOK: query: -- 10. testNoopWithMapWithWindowing 
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -2774,9 +3013,7 @@ from noopwithmap(on part_orc
   partition by p_mfgr
   order by p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 10. testNoopWithMapWithWindowing 
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -2785,6 +3022,10 @@ from noopwithmap(on part_orc
   partition by p_mfgr
   order by p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -2823,6 +3064,12 @@ STAGE PLANS:
                 tag: -1
                 value expressions: p_size (type: int), p_retailprice (type: double)
                 auto parallelism: false
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          notVectorizedReason: PTF Operator (PTF) not supported
+          vectorized: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2834,6 +3081,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -2854,6 +3102,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -2873,6 +3122,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -2902,6 +3155,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -2925,6 +3179,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -2934,6 +3197,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -2943,6 +3207,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -2951,6 +3216,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3069,9 +3338,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	3401.35
 Manufacturer#5	almond antique sky peru orange	2	3	3	5190.08
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	6208.18
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	7672.66
-PREHOOK: query: -- 11. testHavingWithWindowingPTFNoGBY
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -3080,9 +3347,7 @@ from noop(on part_orc
 partition by p_mfgr
 order by p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 11. testHavingWithWindowingPTFNoGBY
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size,
 rank() over (partition by p_mfgr order by p_name) as r,
 dense_rank() over (partition by p_mfgr order by p_name) as dr,
@@ -3091,6 +3356,10 @@ from noop(on part_orc
 partition by p_mfgr
 order by p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -3114,6 +3383,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3125,6 +3402,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -3145,6 +3423,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -3164,6 +3443,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3192,6 +3475,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -3215,6 +3499,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3224,6 +3517,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -3233,6 +3527,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -3241,6 +3536,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3359,9 +3658,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	3401.35
 Manufacturer#5	almond antique sky peru orange	2	3	3	5190.08
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	6208.18
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	7672.66
-PREHOOK: query: -- 12. testFunctionChain
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -3371,9 +3668,7 @@ partition by p_mfgr
 order by p_mfgr, p_name
 )))
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 12. testFunctionChain
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, p_size, 
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -3383,6 +3678,10 @@ partition by p_mfgr
 order by p_mfgr, p_name
 )))
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -3407,6 +3706,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3418,6 +3725,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -3438,6 +3746,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -3457,6 +3766,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3508,6 +3821,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5,_col7
                       columns.types string,string,int,double
                       escape.delim \
@@ -3531,6 +3845,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3540,6 +3863,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -3549,6 +3873,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -3557,6 +3882,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3593,6 +3922,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -3616,6 +3946,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3625,6 +3964,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -3634,6 +3974,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -3642,6 +3983,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3762,9 +4107,7 @@ Manufacturer#5	almond antique medium spring khaki	6	2	2	3401.35
 Manufacturer#5	almond antique sky peru orange	2	3	3	5190.08
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	4	4	6208.18
 Manufacturer#5	almond azure blanched chiffon midnight	23	5	5	7672.66
-PREHOOK: query: -- 13. testPTFAndWindowingInSubQ
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name, 
 sub1.cd, sub1.s1 
 from (select p_mfgr, p_name, 
@@ -3777,9 +4120,7 @@ order by p_name)
 window w1 as (partition by p_mfgr order by p_name rows between 2 preceding and 2 following) 
 ) sub1
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 13. testPTFAndWindowingInSubQ
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name, 
 sub1.cd, sub1.s1 
 from (select p_mfgr, p_name, 
@@ -3792,6 +4133,10 @@ order by p_name)
 window w1 as (partition by p_mfgr order by p_name rows between 2 preceding and 2 following) 
 ) sub1
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -3815,6 +4160,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3826,6 +4179,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -3846,6 +4200,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -3865,6 +4220,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [sub1:part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -3893,6 +4252,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -3916,6 +4276,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -3925,6 +4294,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -3934,6 +4304,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -3942,6 +4313,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -4060,9 +4435,7 @@ Manufacturer#5	almond antique medium spring khaki	2	6208.18
 Manufacturer#5	almond antique sky peru orange	3	7672.66
 Manufacturer#5	almond aquamarine dodger light gainsboro	4	5882.97
 Manufacturer#5	almond azure blanched chiffon midnight	5	4271.31
-PREHOOK: query: -- 14. testPTFJoinWithWindowingWithCount
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select abc.p_mfgr, abc.p_name, 
 rank() over (distribute by abc.p_mfgr sort by abc.p_name) as r, 
 dense_rank() over (distribute by abc.p_mfgr sort by abc.p_name) as dr, 
@@ -4074,9 +4447,7 @@ partition by p_mfgr
 order by p_name 
 ) abc join part_orc p1 on abc.p_partkey = p1.p_partkey
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 14. testPTFJoinWithWindowingWithCount
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select abc.p_mfgr, abc.p_name, 
 rank() over (distribute by abc.p_mfgr sort by abc.p_name) as r, 
 dense_rank() over (distribute by abc.p_mfgr sort by abc.p_name) as dr, 
@@ -4088,6 +4459,10 @@ partition by p_mfgr
 order by p_name 
 ) abc join part_orc p1 on abc.p_partkey = p1.p_partkey
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -4112,6 +4487,14 @@ STAGE PLANS:
               value expressions: p_partkey (type: int), p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4123,6 +4506,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -4143,6 +4527,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -4162,6 +4547,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col0 (type: int), KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -4194,6 +4583,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col0,_col1,_col2,_col5,_col7
                       columns.types int,string,string,int,double
                       escape.delim \
@@ -4233,6 +4623,9 @@ STAGE PLANS:
                 Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
                 tag: 1
                 auto parallelism: false
+      Map Vectorization:
+          enabled: false
+          enabledConditionsNotMet: Vectorized map work only works with 1 TableScanOperator IS false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4242,6 +4635,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2,_col5,_col7
               columns.types int,string,string,int,double
               escape.delim \
@@ -4251,6 +4645,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2,_col5,_col7
                 columns.types int,string,string,int,double
                 escape.delim \
@@ -4264,6 +4659,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -4284,6 +4680,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -4304,6 +4701,10 @@ STAGE PLANS:
         /part_orc [p1]
 #### A masked pattern was here ####
       Needs Tagging: true
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Join Operator
           condition map:
@@ -4322,6 +4723,7 @@ STAGE PLANS:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                 properties:
+                  column.name.delimiter ,
                   columns _col1,_col2,_col5,_col7
                   columns.types string,string,int,double
                   escape.delim \
@@ -4345,6 +4747,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4354,6 +4765,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -4363,6 +4775,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -4371,6 +4784,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -4510,22 +4927,22 @@ Manufacturer#5	almond antique medium spring khaki	2	2	2	1611.66	3401.35	6	-25
 Manufacturer#5	almond antique sky peru orange	3	3	3	1788.73	5190.08	2	-4
 Manufacturer#5	almond aquamarine dodger light gainsboro	4	4	4	1018.1	6208.18	46	44
 Manufacturer#5	almond azure blanched chiffon midnight	5	5	5	1464.48	7672.66	23	-23
-PREHOOK: query: -- 15. testDistinctInSelectWithPTF
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select DISTINCT p_mfgr, p_name, p_size 
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 15. testDistinctInSelectWithPTF
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select DISTINCT p_mfgr, p_name, p_size 
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -4549,6 +4966,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4560,6 +4985,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -4580,6 +5006,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -4599,6 +5026,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -4636,6 +5067,7 @@ STAGE PLANS:
                       input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                       output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                       properties:
+                        column.name.delimiter ,
                         columns _col0,_col1,_col2
                         columns.types string,string,int
                         escape.delim \
@@ -4658,6 +5090,15 @@ STAGE PLANS:
               Statistics: Num rows: 26 Data size: 16042 Basic stats: COMPLETE Column stats: NONE
               tag: -1
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4667,6 +5108,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2
               columns.types string,string,int
               escape.delim \
@@ -4676,6 +5118,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2
                 columns.types string,string,int
                 escape.delim \
@@ -4684,6 +5127,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Group By Operator
           keys: KEY._col0 (type: string), KEY._col1 (type: string), KEY._col2 (type: int)
@@ -4758,8 +5205,7 @@ Manufacturer#5	almond antique medium spring khaki	6
 Manufacturer#5	almond antique sky peru orange	2
 Manufacturer#5	almond aquamarine dodger light gainsboro	46
 Manufacturer#5	almond azure blanched chiffon midnight	23
-PREHOOK: query: -- 16. testViewAsTableInputToPTF
-create view IF NOT EXISTS mfgr_price_view as 
+PREHOOK: query: create view IF NOT EXISTS mfgr_price_view as 
 select p_mfgr, p_brand, 
 round(sum(p_retailprice),2) as s
 from part_orc 
@@ -4768,8 +5214,7 @@ PREHOOK: type: CREATEVIEW
 PREHOOK: Input: default@part_orc
 PREHOOK: Output: database:default
 PREHOOK: Output: default@mfgr_price_view
-POSTHOOK: query: -- 16. testViewAsTableInputToPTF
-create view IF NOT EXISTS mfgr_price_view as 
+POSTHOOK: query: create view IF NOT EXISTS mfgr_price_view as 
 select p_mfgr, p_brand, 
 round(sum(p_retailprice),2) as s
 from part_orc 
@@ -4778,7 +5223,10 @@ POSTHOOK: type: CREATEVIEW
 POSTHOOK: Input: default@part_orc
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@mfgr_price_view
-PREHOOK: query: explain extended
+POSTHOOK: Lineage: mfgr_price_view.p_brand SIMPLE [(part_orc)part_orc.FieldSchema(name:p_brand, type:string, comment:null), ]
+POSTHOOK: Lineage: mfgr_price_view.p_mfgr SIMPLE [(part_orc)part_orc.FieldSchema(name:p_mfgr, type:string, comment:null), ]
+POSTHOOK: Lineage: mfgr_price_view.s EXPRESSION [(part_orc)part_orc.FieldSchema(name:p_retailprice, type:double, comment:null), ]
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_brand, s, 
 round(sum(s) over w1,2) as s1
 from noop(on mfgr_price_view 
@@ -4786,7 +5234,7 @@ partition by p_mfgr
 order by p_mfgr)  
 window w1 as ( partition by p_mfgr order by p_brand rows between 2 preceding and current row)
 PREHOOK: type: QUERY
-POSTHOOK: query: explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_brand, s, 
 round(sum(s) over w1,2) as s1
 from noop(on mfgr_price_view 
@@ -4794,6 +5242,10 @@ partition by p_mfgr
 order by p_mfgr)  
 window w1 as ( partition by p_mfgr order by p_brand rows between 2 preceding and current row)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -4827,6 +5279,14 @@ STAGE PLANS:
                   value expressions: _col2 (type: double)
                   auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4838,6 +5298,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -4858,6 +5319,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -4877,6 +5339,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [mfgr_price_view:part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Group By Operator
           aggregations: sum(VALUE._col0)
@@ -4911,6 +5377,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col0,_col1,_col2
                       columns.types string,string,double
                       escape.delim \
@@ -4934,6 +5401,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col2 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -4943,6 +5419,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col0,_col1,_col2
               columns.types string,string,double
               escape.delim \
@@ -4952,6 +5429,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col0,_col1,_col2
                 columns.types string,string,double
                 escape.delim \
@@ -4960,6 +5438,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey0 (type: string), KEY.reducesinkkey1 (type: string), VALUE._col0 (type: double)
@@ -5054,8 +5536,7 @@ Manufacturer#4	Brand#42	2581.68	7337.62
 Manufacturer#5	Brand#51	1611.66	1611.66
 Manufacturer#5	Brand#52	3254.17	4865.83
 Manufacturer#5	Brand#53	2806.83	7672.66
-PREHOOK: query: -- 17. testMultipleInserts2SWQsWithPTF
-CREATE TABLE part_4( 
+PREHOOK: query: CREATE TABLE part_4( 
 p_mfgr STRING, 
 p_name STRING, 
 p_size INT, 
@@ -5065,8 +5546,7 @@ s DOUBLE)
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@part_4
-POSTHOOK: query: -- 17. testMultipleInserts2SWQsWithPTF
-CREATE TABLE part_4( 
+POSTHOOK: query: CREATE TABLE part_4( 
 p_mfgr STRING, 
 p_name STRING, 
 p_size INT, 
@@ -5100,7 +5580,7 @@ fv1 INT)
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@part_5
-PREHOOK: query: explain extended
+PREHOOK: query: explain vectorization extended
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name) 
@@ -5116,7 +5596,7 @@ cume_dist() over (distribute by p_mfgr sort by p_mfgr, p_name) as cud,
 first_value(p_size, true) over w1  as fv1
 window w1 as (distribute by p_mfgr sort by p_mfgr, p_name rows between 2 preceding and 2 following)
 PREHOOK: type: QUERY
-POSTHOOK: query: explain extended
+POSTHOOK: query: explain vectorization extended
 from noop(on part_orc 
 partition by p_mfgr 
 order by p_name) 
@@ -5132,6 +5612,10 @@ cume_dist() over (distribute by p_mfgr sort by p_mfgr, p_name) as cud,
 first_value(p_size, true) over w1  as fv1
 window w1 as (distribute by p_mfgr sort by p_mfgr, p_name rows between 2 preceding and 2 following)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-2 is a root stage
   Stage-3 depends on stages: Stage-2
@@ -5160,6 +5644,14 @@ STAGE PLANS:
               value expressions: p_size (type: int), p_retailprice (type: double)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5171,6 +5663,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -5191,6 +5684,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -5210,6 +5704,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -5238,6 +5736,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -5255,6 +5754,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5,_col7
                     columns.types string,string,int,double
                     escape.delim \
@@ -5278,6 +5778,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int), _col7 (type: double)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5287,6 +5796,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -5296,6 +5806,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -5304,6 +5815,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int), VALUE._col5 (type: double)
@@ -5360,6 +5875,7 @@ STAGE PLANS:
                     properties:
                       COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                       bucket_count -1
+                      column.name.delimiter ,
                       columns p_mfgr,p_name,p_size,r,dr,s
                       columns.comments 
                       columns.types string:string:int:int:int:double
@@ -5390,6 +5906,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_mfgr,p_name,p_size,r,dr,s
                 columns.comments 
                 columns.types string:string:int:int:int:double
@@ -5424,6 +5941,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col1 (type: string)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5433,6 +5959,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,_col7
               columns.types string,string,int,double
               escape.delim \
@@ -5442,6 +5969,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,_col7
                 columns.types string,string,int,double
                 escape.delim \
@@ -5450,6 +5978,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), KEY.reducesinkkey1 (type: int)
@@ -5488,6 +6020,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5,sum_window_0
                       columns.types string,string,int,bigint
                       escape.delim \
@@ -5511,6 +6044,15 @@ STAGE PLANS:
               tag: -1
               value expressions: sum_window_0 (type: bigint), _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5520,6 +6062,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5,sum_window_0
               columns.types string,string,int,bigint
               escape.delim \
@@ -5529,6 +6072,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5,sum_window_0
                 columns.types string,string,int,bigint
                 escape.delim \
@@ -5537,6 +6081,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col0 (type: bigint), KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -5600,6 +6148,7 @@ STAGE PLANS:
                     properties:
                       COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                       bucket_count -1
+                      column.name.delimiter ,
                       columns p_mfgr,p_name,p_size,s2,r,dr,cud,fv1
                       columns.comments 
                       columns.types string:string:int:int:int:int:double:int
@@ -5630,6 +6179,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_mfgr,p_name,p_size,s2,r,dr,cud,fv1
                 columns.comments 
                 columns.types string:string:int:int:int:int:double:int
@@ -5768,9 +6318,7 @@ Manufacturer#5	almond antique medium spring khaki	6	8	2	2	0.4	31
 Manufacturer#5	almond antique sky peru orange	2	2	3	3	0.6	31
 Manufacturer#5	almond aquamarine dodger light gainsboro	46	46	4	4	0.8	6
 Manufacturer#5	almond azure blanched chiffon midnight	23	23	5	5	1.0	2
-PREHOOK: query: -- 18. testMulti2OperatorsFunctionChainWithMap
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name) as dr, 
@@ -5787,9 +6335,7 @@ from noop(on
         partition by p_mfgr,p_name  
         order by p_mfgr,p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 18. testMulti2OperatorsFunctionChainWithMap
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name) as dr, 
@@ -5806,6 +6352,10 @@ from noop(on
         partition by p_mfgr,p_name  
         order by p_mfgr,p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -5830,6 +6380,14 @@ STAGE PLANS:
               value expressions: p_name (type: string), p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5841,6 +6399,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -5861,6 +6420,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -5880,6 +6440,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -5938,6 +6502,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5
                       columns.types string,string,int
                       escape.delim \
@@ -5961,6 +6526,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -5970,6 +6544,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -5979,6 +6554,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -5987,6 +6563,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -6023,6 +6603,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6046,6 +6627,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6055,6 +6645,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6064,6 +6655,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6072,6 +6664,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -6206,9 +6802,7 @@ Manufacturer#5	almond antique medium spring khaki	1	1	6	6
 Manufacturer#5	almond antique sky peru orange	1	1	2	2
 Manufacturer#5	almond aquamarine dodger light gainsboro	1	1	46	46
 Manufacturer#5	almond azure blanched chiffon midnight	1	1	23	23
-PREHOOK: query: -- 19. testMulti3OperatorsFunctionChain
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -6225,9 +6819,7 @@ from noop(on
         partition by p_mfgr  
         order by p_mfgr )
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 19. testMulti3OperatorsFunctionChain
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -6244,6 +6836,10 @@ from noop(on
         partition by p_mfgr  
         order by p_mfgr )
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -6269,6 +6865,14 @@ STAGE PLANS:
               value expressions: p_name (type: string), p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6280,6 +6884,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -6300,6 +6905,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -6319,6 +6925,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -6354,6 +6964,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6377,6 +6988,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6386,6 +7006,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6395,6 +7016,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6403,6 +7025,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -6431,6 +7057,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6454,6 +7081,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col1 (type: string), _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6463,6 +7099,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6472,6 +7109,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6480,6 +7118,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -6508,6 +7150,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6531,6 +7174,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6540,6 +7192,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6549,6 +7202,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6557,6 +7211,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -6691,9 +7349,7 @@ Manufacturer#5	almond antique medium spring khaki	2	2	6	37
 Manufacturer#5	almond antique sky peru orange	3	3	2	39
 Manufacturer#5	almond aquamarine dodger light gainsboro	4	4	46	85
 Manufacturer#5	almond azure blanched chiffon midnight	5	5	23	108
-PREHOOK: query: -- 20. testMultiOperatorChainWithNoWindowing
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -6708,9 +7364,7 @@ from noop(on
           partition by p_mfgr 
           order by p_mfgr))
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 20. testMultiOperatorChainWithNoWindowing
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -6725,6 +7379,10 @@ from noop(on
           partition by p_mfgr 
           order by p_mfgr))
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -6749,6 +7407,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6760,6 +7426,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -6780,6 +7447,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -6799,6 +7467,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -6834,6 +7506,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6857,6 +7530,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col1 (type: string), _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6866,6 +7548,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6875,6 +7558,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6883,6 +7567,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -6918,6 +7606,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -6941,6 +7630,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -6950,6 +7648,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -6959,6 +7658,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -6967,6 +7667,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -7097,9 +7801,7 @@ Manufacturer#5	almond antique medium spring khaki	2	2	6	37
 Manufacturer#5	almond antique sky peru orange	3	3	2	39
 Manufacturer#5	almond aquamarine dodger light gainsboro	4	4	46	85
 Manufacturer#5	almond azure blanched chiffon midnight	5	5	23	108
-PREHOOK: query: -- 21. testMultiOperatorChainEndsWithNoopMap
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name) as dr, 
@@ -7116,9 +7818,7 @@ from noopwithmap(on
           partition by p_mfgr,p_name 
           order by p_mfgr,p_name)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 21. testMultiOperatorChainEndsWithNoopMap
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name) as dr, 
@@ -7135,6 +7835,10 @@ from noopwithmap(on
           partition by p_mfgr,p_name 
           order by p_mfgr,p_name)
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -7160,6 +7864,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7171,6 +7883,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -7191,6 +7904,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -7210,6 +7924,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -7245,6 +7963,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -7268,6 +7987,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col1 (type: string), _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7277,6 +8005,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -7286,6 +8015,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -7294,6 +8024,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -7338,6 +8072,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5
                       columns.types string,string,int
                       escape.delim \
@@ -7361,6 +8096,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7370,6 +8114,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -7379,6 +8124,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -7387,6 +8133,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -7416,6 +8166,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -7439,6 +8190,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7448,6 +8208,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -7457,6 +8218,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -7465,6 +8227,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -7599,9 +8365,7 @@ Manufacturer#5	almond antique medium spring khaki	1	1	6	6
 Manufacturer#5	almond antique sky peru orange	1	1	2	2
 Manufacturer#5	almond aquamarine dodger light gainsboro	1	1	46	46
 Manufacturer#5	almond azure blanched chiffon midnight	1	1	23	23
-PREHOOK: query: -- 22. testMultiOperatorChainWithDiffPartitionForWindow1
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name order by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name order by p_mfgr,p_name) as dr, 
@@ -7617,9 +8381,7 @@ from noop(on
           order by p_mfgr
           ))
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 22. testMultiOperatorChainWithDiffPartitionForWindow1
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr,p_name order by p_mfgr,p_name) as r, 
 dense_rank() over (partition by p_mfgr,p_name order by p_mfgr,p_name) as dr, 
@@ -7635,6 +8397,10 @@ from noop(on
           order by p_mfgr
           ))
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -7659,6 +8425,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7670,6 +8444,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -7690,6 +8465,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -7709,6 +8485,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -7760,6 +8540,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5
                       columns.types string,string,int
                       escape.delim \
@@ -7783,6 +8564,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col1 (type: string), _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7792,6 +8582,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -7801,6 +8592,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -7809,6 +8601,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: VALUE._col1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col4 (type: int)
@@ -7845,6 +8641,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -7868,6 +8665,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -7877,6 +8683,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -7886,6 +8693,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -7894,6 +8702,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -8026,9 +8838,7 @@ Manufacturer#5	almond antique medium spring khaki	1	1	6	6	6
 Manufacturer#5	almond antique sky peru orange	1	1	2	2	2
 Manufacturer#5	almond aquamarine dodger light gainsboro	1	1	46	46	46
 Manufacturer#5	almond azure blanched chiffon midnight	1	1	23	23	23
-PREHOOK: query: -- 23. testMultiOperatorChainWithDiffPartitionForWindow2
-
-explain extended
+PREHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -8042,9 +8852,7 @@ from noopwithmap(on
               order by p_mfgr, p_name) 
           ))
 PREHOOK: type: QUERY
-POSTHOOK: query: -- 23. testMultiOperatorChainWithDiffPartitionForWindow2
-
-explain extended
+POSTHOOK: query: explain vectorization extended
 select p_mfgr, p_name,  
 rank() over (partition by p_mfgr order by p_name) as r, 
 dense_rank() over (partition by p_mfgr order by p_name) as dr, 
@@ -8058,6 +8866,10 @@ from noopwithmap(on
               order by p_mfgr, p_name) 
           ))
 POSTHOOK: type: QUERY
+PLAN VECTORIZATION:
+  enabled: true
+  enabledConditionsMet: [hive.vectorized.execution.enabled IS true]
+
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
   Stage-2 depends on stages: Stage-1
@@ -8082,6 +8894,14 @@ STAGE PLANS:
               value expressions: p_size (type: int)
               auto parallelism: false
       Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vectorized.input.format IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.hive.ql.io.orc.OrcInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -8093,6 +8913,7 @@ STAGE PLANS:
             properties:
               COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
               bucket_count -1
+              column.name.delimiter ,
               columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
               columns.comments 
               columns.types int:string:string:string:string:int:string:double:string
@@ -8113,6 +8934,7 @@ STAGE PLANS:
               properties:
                 COLUMN_STATS_ACCURATE {"BASIC_STATS":"true"}
                 bucket_count -1
+                column.name.delimiter ,
                 columns p_partkey,p_name,p_mfgr,p_brand,p_type,p_size,p_container,p_retailprice,p_comment
                 columns.comments 
                 columns.types int:string:string:string:string:int:string:double:string
@@ -8132,6 +8954,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
         /part_orc [part_orc]
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -8183,6 +9009,7 @@ STAGE PLANS:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                     properties:
+                      column.name.delimiter ,
                       columns _col1,_col2,_col5
                       columns.types string,string,int
                       escape.delim \
@@ -8206,6 +9033,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -8215,6 +9051,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -8224,6 +9061,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -8232,6 +9070,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)
@@ -8261,6 +9103,7 @@ STAGE PLANS:
                   input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                   output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
                   properties:
+                    column.name.delimiter ,
                     columns _col1,_col2,_col5
                     columns.types string,string,int
                     escape.delim \
@@ -8284,6 +9127,15 @@ STAGE PLANS:
               tag: -1
               value expressions: _col5 (type: int)
               auto parallelism: false
+      Execution mode: vectorized
+      Map Vectorization:
+          enabled: true
+          enabledConditionsMet: hive.vectorized.use.vector.serde.deserialize IS true
+          groupByVectorOutput: true
+          inputFileFormats: org.apache.hadoop.mapred.SequenceFileInputFormat
+          allNative: false
+          usesVectorUDFAdaptor: false
+          vectorized: true
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -8293,6 +9145,7 @@ STAGE PLANS:
             input format: org.apache.hadoop.mapred.SequenceFileInputFormat
             output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
             properties:
+              column.name.delimiter ,
               columns _col1,_col2,_col5
               columns.types string,string,int
               escape.delim \
@@ -8302,6 +9155,7 @@ STAGE PLANS:
               input format: org.apache.hadoop.mapred.SequenceFileInputFormat
               output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
               properties:
+                column.name.delimiter ,
                 columns _col1,_col2,_col5
                 columns.types string,string,int
                 escape.delim \
@@ -8310,6 +9164,10 @@ STAGE PLANS:
       Truncated Path -> Alias:
 #### A masked pattern was here ####
       Needs Tagging: false
+      Reduce Vectorization:
+          enabled: false
+          enableConditionsMet: hive.vectorized.execution.reduce.enabled IS true
+          enableConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey1 (type: string), KEY.reducesinkkey0 (type: string), VALUE._col3 (type: int)

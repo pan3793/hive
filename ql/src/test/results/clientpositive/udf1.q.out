@@ -50,7 +50,7 @@ STAGE PLANS:
             alias: src
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (UDFToDouble(key) = 86.0) (type: boolean)
+              predicate: (key = 86) (type: boolean)
               Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: 'TRUE' (type: string), 'FALSE' (type: string), 'TRUE' (type: string), 'TRUE' (type: string), 'TRUE' (type: string), 'FALSE' (type: string), 'FALSE' (type: string), 'FALSE' (type: string), 'TRUE' (type: string), 'TRUE' (type: string), 'FALSE' (type: string), 'TRUE' (type: string), 'TRUE' (type: string), 'acc' (type: string), 'abc' (type: string), 'abb' (type: string), 'hive' (type: string), 'hadoop' (type: string), 'AaAbAcA' (type: string), 'FALSE' (type: string)
@@ -142,12 +142,12 @@ POSTHOOK: Lineage: dest1.c10 EXPRESSION []
 POSTHOOK: Lineage: dest1.c11 EXPRESSION []
 POSTHOOK: Lineage: dest1.c12 EXPRESSION []
 POSTHOOK: Lineage: dest1.c13 EXPRESSION []
-POSTHOOK: Lineage: dest1.c14 SIMPLE []
-POSTHOOK: Lineage: dest1.c15 SIMPLE []
-POSTHOOK: Lineage: dest1.c16 SIMPLE []
-POSTHOOK: Lineage: dest1.c17 SIMPLE []
-POSTHOOK: Lineage: dest1.c18 SIMPLE []
-POSTHOOK: Lineage: dest1.c19 SIMPLE []
+POSTHOOK: Lineage: dest1.c14 EXPRESSION []
+POSTHOOK: Lineage: dest1.c15 EXPRESSION []
+POSTHOOK: Lineage: dest1.c16 EXPRESSION []
+POSTHOOK: Lineage: dest1.c17 EXPRESSION []
+POSTHOOK: Lineage: dest1.c18 EXPRESSION []
+POSTHOOK: Lineage: dest1.c19 EXPRESSION []
 POSTHOOK: Lineage: dest1.c2 EXPRESSION []
 POSTHOOK: Lineage: dest1.c20 EXPRESSION []
 POSTHOOK: Lineage: dest1.c3 EXPRESSION []

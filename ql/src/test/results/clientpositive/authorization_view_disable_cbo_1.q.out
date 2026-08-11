@@ -249,16 +249,16 @@ POSTHOOK: Input: default@v
 POSTHOOK: Input: default@v1
 POSTHOOK: Input: default@v2
 #### A masked pattern was here ####
-val_0
-val_10
-val_100
-val_103
-val_104
-val_105
-val_11
-val_111
-val_113
-val_114
+238
+86
+311
+27
+165
+409
+255
+278
+98
+484
 PREHOOK: query: select key from v sort by key limit 10
 PREHOOK: type: QUERY
 PREHOOK: Input: default@src_autho_test

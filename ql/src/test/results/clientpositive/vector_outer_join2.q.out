@@ -35,7 +35,7 @@ POSTHOOK: Lineage: small_alltypesorc2a.cboolean1 SIMPLE [(alltypesorc)alltypesor
 POSTHOOK: Lineage: small_alltypesorc2a.cboolean2 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cboolean2, type:boolean, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc2a.cdouble SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cdouble, type:double, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc2a.cfloat SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cfloat, type:float, comment:null), ]
-POSTHOOK: Lineage: small_alltypesorc2a.cint SIMPLE []
+POSTHOOK: Lineage: small_alltypesorc2a.cint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cint, type:int, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc2a.csmallint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:csmallint, type:smallint, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc2a.cstring1 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cstring1, type:string, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc2a.cstring2 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cstring2, type:string, comment:null), ]
@@ -52,7 +52,7 @@ POSTHOOK: type: CREATETABLE_AS_SELECT
 POSTHOOK: Input: default@alltypesorc
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@small_alltypesorc3a
-POSTHOOK: Lineage: small_alltypesorc3a.cbigint SIMPLE []
+POSTHOOK: Lineage: small_alltypesorc3a.cbigint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cbigint, type:bigint, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc3a.cboolean1 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cboolean1, type:boolean, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc3a.cboolean2 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cboolean2, type:boolean, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc3a.cdouble SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cdouble, type:double, comment:null), ]
@@ -74,12 +74,12 @@ POSTHOOK: type: CREATETABLE_AS_SELECT
 POSTHOOK: Input: default@alltypesorc
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@small_alltypesorc4a
-POSTHOOK: Lineage: small_alltypesorc4a.cbigint SIMPLE []
+POSTHOOK: Lineage: small_alltypesorc4a.cbigint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cbigint, type:bigint, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cboolean1 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cboolean1, type:boolean, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cboolean2 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cboolean2, type:boolean, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cdouble SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cdouble, type:double, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cfloat SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cfloat, type:float, comment:null), ]
-POSTHOOK: Lineage: small_alltypesorc4a.cint SIMPLE []
+POSTHOOK: Lineage: small_alltypesorc4a.cint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cint, type:int, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.csmallint SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:csmallint, type:smallint, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cstring1 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cstring1, type:string, comment:null), ]
 POSTHOOK: Lineage: small_alltypesorc4a.cstring2 SIMPLE [(alltypesorc)alltypesorc.FieldSchema(name:cstring2, type:string, comment:null), ]
@@ -255,37 +255,29 @@ STAGE PLANS:
   Stage: Stage-8
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:cd 
+        t1:cd 
           Fetch Operator
             limit: -1
-        $hdt$_2:hd 
+        t1:hd 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:cd 
+        t1:cd 
           TableScan
             alias: cd
             Statistics: Num rows: 20 Data size: 4182 Basic stats: COMPLETE Column stats: NONE
-            Select Operator
-              expressions: cint (type: int)
-              outputColumnNames: _col0
-              Statistics: Num rows: 20 Data size: 4182 Basic stats: COMPLETE Column stats: NONE
-              HashTable Sink Operator
-                keys:
-                  0 _col0 (type: int)
-                  1 _col0 (type: int)
-        $hdt$_2:hd 
+            HashTable Sink Operator
+              keys:
+                0 cint (type: int)
+                1 cint (type: int)
+        t1:hd 
           TableScan
             alias: hd
             Statistics: Num rows: 20 Data size: 4182 Basic stats: COMPLETE Column stats: NONE
-            Select Operator
-              expressions: cbigint (type: bigint)
-              outputColumnNames: _col0
-              Statistics: Num rows: 20 Data size: 4182 Basic stats: COMPLETE Column stats: NONE
-              HashTable Sink Operator
-                keys:
-                  0 _col1 (type: bigint)
-                  1 _col0 (type: bigint)
+            HashTable Sink Operator
+              keys:
+                0 _col3 (type: bigint)
+                1 cbigint (type: bigint)
 
   Stage: Stage-3
     Map Reduce
@@ -296,42 +288,42 @@ STAGE PLANS:
             TableScan Vectorization:
                 native: true
                 projectedOutputColumns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-            Select Operator
-              expressions: cint (type: int), cbigint (type: bigint)
-              outputColumnNames: _col0, _col1
-              Select Vectorization:
-                  className: VectorSelectOperator
-                  native: true
-                  projectedOutputColumns: [2, 3]
-              Statistics: Num rows: 20 Data size: 4182 Basic stats: COMPLETE Column stats: NONE
+            Map Join Operator
+              condition map:
+                   Left Outer Join0 to 1
+              keys:
+                0 cint (type: int)
+                1 cint (type: int)
+              Map Join Vectorization:
+                  className: VectorMapJoinOperator
+                  native: false
+                  nativeConditionsMet: hive.mapjoin.optimized.hashtable IS true, hive.vectorized.execution.mapjoin.native.enabled IS true, One MapJoin Condition IS true, No nullsafe IS true, Small table vectorizes IS true, Optimized Table and Supports Key Types IS true
+                  nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
+              outputColumnNames: _col3
+              Statistics: Num rows: 22 Data size: 4600 Basic stats: COMPLETE Column stats: NONE
               Map Join Operator
                 condition map:
                      Left Outer Join0 to 1
                 keys:
-                  0 _col0 (type: int)
-                  1 _col0 (type: int)
+                  0 _col3 (type: bigint)
+                  1 cbigint (type: bigint)
                 Map Join Vectorization:
                     className: VectorMapJoinOperator
                     native: false
                     nativeConditionsMet: hive.mapjoin.optimized.hashtable IS true, hive.vectorized.execution.mapjoin.native.enabled IS true, One MapJoin Condition IS true, No nullsafe IS true, Small table vectorizes IS true, Optimized Table and Supports Key Types IS true
                     nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
-                outputColumnNames: _col1
-                Statistics: Num rows: 22 Data size: 4600 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Left Outer Join0 to 1
-                  keys:
-                    0 _col1 (type: bigint)
-                    1 _col0 (type: bigint)
-                  Map Join Vectorization:
-                      className: VectorMapJoinOperator
-                      native: false
-                      nativeConditionsMet: hive.mapjoin.optimized.hashtable IS true, hive.vectorized.execution.mapjoin.native.enabled IS true, One MapJoin Condition IS true, No nullsafe IS true, Small table vectorizes IS true, Optimized Table and Supports Key Types IS true
-                      nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
-                  outputColumnNames: _col1
+                outputColumnNames: _col3
+                Statistics: Num rows: 24 Data size: 5060 Basic stats: COMPLETE Column stats: NONE
+                Select Operator
+                  expressions: _col3 (type: bigint)
+                  outputColumnNames: _col0
+                  Select Vectorization:
+                      className: VectorSelectOperator
+                      native: true
+                      projectedOutputColumns: [0]
                   Statistics: Num rows: 24 Data size: 5060 Basic stats: COMPLETE Column stats: NONE
                   Group By Operator
-                    aggregations: count(), sum(_col1)
+                    aggregations: count(), sum(_col0)
                     Group By Vectorization:
                         aggregators: VectorUDAFCountStar(*) -> bigint, VectorUDAFSumLong(col 0) -> bigint
                         className: VectorGroupByOperator

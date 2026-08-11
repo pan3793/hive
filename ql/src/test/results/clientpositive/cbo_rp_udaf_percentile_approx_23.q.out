@@ -512,11 +512,11 @@ STAGE PLANS:
             alias: bucket
             Statistics: Num rows: 726 Data size: 5812 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: CASE WHEN ((key < 100.0)) THEN (NaN) ELSE (key) END (type: double)
-              outputColumnNames: $f0
+              expressions: key (type: double)
+              outputColumnNames: key
               Statistics: Num rows: 726 Data size: 5812 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
-                aggregations: percentile_approx($f0, 0.5)
+                aggregations: percentile_approx(CASE WHEN ((key < 100.0)) THEN (UDFToDouble('NaN')) ELSE (key) END, 0.5)
                 mode: hash
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
@@ -528,15 +528,19 @@ STAGE PLANS:
         Group By Operator
           aggregations: percentile_approx(VALUE._col0)
           mode: mergepartial
-          outputColumnNames: $f0
-          Statistics: Num rows: 1 Data size: 168 Basic stats: COMPLETE Column stats: NONE
-          File Output Operator
-            compressed: false
-            Statistics: Num rows: 1 Data size: 168 Basic stats: COMPLETE Column stats: NONE
-            table:
-                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+          Select Operator
+            expressions: _col0 (type: double)
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+            File Output Operator
+              compressed: false
+              Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-0
     Fetch Operator
@@ -572,10 +576,10 @@ STAGE PLANS:
             Statistics: Num rows: 726 Data size: 5812 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: double)
-              outputColumnNames: $f0
+              outputColumnNames: key
               Statistics: Num rows: 726 Data size: 5812 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
-                aggregations: percentile_approx($f0, 0.5)
+                aggregations: percentile_approx(key, 0.5)
                 mode: hash
                 outputColumnNames: _col0
                 Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
@@ -587,15 +591,19 @@ STAGE PLANS:
         Group By Operator
           aggregations: percentile_approx(VALUE._col0)
           mode: mergepartial
-          outputColumnNames: $f0
-          Statistics: Num rows: 1 Data size: 168 Basic stats: COMPLETE Column stats: NONE
-          File Output Operator
-            compressed: false
-            Statistics: Num rows: 1 Data size: 168 Basic stats: COMPLETE Column stats: NONE
-            table:
-                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+          Select Operator
+            expressions: _col0 (type: double)
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+            File Output Operator
+              compressed: false
+              Statistics: Num rows: 1 Data size: 160 Basic stats: COMPLETE Column stats: NONE
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-0
     Fetch Operator

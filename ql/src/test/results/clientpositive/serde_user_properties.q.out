@@ -160,6 +160,8 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: src
+          properties:
+            user.defined.key some.value
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
           GatherStats: false
           Select Operator
@@ -290,6 +292,8 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: a
+          properties:
+            user.defined.key some.value
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
           GatherStats: false
           Select Operator

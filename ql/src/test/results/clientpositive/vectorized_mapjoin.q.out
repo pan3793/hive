@@ -19,25 +19,21 @@ STAGE PLANS:
   Stage: Stage-5
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:$hdt$_0:t1 
+        t1 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:$hdt$_0:t1 
+        t1 
           TableScan
             alias: t1
             Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: cint is not null (type: boolean)
               Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: cint (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 cint (type: int)
+                  1 cint (type: int)
 
   Stage: Stage-2
     Map Reduce
@@ -55,52 +51,35 @@ STAGE PLANS:
                   predicateExpression: SelectColumnIsNotNull(col 2) -> boolean
               predicate: cint is not null (type: boolean)
               Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: cint (type: int)
-                outputColumnNames: _col0
-                Select Vectorization:
-                    className: VectorSelectOperator
-                    native: true
-                    projectedOutputColumns: [2]
-                Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Map Join Vectorization:
-                      className: VectorMapJoinOperator
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 cint (type: int)
+                  1 cint (type: int)
+                Map Join Vectorization:
+                    className: VectorMapJoinOperator
+                    native: false
+                    nativeConditionsMet: hive.mapjoin.optimized.hashtable IS true, hive.vectorized.execution.mapjoin.native.enabled IS true, One MapJoin Condition IS true, No nullsafe IS true, Small table vectorizes IS true, Optimized Table and Supports Key Types IS true
+                    nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
+                outputColumnNames: _col2, _col17
+                Statistics: Num rows: 13516 Data size: 2906160 Basic stats: COMPLETE Column stats: NONE
+                Group By Operator
+                  aggregations: count(_col2), max(_col17), min(_col2), avg((_col2 + _col17))
+                  Group By Vectorization:
+                      aggregators: VectorUDAFCount(col 0) -> bigint, VectorUDAFMaxLong(col 1) -> int, VectorUDAFMinLong(col 0) -> int, VectorUDAFAvgLong(LongColAddLongColumn(col 0, col 1) -> 2:long) -> struct<count:bigint,sum:double>
+                      className: VectorGroupByOperator
+                      vectorOutput: false
                       native: false
-                      nativeConditionsMet: hive.mapjoin.optimized.hashtable IS true, hive.vectorized.execution.mapjoin.native.enabled IS true, One MapJoin Condition IS true, No nullsafe IS true, Small table vectorizes IS true, Optimized Table and Supports Key Types IS true
-                      nativeConditionsNotMet: hive.execution.engine mr IN [tez, spark] IS false
-                  outputColumnNames: _col0, _col1
-                  Statistics: Num rows: 13516 Data size: 2906160 Basic stats: COMPLETE Column stats: NONE
-                  Select Operator
-                    expressions: _col0 (type: int), _col1 (type: int), (_col0 + _col1) (type: int)
-                    outputColumnNames: _col0, _col1, _col2
-                    Select Vectorization:
-                        className: VectorSelectOperator
-                        native: true
-                        projectedOutputColumns: [0, 1, 2]
-                        selectExpressions: LongColAddLongColumn(col 0, col 1) -> 2:long
-                    Statistics: Num rows: 13516 Data size: 2906160 Basic stats: COMPLETE Column stats: NONE
-                    Group By Operator
-                      aggregations: count(_col0), max(_col1), min(_col0), avg(_col2)
-                      Group By Vectorization:
-                          aggregators: VectorUDAFCount(col 0) -> bigint, VectorUDAFMaxLong(col 1) -> int, VectorUDAFMinLong(col 0) -> int, VectorUDAFAvgLong(col 2) -> struct<count:bigint,sum:double>
-                          className: VectorGroupByOperator
-                          vectorOutput: false
-                          native: false
-                          projectedOutputColumns: [0, 1, 2, 3]
-                          vectorOutputConditionsNotMet: Vector output of VectorUDAFAvgLong(col 2) -> struct<count:bigint,sum:double> output type STRUCT requires PRIMITIVE IS false
-                      mode: hash
-                      outputColumnNames: _col0, _col1, _col2, _col3
-                      Statistics: Num rows: 1 Data size: 92 Basic stats: COMPLETE Column stats: NONE
-                      Reduce Output Operator
-                        sort order: 
-                        Statistics: Num rows: 1 Data size: 92 Basic stats: COMPLETE Column stats: NONE
-                        value expressions: _col0 (type: bigint), _col1 (type: int), _col2 (type: int), _col3 (type: struct<count:bigint,sum:double,input:int>)
+                      projectedOutputColumns: [0, 1, 2, 3]
+                      vectorOutputConditionsNotMet: Vector output of VectorUDAFAvgLong(LongColAddLongColumn(col 0, col 1) -> 2:long) -> struct<count:bigint,sum:double> output type STRUCT requires PRIMITIVE IS false
+                  mode: hash
+                  outputColumnNames: _col0, _col1, _col2, _col3
+                  Statistics: Num rows: 1 Data size: 92 Basic stats: COMPLETE Column stats: NONE
+                  Reduce Output Operator
+                    sort order: 
+                    Statistics: Num rows: 1 Data size: 92 Basic stats: COMPLETE Column stats: NONE
+                    value expressions: _col0 (type: bigint), _col1 (type: int), _col2 (type: int), _col3 (type: struct<count:bigint,sum:double,input:int>)
       Execution mode: vectorized
       Map Vectorization:
           enabled: true

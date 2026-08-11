@@ -34,12 +34,12 @@ STAGE PLANS:
             Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
             GatherStats: false
             Select Operator
-              expressions: substr(key, 1, 1) (type: string), substr(value, 5) (type: string)
-              outputColumnNames: _col0, _col1
+              expressions: key (type: string), value (type: string)
+              outputColumnNames: key, value
               Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
-                aggregations: count(DISTINCT _col1), sum(_col1)
-                keys: _col0 (type: string), _col1 (type: string)
+                aggregations: count(DISTINCT substr(value, 5)), sum(substr(value, 5))
+                keys: substr(key, 1, 1) (type: string), substr(value, 5) (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1, _col2, _col3
                 Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
@@ -152,8 +152,8 @@ STAGE PLANS:
               name: default.srcpart
             name: default.srcpart
       Truncated Path -> Alias:
-        /srcpart/ds=2008-04-08/hr=11 [$hdt$_0:src]
-        /srcpart/ds=2008-04-08/hr=12 [$hdt$_0:src]
+        /srcpart/ds=2008-04-08/hr=11 [src]
+        /srcpart/ds=2008-04-08/hr=12 [src]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator

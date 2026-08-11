@@ -81,25 +81,21 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        b 
           TableScan
             alias: b
             Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int), value (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -110,25 +106,21 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int), value (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0, _col1, _col4
-                  Select Operator
-                    expressions: _col0 (type: int), concat(_col1, _col4) (type: string)
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: -
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: string)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                outputColumnNames: _col0, _col1, _col7
+                Select Operator
+                  expressions: _col0 (type: int), concat(_col1, _col7) (type: string)
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: -
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: string)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -161,25 +153,21 @@ STAGE PLANS:
   Stage: Stage-8
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int), value (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-5
     Map Reduce
@@ -190,25 +178,21 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int), value (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0, _col1, _col4
-                  Select Operator
-                    expressions: _col0 (type: int), concat(_col1, _col4) (type: string)
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: -
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: string)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                outputColumnNames: _col0, _col1, _col7
+                Select Operator
+                  expressions: _col0 (type: int), concat(_col1, _col7) (type: string)
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: -
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: string)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -232,25 +216,21 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int), value (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0, _col1, _col4
-                  Select Operator
-                    expressions: _col0 (type: int), concat(_col1, _col4) (type: string)
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: -
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: string)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                outputColumnNames: _col0, _col1, _col7
+                Select Operator
+                  expressions: _col0 (type: int), concat(_col1, _col7) (type: string)
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: -
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: string)
       Reduce Operator Tree:
         Select Operator
           expressions: KEY.reducesinkkey0 (type: int), VALUE._col0 (type: string)
@@ -362,11 +342,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:test_table2 
+        b:test_table2 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:test_table2 
+        b:test_table2 
           TableScan
             alias: test_table2
             Statistics: Num rows: 84 Data size: 736 Basic stats: COMPLETE Column stats: NONE
@@ -442,11 +422,11 @@ STAGE PLANS:
   Stage: Stage-8
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:test_table1 
+        a:test_table1 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:test_table1 
+        a:test_table1 
           TableScan
             alias: test_table1
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE

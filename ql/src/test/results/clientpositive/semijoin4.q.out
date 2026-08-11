@@ -18,7 +18,6 @@ STORED AS orc
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@table_18
-Warning: Shuffle Join JOIN[26][tables = [$hdt$_0, $hdt$_1, $hdt$_2]] in Stage 'Stage-2:MAPRED' is a cross product
 PREHOOK: query: explain
 SELECT
     COALESCE(498,
@@ -57,10 +56,9 @@ WHERE (t2.tinyint_col_21) IN (
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
-  Stage-2 depends on stages: Stage-1, Stage-6
+  Stage-2 depends on stages: Stage-1, Stage-5
   Stage-3 depends on stages: Stage-2
   Stage-5 is a root stage
-  Stage-6 depends on stages: Stage-5
   Stage-0 depends on stages: Stage-3
 
 STAGE PLANS:
@@ -71,41 +69,33 @@ STAGE PLANS:
             alias: t1
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
-              predicate: ((-92 = tinyint_col_46) and decimal1309_col_65 is not null and bigint_col_13 is not null) (type: boolean)
+              predicate: (bigint_col_13 is not null and decimal1309_col_65 is not null and tinyint_col_46 is not null and UDFToInteger(tinyint_col_46) is not null) (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-              Select Operator
-                expressions: bigint_col_13 (type: bigint), smallint_col_24 (type: smallint), double_col_60 (type: double), decimal1309_col_65 (type: decimal(13,9))
-                outputColumnNames: _col0, _col1, _col3, _col4
+              Reduce Output Operator
+                key expressions: bigint_col_13 (type: bigint), decimal1309_col_65 (type: decimal(27,9)), tinyint_col_46 (type: tinyint)
+                sort order: +++
+                Map-reduce partition columns: bigint_col_13 (type: bigint), decimal1309_col_65 (type: decimal(27,9)), tinyint_col_46 (type: tinyint)
                 Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col4 (type: decimal(27,9)), _col0 (type: bigint)
-                  sort order: ++
-                  Map-reduce partition columns: _col4 (type: decimal(27,9)), _col0 (type: bigint)
-                  Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                  value expressions: _col1 (type: smallint), _col3 (type: double)
+                value expressions: smallint_col_24 (type: smallint), double_col_60 (type: double)
           TableScan
             alias: t2
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
-              predicate: ((tinyint_col_21 = -92) and tinyint_col_18 is not null and decimal2709_col_9 is not null) (type: boolean)
+              predicate: (UDFToLong(tinyint_col_18) is not null and decimal2709_col_9 is not null and tinyint_col_21 is not null and UDFToInteger(tinyint_col_21) is not null) (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-              Select Operator
-                expressions: decimal2709_col_9 (type: decimal(27,9)), tinyint_col_18 (type: tinyint)
-                outputColumnNames: _col0, _col1
+              Reduce Output Operator
+                key expressions: UDFToLong(tinyint_col_18) (type: bigint), decimal2709_col_9 (type: decimal(27,9)), tinyint_col_21 (type: tinyint)
+                sort order: +++
+                Map-reduce partition columns: UDFToLong(tinyint_col_18) (type: bigint), decimal2709_col_9 (type: decimal(27,9)), tinyint_col_21 (type: tinyint)
                 Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col0 (type: decimal(27,9)), UDFToLong(_col1) (type: bigint)
-                  sort order: ++
-                  Map-reduce partition columns: _col0 (type: decimal(27,9)), UDFToLong(_col1) (type: bigint)
-                  Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Inner Join 0 to 1
           keys:
-            0 _col4 (type: decimal(27,9)), _col0 (type: bigint)
-            1 _col0 (type: decimal(27,9)), UDFToLong(_col1) (type: bigint)
-          outputColumnNames: _col1, _col3
+            0 bigint_col_13 (type: bigint), decimal1309_col_65 (type: decimal(27,9)), tinyint_col_46 (type: tinyint)
+            1 UDFToLong(tinyint_col_18) (type: bigint), decimal2709_col_9 (type: decimal(27,9)), tinyint_col_21 (type: tinyint)
+          outputColumnNames: _col23, _col59, _col110
           Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           File Output Operator
             compressed: false
@@ -119,22 +109,26 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             Reduce Output Operator
-              sort order: 
+              key expressions: UDFToInteger(_col110) (type: int)
+              sort order: +
+              Map-reduce partition columns: UDFToInteger(_col110) (type: int)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-              value expressions: _col1 (type: smallint), _col3 (type: double)
+              value expressions: _col23 (type: smallint), _col59 (type: double), _col110 (type: tinyint)
           TableScan
             Reduce Output Operator
-              sort order: 
+              key expressions: -92 (type: int)
+              sort order: +
+              Map-reduce partition columns: -92 (type: int)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
-               Inner Join 0 to 1
+               Left Semi Join 0 to 1
           keys:
-            0 
-            1 
-          outputColumnNames: _col1, _col3
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
+            0 UDFToInteger(_col110) (type: int)
+            1 _col0 (type: int)
+          outputColumnNames: _col23, _col59, _col110
+          Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           File Output Operator
             compressed: false
             table:
@@ -147,44 +141,44 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             Reduce Output Operator
-              key expressions: (UDFToShort(UDFToByte(-92)) + _col1) (type: smallint), floor(_col3) (type: bigint)
+              key expressions: (_col110 + _col23) (type: smallint), floor(_col59) (type: bigint)
               sort order: +-
-              Map-reduce partition columns: (UDFToShort(UDFToByte(-92)) + _col1) (type: smallint)
-              Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
-              value expressions: _col1 (type: smallint), _col3 (type: double)
+              Map-reduce partition columns: (_col110 + _col23) (type: smallint)
+              Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
+              value expressions: _col23 (type: smallint), _col59 (type: double), _col110 (type: tinyint)
       Reduce Operator Tree:
         Select Operator
-          expressions: VALUE._col1 (type: smallint), VALUE._col3 (type: double)
-          outputColumnNames: _col1, _col3
-          Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
+          expressions: VALUE._col23 (type: smallint), VALUE._col59 (type: double), VALUE._col110 (type: tinyint)
+          outputColumnNames: _col23, _col59, _col110
+          Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           PTF Operator
             Function definitions:
                 Input definition
                   input alias: ptf_0
-                  output shape: _col1: smallint, _col3: double
+                  output shape: _col23: smallint, _col59: double, _col110: tinyint
                   type: WINDOWING
                 Windowing table definition
                   input alias: ptf_1
                   name: windowingtablefunction
-                  order by: (UDFToShort(UDFToByte(-92)) + _col1) ASC NULLS FIRST, floor(_col3) DESC NULLS LAST
-                  partition by: (UDFToShort(UDFToByte(-92)) + _col1)
+                  order by: (_col110 + _col23) ASC NULLS FIRST, floor(_col59) DESC NULLS LAST
+                  partition by: (_col110 + _col23)
                   raw input shape:
                   window functions:
                       window function definition
                         alias: LEAD_window_0
-                        arguments: -973
+                        arguments: COALESCE((- 973),(- 684),515)
                         name: LEAD
                         window function: GenericUDAFLeadEvaluator
                         window frame: PRECEDING(MAX)~FOLLOWING(MAX)
                         isPivotResult: true
-            Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Select Operator
               expressions: COALESCE(498,LEAD_window_0,524) (type: int)
               outputColumnNames: _col0
-              Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
+              Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
               File Output Operator
                 compressed: false
-                Statistics: Num rows: 1 Data size: 1 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
                 table:
                     input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                     output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -199,73 +193,47 @@ STAGE PLANS:
             Filter Operator
               predicate: (decimal1309_col_65 is not null and timestamp_col_66 is not null) (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-              Select Operator
-                expressions: decimal1309_col_65 (type: decimal(13,9)), timestamp_col_66 (type: timestamp)
-                outputColumnNames: _col0, _col1
+              Reduce Output Operator
+                key expressions: decimal1309_col_65 (type: decimal(19,11)), timestamp_col_66 (type: timestamp)
+                sort order: ++
+                Map-reduce partition columns: decimal1309_col_65 (type: decimal(19,11)), timestamp_col_66 (type: timestamp)
                 Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col0 (type: decimal(19,11)), _col1 (type: timestamp)
-                  sort order: ++
-                  Map-reduce partition columns: _col0 (type: decimal(19,11)), _col1 (type: timestamp)
-                  Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           TableScan
             alias: tt2
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
               predicate: (decimal1911_col_16 is not null and timestamp_col_19 is not null) (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-              Select Operator
-                expressions: decimal1911_col_16 (type: decimal(19,11)), timestamp_col_19 (type: timestamp)
-                outputColumnNames: _col0, _col1
+              Reduce Output Operator
+                key expressions: decimal1911_col_16 (type: decimal(19,11)), timestamp_col_19 (type: timestamp)
+                sort order: ++
+                Map-reduce partition columns: decimal1911_col_16 (type: decimal(19,11)), timestamp_col_19 (type: timestamp)
                 Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col0 (type: decimal(19,11)), _col1 (type: timestamp)
-                  sort order: ++
-                  Map-reduce partition columns: _col0 (type: decimal(19,11)), _col1 (type: timestamp)
-                  Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Inner Join 0 to 1
           keys:
-            0 _col0 (type: decimal(19,11)), _col1 (type: timestamp)
-            1 _col0 (type: decimal(19,11)), _col1 (type: timestamp)
+            0 decimal1309_col_65 (type: decimal(19,11)), timestamp_col_66 (type: timestamp)
+            1 decimal1911_col_16 (type: decimal(19,11)), timestamp_col_19 (type: timestamp)
+          outputColumnNames: _col65, _col108
           Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-          Group By Operator
-            keys: -92 (type: int)
-            mode: hash
-            outputColumnNames: _col0
+          Filter Operator
+            predicate: (_col65 = _col108) (type: boolean)
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-            File Output Operator
-              compressed: false
-              table:
-                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
-
-  Stage: Stage-6
-    Map Reduce
-      Map Operator Tree:
-          TableScan
-            Reduce Output Operator
-              key expressions: _col0 (type: int)
-              sort order: +
-              Map-reduce partition columns: _col0 (type: int)
+            Select Operator
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-      Reduce Operator Tree:
-        Group By Operator
-          keys: KEY._col0 (type: int)
-          mode: mergepartial
-          outputColumnNames: _col0
-          Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-          Select Operator
-            Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
-            File Output Operator
-              compressed: false
-              table:
-                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+              Group By Operator
+                keys: -92 (type: int)
+                mode: hash
+                outputColumnNames: _col0
+                Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
+                File Output Operator
+                  compressed: false
+                  table:
+                      input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                      output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                      serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
 
   Stage: Stage-0
     Fetch Operator

@@ -150,7 +150,7 @@ b	str
 two	line1
 four	line2
 six	line3
-Warning: Shuffle Join JOIN[12][tables = [$hdt$_1, $hdt$_2, $hdt$_3, $hdt$_0]] in Stage 'Stage-1:MAPRED' is a cross product
+Warning: Shuffle Join JOIN[8][tables = [orc_create_staging, src1, spam1, spam2]] in Stage 'Stage-1:MAPRED' is a cross product
 PREHOOK: query: INSERT INTO TABLE orc_create_complex
 SELECT orc_create_staging.*, src1.key FROM orc_create_staging cross join src src1 cross join orc_create_staging spam1 cross join orc_create_staging spam2
 PREHOOK: type: QUERY
@@ -224,6 +224,6 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@orc_create_complex
 #### A masked pattern was here ####
 strct	mp	lst	str	_c4
+{"a":"five","b":"six"}	{"key31":"value31","key32":"value32","key33":"value33"}	["g","h","i"]	line3	4501
 {"a":"one","b":"two"}	{"key11":"value11","key12":"value12","key13":"value13"}	["a","b","c"]	line1	4501
 {"a":"three","b":"four"}	{"key21":"value21","key22":"value22","key23":"value23"}	["d","e","f"]	line2	4501
-{"a":"five","b":"six"}	{"key31":"value31","key32":"value32","key33":"value33"}	["g","h","i"]	line3	4501

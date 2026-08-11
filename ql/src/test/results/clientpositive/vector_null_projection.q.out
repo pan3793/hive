@@ -119,9 +119,9 @@ STAGE PLANS:
                     outputColumnNames: _col0
                     Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
                     Reduce Output Operator
-                      key expressions: _col0 (type: void)
+                      key expressions: null (type: void)
                       sort order: +
-                      Map-reduce partition columns: _col0 (type: void)
+                      Map-reduce partition columns: null (type: void)
                       Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
           TableScan
             alias: b
@@ -142,9 +142,9 @@ STAGE PLANS:
                     outputColumnNames: _col0
                     Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
                     Reduce Output Operator
-                      key expressions: _col0 (type: void)
+                      key expressions: null (type: void)
                       sort order: +
-                      Map-reduce partition columns: _col0 (type: void)
+                      Map-reduce partition columns: null (type: void)
                       Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE
       Map Vectorization:
           enabled: false
@@ -159,7 +159,7 @@ STAGE PLANS:
               vectorOutput: false
               native: false
               projectedOutputColumns: null
-          keys: KEY._col0 (type: void)
+          keys: null (type: void)
           mode: mergepartial
           outputColumnNames: _col0
           Statistics: Num rows: 1 Data size: 4 Basic stats: COMPLETE Column stats: COMPLETE

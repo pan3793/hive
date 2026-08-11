@@ -1,12 +1,8 @@
-PREHOOK: query: -- SORT_QUERY_RESULTS
-
-CREATE TABLE tbl1(key int, value string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS
+PREHOOK: query: CREATE TABLE tbl1(key int, value string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@tbl1
-POSTHOOK: query: -- SORT_QUERY_RESULTS
-
-CREATE TABLE tbl1(key int, value string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS
+POSTHOOK: query: CREATE TABLE tbl1(key int, value string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@tbl1
@@ -42,14 +38,12 @@ POSTHOOK: Input: default@src
 POSTHOOK: Output: default@tbl2
 POSTHOOK: Lineage: tbl2.key EXPRESSION [(src)src.FieldSchema(name:key, type:string, comment:default), ]
 POSTHOOK: Lineage: tbl2.value SIMPLE [(src)src.FieldSchema(name:value, type:string, comment:default), ]
-PREHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
@@ -68,23 +62,19 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -118,16 +108,14 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 22
-PREHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select key, count(*) from 
 (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
 group by key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select key, count(*) from 
 (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
@@ -148,27 +136,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -212,8 +196,7 @@ POSTHOOK: Input: default@tbl2
 5	9
 8	1
 9	1
-PREHOOK: query: -- The join is being performed as part of more than one sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from
 (
   select key, count(*) from 
@@ -223,8 +206,7 @@ select count(*) from
   group by key
 ) subq2
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of more than one sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from
 (
   select key, count(*) from 
@@ -249,30 +231,29 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
+          aggregations: count(VALUE._col0)
           keys: KEY._col0 (type: int)
           mode: mergepartial
-          outputColumnNames: _col0
+          outputColumnNames: _col0, _col1
           Select Operator
             Group By Operator
               aggregations: count()
@@ -335,9 +316,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 6
-PREHOOK: query: -- A join is being performed across different sub-queries, where a join is being performed in each of them.
--- Each sub-query should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select src1.key, src1.cnt1, src2.cnt1 from
 (
   select key, count(*) as cnt1 from 
@@ -354,9 +333,7 @@ join
 ) src2
 on src1.key = src2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- A join is being performed across different sub-queries, where a join is being performed in each of them.
--- Each sub-query should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select src1.key, src1.cnt1, src2.cnt1 from
 (
   select key, count(*) as cnt1 from 
@@ -394,27 +371,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -547,27 +520,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -631,18 +600,14 @@ POSTHOOK: Input: default@tbl2
 5	9	9
 8	1	1
 9	1	1
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq2
   on subq1.key = subq2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -717,9 +682,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join, although there is more than one level of sub-query
-explain
+PREHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -731,9 +694,7 @@ select count(*) from
   join tbl2 b
   on subq2.key = b.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join, although there is more than one level of sub-query
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -768,7 +729,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -823,9 +784,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- Both the tables are nested sub-queries i.e more then 1 level of sub-query.
--- The join should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -844,9 +803,7 @@ select count(*) from
   ) subq4
   on subq2.key = subq4.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- Both the tables are nested sub-queries i.e more then 1 level of sub-query.
--- The join should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -955,20 +912,14 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@tbl1
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters and the join key
--- is not getting modified, it should be converted to a sort-merge join. Note that the sub-query modifies one 
--- item, but that is not part of the join key.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, concat(a.value, a.value) as value from tbl1 a where key < 8) subq1 
     join
   (select a.key as key, concat(a.value, a.value) as value from tbl2 a where key < 8) subq2
   on subq1.key = subq2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters and the join key
--- is not getting modified, it should be converted to a sort-merge join. Note that the sub-query modifies one 
--- item, but that is not part of the join key.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, concat(a.value, a.value) as value from tbl1 a where key < 8) subq1 
     join
@@ -1043,18 +994,14 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- Since the join key is modified by the sub-query, neither sort-merge join not bucketized mapside
--- join should be performed
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key +1 as key, concat(a.value, a.value) as value from tbl1 a) subq1 
     join
   (select a.key +1 as key, concat(a.value, a.value) as value from tbl2 a) subq2
   on subq1.key = subq2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- Since the join key is modified by the sub-query, neither sort-merge join not bucketized mapside
--- join should be performed
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key +1 as key, concat(a.value, a.value) as value from tbl1 a) subq1 
     join
@@ -1070,20 +1017,20 @@ STAGE PLANS:
   Stage: Stage-5
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-            Filter Operator
-              predicate: (key + 1) is not null (type: boolean)
+            Select Operator
+              expressions: (key + 1) (type: int)
+              outputColumnNames: _col0
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: (key + 1) (type: int)
-                outputColumnNames: _col0
+              Filter Operator
+                predicate: _col0 is not null (type: boolean)
                 Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
                 HashTable Sink Operator
                   keys:
@@ -1096,12 +1043,12 @@ STAGE PLANS:
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-            Filter Operator
-              predicate: (key + 1) is not null (type: boolean)
+            Select Operator
+              expressions: (key + 1) (type: int)
+              outputColumnNames: _col0
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: (key + 1) (type: int)
-                outputColumnNames: _col0
+              Filter Operator
+                predicate: _col0 is not null (type: boolean)
                 Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
                 Map Join Operator
                   condition map:
@@ -1160,16 +1107,12 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 22
-PREHOOK: query: -- The left table is a sub-query and the right table is not.
--- It should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join tbl2 a on subq1.key = a.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The left table is a sub-query and the right table is not.
--- It should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join tbl2 a on subq1.key = a.key
@@ -1197,7 +1140,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -1238,17 +1181,13 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The right table is a sub-query and the left table is not.
--- It should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from tbl1 a
   join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq1 
   on a.key = subq1.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The right table is a sub-query and the left table is not.
--- It should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from tbl1 a
   join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq1 
@@ -1266,25 +1205,21 @@ STAGE PLANS:
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -1320,9 +1255,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- There are more than 2 inputs to the join, all of them being sub-queries. 
--- It should be converted to to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -1332,9 +1265,7 @@ select count(*) from
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq3
   on (subq1.key = subq3.key)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- There are more than 2 inputs to the join, all of them being sub-queries. 
--- It should be converted to to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -1420,9 +1351,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 56
-PREHOOK: query: -- The join is being performed on a nested sub-query, and an aggregation is performed after that.
--- The join should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from (
   select subq2.key as key, subq2.value as value1, b.value as value2 from
   (
@@ -1435,9 +1364,7 @@ select count(*) from (
 join tbl2 b
 on subq2.key = b.key) a
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed on a nested sub-query, and an aggregation is performed after that.
--- The join should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from (
   select subq2.key as key, subq2.value as value1, b.value as value2 from
   (
@@ -1473,7 +1400,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -1530,14 +1457,12 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
@@ -1558,25 +1483,21 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        subq1:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        subq1:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-3
     Map Reduce
@@ -1587,23 +1508,19 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -1621,25 +1538,21 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -1650,23 +1563,19 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -1690,23 +1599,19 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -1740,16 +1645,14 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 22
-PREHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select key, count(*) from 
 (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
 ) subq1
 group by key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select key, count(*) from 
 (
   select a.key as key, a.value as val1, b.value as val2 from tbl1 a join tbl2 b on a.key = b.key
@@ -1772,25 +1675,21 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        subq1:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        subq1:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-3
     Map Reduce
@@ -1801,27 +1700,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -1840,25 +1735,21 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -1869,27 +1760,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -1914,27 +1801,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -1978,8 +1861,7 @@ POSTHOOK: Input: default@tbl2
 5	9
 8	1
 9	1
-PREHOOK: query: -- The join is being performed as part of more than one sub-query. It should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from
 (
   select key, count(*) from 
@@ -1989,8 +1871,7 @@ select count(*) from
   group by key
 ) subq2
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed as part of more than one sub-query. It should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from
 (
   select key, count(*) from 
@@ -2017,25 +1898,21 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:$hdt$_1:b 
+        subq2:subq1:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:$hdt$_1:b 
+        subq2:subq1:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -2046,32 +1923,31 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
         Group By Operator
+          aggregations: count(VALUE._col0)
           keys: KEY._col0 (type: int)
           mode: mergepartial
-          outputColumnNames: _col0
+          outputColumnNames: _col0, _col1
           Select Operator
             Group By Operator
               aggregations: count()
@@ -2106,25 +1982,21 @@ STAGE PLANS:
   Stage: Stage-8
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:$hdt$_0:a 
+        subq2:subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:$hdt$_0:a 
+        subq2:subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-5
     Map Reduce
@@ -2135,32 +2007,31 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
         Group By Operator
+          aggregations: count(VALUE._col0)
           keys: KEY._col0 (type: int)
           mode: mergepartial
-          outputColumnNames: _col0
+          outputColumnNames: _col0, _col1
           Select Operator
             Group By Operator
               aggregations: count()
@@ -2182,30 +2053,29 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
+          aggregations: count(VALUE._col0)
           keys: KEY._col0 (type: int)
           mode: mergepartial
-          outputColumnNames: _col0
+          outputColumnNames: _col0, _col1
           Select Operator
             Group By Operator
               aggregations: count()
@@ -2249,9 +2119,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 6
-PREHOOK: query: -- A join is being performed across different sub-queries, where a join is being performed in each of them.
--- Each sub-query should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select src1.key, src1.cnt1, src2.cnt1 from
 (
   select key, count(*) as cnt1 from 
@@ -2268,9 +2136,7 @@ join
 ) src2
 on src1.key = src2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- A join is being performed across different sub-queries, where a join is being performed in each of them.
--- Each sub-query should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select src1.key, src1.cnt1, src2.cnt1 from
 (
   select key, count(*) as cnt1 from 
@@ -2315,25 +2181,21 @@ STAGE PLANS:
   Stage: Stage-17
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:$hdt$_1:b 
+        src1:subq1:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:$hdt$_1:b 
+        src1:subq1:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-9
     Map Reduce
@@ -2344,27 +2206,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -2493,25 +2351,21 @@ STAGE PLANS:
   Stage: Stage-18
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:$hdt$_0:a 
+        src1:subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:$hdt$_0:a 
+        src1:subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-10
     Map Reduce
@@ -2522,27 +2376,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -2567,27 +2417,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -2607,25 +2453,21 @@ STAGE PLANS:
   Stage: Stage-19
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:$hdt$_2:b 
+        src2:subq2:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:$hdt$_2:b 
+        src2:subq2:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-12
     Map Reduce
@@ -2636,27 +2478,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -2675,25 +2513,21 @@ STAGE PLANS:
   Stage: Stage-20
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:$hdt$_1:a 
+        src2:subq2:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:$hdt$_1:a 
+        src2:subq2:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
 
   Stage: Stage-13
     Map Reduce
@@ -2704,27 +2538,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -2749,27 +2579,23 @@ STAGE PLANS:
             Filter Operator
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 key (type: int)
                 outputColumnNames: _col0
-                Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  outputColumnNames: _col0
-                  Group By Operator
-                    aggregations: count()
-                    keys: _col0 (type: int)
-                    mode: hash
-                    outputColumnNames: _col0, _col1
-                    Reduce Output Operator
-                      key expressions: _col0 (type: int)
-                      sort order: +
-                      Map-reduce partition columns: _col0 (type: int)
-                      value expressions: _col1 (type: bigint)
+                Group By Operator
+                  aggregations: count()
+                  keys: _col0 (type: int)
+                  mode: hash
+                  outputColumnNames: _col0, _col1
+                  Reduce Output Operator
+                    key expressions: _col0 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: _col0 (type: int)
+                    value expressions: _col1 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -2833,18 +2659,14 @@ POSTHOOK: Input: default@tbl2
 5	9	9
 8	1	1
 9	1	1
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq2
   on subq1.key = subq2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -2867,11 +2689,11 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        subq2:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        subq2:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -2930,11 +2752,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3053,9 +2875,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join, although there is more than one level of sub-query
-explain
+PREHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -3067,9 +2887,7 @@ select count(*) from
   join tbl2 b
   on subq2.key = b.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters, it should 
--- be converted to a sort-merge join, although there is more than one level of sub-query
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -3097,25 +2915,21 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((key < 8) and (key < 6)) (type: boolean)
-              Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              HashTable Sink Operator
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
 
   Stage: Stage-3
     Map Reduce
@@ -3135,7 +2949,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -3160,11 +2974,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq2:subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq2:subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3178,7 +2992,7 @@ STAGE PLANS:
                 HashTable Sink Operator
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -3187,25 +3001,21 @@ STAGE PLANS:
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((key < 8) and (key < 6)) (type: boolean)
-              Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -3238,7 +3048,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -3293,9 +3103,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- Both the tables are nested sub-queries i.e more then 1 level of sub-query.
--- The join should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -3314,9 +3122,7 @@ select count(*) from
   ) subq4
   on subq2.key = subq4.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- Both the tables are nested sub-queries i.e more then 1 level of sub-query.
--- The join should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (
   select * from
@@ -3351,11 +3157,11 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        subq4:subq3:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        subq4:subq3:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3414,11 +3220,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq2:subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq2:subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3559,20 +3365,14 @@ POSTHOOK: type: QUERY
 POSTHOOK: Input: default@tbl1
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters and the join key
--- is not getting modified, it should be converted to a sort-merge join. Note that the sub-query modifies one 
--- item, but that is not part of the join key.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, concat(a.value, a.value) as value from tbl1 a where key < 8) subq1 
     join
   (select a.key as key, concat(a.value, a.value) as value from tbl2 a where key < 8) subq2
   on subq1.key = subq2.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The subquery itself is being joined. Since the sub-query only contains selects and filters and the join key
--- is not getting modified, it should be converted to a sort-merge join. Note that the sub-query modifies one 
--- item, but that is not part of the join key.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, concat(a.value, a.value) as value from tbl1 a where key < 8) subq1 
     join
@@ -3595,11 +3395,11 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        subq2:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        subq2:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3658,11 +3458,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3781,16 +3581,12 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The left table is a sub-query and the right table is not.
--- It should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join tbl2 a on subq1.key = a.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The left table is a sub-query and the right table is not.
--- It should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join tbl2 a on subq1.key = a.key
@@ -3811,25 +3607,21 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              HashTable Sink Operator
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
 
   Stage: Stage-3
     Map Reduce
@@ -3849,7 +3641,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -3874,11 +3666,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -3892,7 +3684,7 @@ STAGE PLANS:
                 HashTable Sink Operator
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -3901,25 +3693,21 @@ STAGE PLANS:
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -3952,7 +3740,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -3993,17 +3781,13 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- The right table is a sub-query and the left table is not.
--- It should be converted to a sort-merge join.
-explain
+PREHOOK: query: explain
 select count(*) from tbl1 a
   join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq1 
   on a.key = subq1.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The right table is a sub-query and the left table is not.
--- It should be converted to a sort-merge join.
-explain
+POSTHOOK: query: explain
 select count(*) from tbl1 a
   join
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq1 
@@ -4025,11 +3809,11 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4042,7 +3826,7 @@ STAGE PLANS:
                 Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
                 HashTable Sink Operator
                   keys:
-                    0 _col0 (type: int)
+                    0 key (type: int)
                     1 _col0 (type: int)
 
   Stage: Stage-3
@@ -4052,25 +3836,21 @@ STAGE PLANS:
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -4088,25 +3868,21 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              HashTable Sink Operator
+                keys:
+                  0 key (type: int)
+                  1 _col0 (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -4125,7 +3901,7 @@ STAGE PLANS:
                   condition map:
                        Inner Join 0 to 1
                   keys:
-                    0 _col0 (type: int)
+                    0 key (type: int)
                     1 _col0 (type: int)
                   Group By Operator
                     aggregations: count()
@@ -4155,25 +3931,21 @@ STAGE PLANS:
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (key < 6) (type: boolean)
-              Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 3 Data size: 21 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: int)
+                  1 _col0 (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
@@ -4209,9 +3981,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 20
-PREHOOK: query: -- There are more than 2 inputs to the join, all of them being sub-queries. 
--- It should be converted to to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -4221,9 +3991,7 @@ select count(*) from
   (select a.key as key, a.value as value from tbl2 a where key < 6) subq3
   on (subq1.key = subq3.key)
 PREHOOK: type: QUERY
-POSTHOOK: query: -- There are more than 2 inputs to the join, all of them being sub-queries. 
--- It should be converted to to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from 
   (select a.key as key, a.value as value from tbl1 a where key < 6) subq1 
     join
@@ -4251,14 +4019,14 @@ STAGE PLANS:
   Stage: Stage-8
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:a 
+        subq2:a 
           Fetch Operator
             limit: -1
-        $hdt$_2:a 
+        subq3:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:a 
+        subq2:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4274,7 +4042,7 @@ STAGE PLANS:
                     0 _col0 (type: int)
                     1 _col0 (type: int)
                     2 _col0 (type: int)
-        $hdt$_2:a 
+        subq3:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4336,14 +4104,14 @@ STAGE PLANS:
   Stage: Stage-9
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
-        $hdt$_2:a 
+        subq3:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4359,7 +4127,7 @@ STAGE PLANS:
                     0 _col0 (type: int)
                     1 _col0 (type: int)
                     2 _col0 (type: int)
-        $hdt$_2:a 
+        subq3:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4421,14 +4189,14 @@ STAGE PLANS:
   Stage: Stage-10
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        subq1:a 
           Fetch Operator
             limit: -1
-        $hdt$_1:a 
+        subq2:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4444,7 +4212,7 @@ STAGE PLANS:
                     0 _col0 (type: int)
                     1 _col0 (type: int)
                     2 _col0 (type: int)
-        $hdt$_1:a 
+        subq2:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4574,9 +4342,7 @@ POSTHOOK: Input: default@tbl1
 POSTHOOK: Input: default@tbl2
 #### A masked pattern was here ####
 56
-PREHOOK: query: -- The join is being performed on a nested sub-query, and an aggregation is performed after that.
--- The join should be converted to a sort-merge join
-explain
+PREHOOK: query: explain
 select count(*) from (
   select subq2.key as key, subq2.value as value1, b.value as value2 from
   (
@@ -4589,9 +4355,7 @@ select count(*) from (
 join tbl2 b
 on subq2.key = b.key) a
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The join is being performed on a nested sub-query, and an aggregation is performed after that.
--- The join should be converted to a sort-merge join
-explain
+POSTHOOK: query: explain
 select count(*) from (
   select subq2.key as key, subq2.value as value1, b.value as value2 from
   (
@@ -4620,25 +4384,21 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        a:b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        a:b 
           TableScan
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((key < 8) and (key < 6)) (type: boolean)
-              Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              HashTable Sink Operator
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
 
   Stage: Stage-3
     Map Reduce
@@ -4658,7 +4418,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash
@@ -4683,11 +4443,11 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a:subq2:subq1:a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a:subq2:subq1:a 
           TableScan
             alias: a
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
@@ -4701,7 +4461,7 @@ STAGE PLANS:
                 HashTable Sink Operator
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
 
   Stage: Stage-4
     Map Reduce
@@ -4710,25 +4470,21 @@ STAGE PLANS:
             alias: b
             Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((key < 8) and (key < 6)) (type: boolean)
-              Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: int)
-                outputColumnNames: _col0
-                Statistics: Num rows: 1 Data size: 7 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: int)
-                    1 _col0 (type: int)
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      sort order: 
-                      value expressions: _col0 (type: bigint)
+              predicate: key is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 70 Basic stats: COMPLETE Column stats: NONE
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 _col0 (type: int)
+                  1 key (type: int)
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    sort order: 
+                    value expressions: _col0 (type: bigint)
       Local Work:
         Map Reduce Local Work
       Reduce Operator Tree:
@@ -4761,7 +4517,7 @@ STAGE PLANS:
                        Inner Join 0 to 1
                   keys:
                     0 _col0 (type: int)
-                    1 _col0 (type: int)
+                    1 key (type: int)
                   Group By Operator
                     aggregations: count()
                     mode: hash

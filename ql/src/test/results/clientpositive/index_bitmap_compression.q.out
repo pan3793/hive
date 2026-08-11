@@ -33,15 +33,15 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             alias: default__src_src_index__
-            filterExpr: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0) and (not EWAH_BITMAP_EMPTY(_bitmaps))) (type: boolean)
+            filterExpr: ((key > 80) and (key < 100) and (not EWAH_BITMAP_EMPTY(_bitmaps))) (type: boolean)
             Filter Operator
-              predicate: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0) and (not EWAH_BITMAP_EMPTY(_bitmaps))) (type: boolean)
+              predicate: ((key > 80) and (key < 100) and (not EWAH_BITMAP_EMPTY(_bitmaps))) (type: boolean)
               Select Operator
                 expressions: _bucketname (type: string), _offset (type: bigint)
-                outputColumnNames: _bucketname, _offset
+                outputColumnNames: _col0, _col1
                 Group By Operator
-                  aggregations: collect_set(_offset)
-                  keys: _bucketname (type: string)
+                  aggregations: collect_set(_col1)
+                  keys: _col0 (type: string)
                   mode: hash
                   outputColumnNames: _col0, _col1
                   Reduce Output Operator
@@ -73,10 +73,10 @@ STAGE PLANS:
       Map Operator Tree:
           TableScan
             alias: src
-            filterExpr: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
+            filterExpr: ((key > 80) and (key < 100)) (type: boolean)
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((UDFToDouble(key) > 80.0) and (UDFToDouble(key) < 100.0)) (type: boolean)
+              predicate: ((key > 80) and (key < 100)) (type: boolean)
               Statistics: Num rows: 55 Data size: 584 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: key (type: string), value (type: string)

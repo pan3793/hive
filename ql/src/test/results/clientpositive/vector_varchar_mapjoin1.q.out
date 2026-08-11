@@ -141,25 +141,21 @@ STAGE PLANS:
   Stage: Stage-5
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: c2 is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: varchar(10))
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col1 (type: varchar(10))
-                    1 _col1 (type: varchar(10))
+              HashTable Sink Operator
+                keys:
+                  0 c2 (type: varchar(10))
+                  1 c2 (type: varchar(10))
 
   Stage: Stage-2
     Map Reduce
@@ -170,16 +166,16 @@ STAGE PLANS:
             Filter Operator
               predicate: c2 is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: varchar(10))
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col1 (type: varchar(10))
-                    1 _col1 (type: varchar(10))
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 c2 (type: varchar(10))
+                  1 c2 (type: varchar(10))
+                outputColumnNames: _col0, _col1, _col5, _col6
+                Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
+                Select Operator
+                  expressions: _col0 (type: int), _col1 (type: varchar(10)), _col5 (type: int), _col6 (type: varchar(10))
                   outputColumnNames: _col0, _col1, _col2, _col3
                   Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator
@@ -249,25 +245,21 @@ STAGE PLANS:
   Stage: Stage-5
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: c2 is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: varchar(10))
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col1 (type: varchar(20))
-                    1 _col1 (type: varchar(20))
+              HashTable Sink Operator
+                keys:
+                  0 c2 (type: varchar(20))
+                  1 c2 (type: varchar(20))
 
   Stage: Stage-2
     Map Reduce
@@ -278,16 +270,16 @@ STAGE PLANS:
             Filter Operator
               predicate: c2 is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: varchar(20))
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col1 (type: varchar(20))
-                    1 _col1 (type: varchar(20))
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 c2 (type: varchar(20))
+                  1 c2 (type: varchar(20))
+                outputColumnNames: _col0, _col1, _col5, _col6
+                Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
+                Select Operator
+                  expressions: _col0 (type: int), _col1 (type: varchar(10)), _col5 (type: int), _col6 (type: varchar(20))
                   outputColumnNames: _col0, _col1, _col2, _col3
                   Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator
@@ -359,25 +351,21 @@ STAGE PLANS:
   Stage: Stage-5
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        b 
           Fetch Operator
             limit: -1
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        b 
           TableScan
             alias: b
             Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
               predicate: c2 is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 UDFToString(_col1) (type: string)
-                    1 _col1 (type: string)
+              HashTable Sink Operator
+                keys:
+                  0 UDFToString(c2) (type: string)
+                  1 c2 (type: string)
 
   Stage: Stage-2
     Map Reduce
@@ -386,18 +374,18 @@ STAGE PLANS:
             alias: a
             Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: c2 is not null (type: boolean)
+              predicate: UDFToString(c2) is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: c1 (type: int), c2 (type: varchar(10))
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 273 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 UDFToString(_col1) (type: string)
-                    1 _col1 (type: string)
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 UDFToString(c2) (type: string)
+                  1 c2 (type: string)
+                outputColumnNames: _col0, _col1, _col5, _col6
+                Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
+                Select Operator
+                  expressions: _col0 (type: int), _col1 (type: varchar(10)), _col5 (type: int), _col6 (type: string)
                   outputColumnNames: _col0, _col1, _col2, _col3
                   Statistics: Num rows: 3 Data size: 300 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator

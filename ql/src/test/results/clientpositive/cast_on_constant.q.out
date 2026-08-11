@@ -22,7 +22,7 @@ STAGE PLANS:
             alias: t1
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
-              predicate: (ts_field = 2016-01-23 00:00:00.0) (type: boolean)
+              predicate: (ts_field = '2016-01-23 00:00:00') (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
               Select Operator
                 expressions: 2016-01-23 00:00:00.0 (type: timestamp), date_field (type: date)
@@ -58,7 +58,7 @@ STAGE PLANS:
             alias: t1
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
-              predicate: (date_field = 2016-01-23) (type: boolean)
+              predicate: (date_field = '2016-01-23') (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
               Select Operator
                 expressions: ts_field (type: timestamp), 2016-01-23 (type: date)
@@ -166,7 +166,7 @@ STAGE PLANS:
             alias: t1
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Filter Operator
-              predicate: (CAST( date_field AS TIMESTAMP) = ts_field) (type: boolean)
+              predicate: (date_field = ts_field) (type: boolean)
               Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
               Select Operator
                 expressions: ts_field (type: timestamp), date_field (type: date)

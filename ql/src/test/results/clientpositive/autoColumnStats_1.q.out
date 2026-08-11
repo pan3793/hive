@@ -477,11 +477,11 @@ STAGE PLANS:
       Processor Tree:
         TableScan
           alias: nzhang_part14
-          Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: COMPLETE
+          Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: PARTIAL
           Select Operator
             expressions: key (type: string)
             outputColumnNames: _col0
-            Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: COMPLETE
+            Statistics: Num rows: 11 Data size: 946 Basic stats: COMPLETE Column stats: PARTIAL
             ListSink
 
 PREHOOK: query: create table alter5 ( col1 string ) partitioned by (dt string)
@@ -599,7 +599,7 @@ STAGE PLANS:
           Select Operator
             expressions: col1 (type: string), 'a' (type: string)
             outputColumnNames: _col0, _col1
-            Statistics: Num rows: 500 Data size: 86000 Basic stats: COMPLETE Column stats: COMPLETE
+            Statistics: Num rows: 500 Data size: 43500 Basic stats: COMPLETE Column stats: COMPLETE
             ListSink
 
 PREHOOK: query: drop table src_stat_part
@@ -958,6 +958,12 @@ Retention:          	0
 #### A masked pattern was here ####
 Table Type:         	MANAGED_TABLE       	 
 Table Parameters:	 	 
+	COLUMN_STATS_ACCURATE	{\"BASIC_STATS\":\"true\"}
+	numFiles            	0                   
+	numPartitions       	0                   
+	numRows             	0                   
+	rawDataSize         	0                   
+	totalSize           	0                   
 #### A masked pattern was here ####
 	 	 
 # Storage Information	 	 

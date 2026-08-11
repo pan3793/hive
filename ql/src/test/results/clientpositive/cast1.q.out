@@ -30,7 +30,7 @@ STAGE PLANS:
             alias: src
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: (UDFToDouble(key) = 86.0) (type: boolean)
+              predicate: (key = 86) (type: boolean)
               Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: 5 (type: int), 5.0 (type: double), 5.0 (type: double), 5.0 (type: double), 5 (type: int), 'TRUE' (type: string), 1 (type: int)
@@ -105,13 +105,13 @@ POSTHOOK: query: FROM src INSERT OVERWRITE TABLE dest1 SELECT 3 + 2, 3.0 + 2, 3 
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@dest1
-POSTHOOK: Lineage: dest1.c1 SIMPLE []
+POSTHOOK: Lineage: dest1.c1 EXPRESSION []
 POSTHOOK: Lineage: dest1.c2 EXPRESSION []
 POSTHOOK: Lineage: dest1.c3 EXPRESSION []
 POSTHOOK: Lineage: dest1.c4 EXPRESSION []
-POSTHOOK: Lineage: dest1.c5 SIMPLE []
+POSTHOOK: Lineage: dest1.c5 EXPRESSION []
 POSTHOOK: Lineage: dest1.c6 EXPRESSION []
-POSTHOOK: Lineage: dest1.c7 SIMPLE []
+POSTHOOK: Lineage: dest1.c7 EXPRESSION []
 PREHOOK: query: select dest1.* FROM dest1
 PREHOOK: type: QUERY
 PREHOOK: Input: default@dest1

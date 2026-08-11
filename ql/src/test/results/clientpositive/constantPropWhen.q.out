@@ -34,7 +34,7 @@ STAGE PLANS:
             alias: test_1
             Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: (not NVL((id = id2),false)) (type: boolean)
+              expressions: CASE WHEN ((id = id2)) THEN (false) ELSE (true) END (type: boolean)
               outputColumnNames: _col0
               Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
               File Output Operator
@@ -79,7 +79,7 @@ STAGE PLANS:
             alias: test_1
             Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: (not NVL((id = id2),false)) (type: boolean)
+              expressions: CASE (id) WHEN (id2) THEN (false) ELSE (true) END (type: boolean)
               outputColumnNames: _col0
               Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
               File Output Operator
@@ -124,7 +124,7 @@ STAGE PLANS:
             alias: test_1
             Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: NVL((id = id2),false) (type: boolean)
+              expressions: CASE WHEN ((id = id2)) THEN (true) ELSE (false) END (type: boolean)
               outputColumnNames: _col0
               Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
               File Output Operator
@@ -169,7 +169,7 @@ STAGE PLANS:
             alias: test_1
             Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: NVL((id = id2),false) (type: boolean)
+              expressions: CASE (id) WHEN (id2) THEN (true) ELSE (false) END (type: boolean)
               outputColumnNames: _col0
               Statistics: Num rows: 4 Data size: 24 Basic stats: COMPLETE Column stats: NONE
               File Output Operator

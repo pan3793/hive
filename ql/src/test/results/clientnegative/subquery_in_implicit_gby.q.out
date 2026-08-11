@@ -30,9 +30,4 @@ POSTHOOK: type: QUERY
 POSTHOOK: Output: default@tt
 POSTHOOK: Lineage: tt.i EXPRESSION [(values__tmp__table__2)values__tmp__table__2.FieldSchema(name:tmp_values_col1, type:string, comment:), ]
 POSTHOOK: Lineage: tt.j EXPRESSION [(values__tmp__table__2)values__tmp__table__2.FieldSchema(name:tmp_values_col2, type:string, comment:), ]
-PREHOOK: query: select * from t where i IN (select count(i) from tt where tt.j = t.j)
-PREHOOK: type: QUERY
-PREHOOK: Input: default@t
-PREHOOK: Input: default@tt
-#### A masked pattern was here ####
-FAILED: Execution Error, return code 2 from org.apache.hadoop.hive.ql.exec.mr.MapRedTask
+FAILED: SemanticException [Error 10025]: Line 4:58 Expression not in GROUP BY key 'j'

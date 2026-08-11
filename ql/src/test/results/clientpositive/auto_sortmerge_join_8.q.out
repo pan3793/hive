@@ -1,10 +1,8 @@
-PREHOOK: query: -- small 2 part, 2 bucket & big 2 part, 4 bucket
-CREATE TABLE bucket_small (key string, value string) partitioned by (ds string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS STORED AS TEXTFILE
+PREHOOK: query: CREATE TABLE bucket_small (key string, value string) partitioned by (ds string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS STORED AS TEXTFILE
 PREHOOK: type: CREATETABLE
 PREHOOK: Output: database:default
 PREHOOK: Output: default@bucket_small
-POSTHOOK: query: -- small 2 part, 2 bucket & big 2 part, 4 bucket
-CREATE TABLE bucket_small (key string, value string) partitioned by (ds string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS STORED AS TEXTFILE
+POSTHOOK: query: CREATE TABLE bucket_small (key string, value string) partitioned by (ds string) CLUSTERED BY (key) SORTED BY (key) INTO 2 BUCKETS STORED AS TEXTFILE
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@bucket_small
@@ -116,11 +114,9 @@ POSTHOOK: query: load data local inpath '../../data/files/srcsortbucket4outof4.t
 POSTHOOK: type: LOAD
 #### A masked pattern was here ####
 POSTHOOK: Output: default@bucket_big@ds=2008-04-09
-PREHOOK: query: -- Since size is being used to find the big table, the order of the tables in the join does not matter
-explain extended select count(*) FROM bucket_small a JOIN bucket_big b ON a.key = b.key
+PREHOOK: query: explain extended select count(*) FROM bucket_small a JOIN bucket_big b ON a.key = b.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- Since size is being used to find the big table, the order of the tables in the join does not matter
-explain extended select count(*) FROM bucket_small a JOIN bucket_big b ON a.key = b.key
+POSTHOOK: query: explain extended select count(*) FROM bucket_small a JOIN bucket_big b ON a.key = b.key
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
@@ -138,28 +134,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -173,6 +165,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -196,6 +189,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -220,6 +214,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -243,6 +238,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -258,8 +254,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_1:b]
-        /bucket_big/ds=2008-04-09 [$hdt$_1:b]
+        /bucket_big/ds=2008-04-08 [b]
+        /bucket_big/ds=2008-04-09 [b]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -333,28 +329,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -368,6 +360,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -391,6 +384,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -415,6 +409,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -438,6 +433,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -453,8 +449,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -508,11 +504,9 @@ POSTHOOK: Input: default@bucket_small@ds=2008-04-08
 POSTHOOK: Input: default@bucket_small@ds=2008-04-09
 #### A masked pattern was here ####
 76
-PREHOOK: query: -- The mapjoin should fail resulting in the sort-merge join
-explain extended select count(*) FROM bucket_big a JOIN bucket_small b ON a.key = b.key
+PREHOOK: query: explain extended select count(*) FROM bucket_big a JOIN bucket_small b ON a.key = b.key
 PREHOOK: type: QUERY
-POSTHOOK: query: -- The mapjoin should fail resulting in the sort-merge join
-explain extended select count(*) FROM bucket_big a JOIN bucket_small b ON a.key = b.key
+POSTHOOK: query: explain extended select count(*) FROM bucket_big a JOIN bucket_small b ON a.key = b.key
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
   Stage-5 is a root stage , consists of Stage-6, Stage-7, Stage-1
@@ -530,7 +524,7 @@ STAGE PLANS:
   Stage: Stage-6
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_1:b 
+        b 
           Fetch Operator
             limit: -1
             Partition Description:
@@ -542,6 +536,7 @@ STAGE PLANS:
                   properties:
                     bucket_count 2
                     bucket_field_name key
+                    column.name.delimiter ,
                     columns key,value
                     columns.comments 
                     columns.types string:string
@@ -565,6 +560,7 @@ STAGE PLANS:
                       SORTBUCKETCOLSPREFIX TRUE
                       bucket_count 2
                       bucket_field_name key
+                      column.name.delimiter ,
                       columns key,value
                       columns.comments 
                       columns.types string:string
@@ -587,6 +583,7 @@ STAGE PLANS:
                   properties:
                     bucket_count 2
                     bucket_field_name key
+                    column.name.delimiter ,
                     columns key,value
                     columns.comments 
                     columns.types string:string
@@ -610,6 +607,7 @@ STAGE PLANS:
                       SORTBUCKETCOLSPREFIX TRUE
                       bucket_count 2
                       bucket_field_name key
+                      column.name.delimiter ,
                       columns key,value
                       columns.comments 
                       columns.types string:string
@@ -625,7 +623,7 @@ STAGE PLANS:
                     name: default.bucket_small
                   name: default.bucket_small
       Alias -> Map Local Operator Tree:
-        $hdt$_1:b 
+        b 
           TableScan
             alias: b
             Statistics: Num rows: 2 Data size: 228 Basic stats: COMPLETE Column stats: NONE
@@ -634,15 +632,11 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 2 Data size: 228 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 2 Data size: 228 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
+              HashTable Sink Operator
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
 
   Stage: Stage-3
     Map Reduce
@@ -655,27 +649,23 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Local Work:
         Map Reduce Local Work
       Path -> Alias:
@@ -691,6 +681,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -714,6 +705,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -738,6 +730,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -761,6 +754,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -784,6 +778,7 @@ STAGE PLANS:
             properties:
               bucket_count 2
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -807,6 +802,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 2
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -830,6 +826,7 @@ STAGE PLANS:
             properties:
               bucket_count 2
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -853,6 +850,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 2
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -868,8 +866,8 @@ STAGE PLANS:
               name: default.bucket_small
             name: default.bucket_small
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -901,7 +899,7 @@ STAGE PLANS:
   Stage: Stage-7
     Map Reduce Local Work
       Alias -> Map Local Tables:
-        $hdt$_0:a 
+        a 
           Fetch Operator
             limit: -1
             Partition Description:
@@ -914,6 +912,7 @@ STAGE PLANS:
                   properties:
                     bucket_count 4
                     bucket_field_name key
+                    column.name.delimiter ,
                     columns key,value
                     columns.comments 
                     columns.types string:string
@@ -937,6 +936,7 @@ STAGE PLANS:
                       SORTBUCKETCOLSPREFIX TRUE
                       bucket_count 4
                       bucket_field_name key
+                      column.name.delimiter ,
                       columns key,value
                       columns.comments 
                       columns.types string:string
@@ -960,6 +960,7 @@ STAGE PLANS:
                   properties:
                     bucket_count 4
                     bucket_field_name key
+                    column.name.delimiter ,
                     columns key,value
                     columns.comments 
                     columns.types string:string
@@ -983,6 +984,7 @@ STAGE PLANS:
                       SORTBUCKETCOLSPREFIX TRUE
                       bucket_count 4
                       bucket_field_name key
+                      column.name.delimiter ,
                       columns key,value
                       columns.comments 
                       columns.types string:string
@@ -998,7 +1000,7 @@ STAGE PLANS:
                     name: default.bucket_big
                   name: default.bucket_big
       Alias -> Map Local Operator Tree:
-        $hdt$_0:a 
+        a 
           TableScan
             alias: a
             Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
@@ -1007,15 +1009,11 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                HashTable Sink Operator
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
+              HashTable Sink Operator
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
 
   Stage: Stage-4
     Map Reduce
@@ -1028,27 +1026,23 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 2 Data size: 228 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 2 Data size: 228 Basic stats: COMPLETE Column stats: NONE
-                Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 1
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 1
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Local Work:
         Map Reduce Local Work
       Path -> Alias:
@@ -1064,6 +1058,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1087,6 +1082,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1111,6 +1107,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1134,6 +1131,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1157,6 +1155,7 @@ STAGE PLANS:
             properties:
               bucket_count 2
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1180,6 +1179,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 2
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1203,6 +1203,7 @@ STAGE PLANS:
             properties:
               bucket_count 2
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1226,6 +1227,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 2
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1241,8 +1243,8 @@ STAGE PLANS:
               name: default.bucket_small
             name: default.bucket_small
       Truncated Path -> Alias:
-        /bucket_small/ds=2008-04-08 [$hdt$_1:b]
-        /bucket_small/ds=2008-04-09 [$hdt$_1:b]
+        /bucket_small/ds=2008-04-08 [b]
+        /bucket_small/ds=2008-04-09 [b]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator
@@ -1282,28 +1284,24 @@ STAGE PLANS:
               isSamplingPred: false
               predicate: key is not null (type: boolean)
               Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: key (type: string)
-                outputColumnNames: _col0
-                Statistics: Num rows: 116 Data size: 11624 Basic stats: COMPLETE Column stats: NONE
-                Sorted Merge Bucket Map Join Operator
-                  condition map:
-                       Inner Join 0 to 1
-                  keys:
-                    0 _col0 (type: string)
-                    1 _col0 (type: string)
-                  Position of Big Table: 0
-                  BucketMapJoin: true
-                  Group By Operator
-                    aggregations: count()
-                    mode: hash
-                    outputColumnNames: _col0
-                    Reduce Output Operator
-                      null sort order: 
-                      sort order: 
-                      tag: -1
-                      value expressions: _col0 (type: bigint)
-                      auto parallelism: false
+              Sorted Merge Bucket Map Join Operator
+                condition map:
+                     Inner Join 0 to 1
+                keys:
+                  0 key (type: string)
+                  1 key (type: string)
+                Position of Big Table: 0
+                BucketMapJoin: true
+                Group By Operator
+                  aggregations: count()
+                  mode: hash
+                  outputColumnNames: _col0
+                  Reduce Output Operator
+                    null sort order: 
+                    sort order: 
+                    tag: -1
+                    value expressions: _col0 (type: bigint)
+                    auto parallelism: false
       Path -> Alias:
 #### A masked pattern was here ####
       Path -> Partition:
@@ -1317,6 +1315,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1340,6 +1339,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1364,6 +1364,7 @@ STAGE PLANS:
             properties:
               bucket_count 4
               bucket_field_name key
+              column.name.delimiter ,
               columns key,value
               columns.comments 
               columns.types string:string
@@ -1387,6 +1388,7 @@ STAGE PLANS:
                 SORTBUCKETCOLSPREFIX TRUE
                 bucket_count 4
                 bucket_field_name key
+                column.name.delimiter ,
                 columns key,value
                 columns.comments 
                 columns.types string:string
@@ -1402,8 +1404,8 @@ STAGE PLANS:
               name: default.bucket_big
             name: default.bucket_big
       Truncated Path -> Alias:
-        /bucket_big/ds=2008-04-08 [$hdt$_0:a]
-        /bucket_big/ds=2008-04-09 [$hdt$_0:a]
+        /bucket_big/ds=2008-04-08 [a]
+        /bucket_big/ds=2008-04-09 [a]
       Needs Tagging: false
       Reduce Operator Tree:
         Group By Operator

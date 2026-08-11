@@ -30,10 +30,4 @@ POSTHOOK: type: QUERY
 POSTHOOK: Output: default@supply
 POSTHOOK: Lineage: supply.pnum EXPRESSION [(values__tmp__table__2)values__tmp__table__2.FieldSchema(name:tmp_values_col1, type:string, comment:), ]
 POSTHOOK: Lineage: supply.qty EXPRESSION [(values__tmp__table__2)values__tmp__table__2.FieldSchema(name:tmp_values_col2, type:string, comment:), ]
-PREHOOK: query: select pnum from Part1 p where OrderOnHand in
-                (select count(*) from Supply s where s.pnum = p.pnum)
-PREHOOK: type: QUERY
-PREHOOK: Input: default@part1
-PREHOOK: Input: default@supply
-#### A masked pattern was here ####
-FAILED: Execution Error, return code 2 from org.apache.hadoop.hive.ql.exec.mr.MapRedTask
+FAILED: SemanticException [Error 10025]: Line 5:53 Expression not in GROUP BY key 'pnum'

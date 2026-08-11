@@ -1,0 +1,880 @@
+PREHOOK: query: create table dsrv2_big stored as orc as
+  select
+  cast(L_PARTKEY as bigint) as partkey_bigint,
+  cast(L_PARTKEY as decimal(10,1)) as partkey_decimal,
+  cast(L_PARTKEY as double) as partkey_double,
+  cast(l_shipdate as date) as shipdate_date,
+  cast(cast(l_shipdate as date) as timestamp) as shipdate_ts,
+  cast(l_shipdate as string) as shipdate_string,
+  cast(l_shipdate as char(10)) as shipdate_char,
+  cast(l_shipdate as varchar(10)) as shipdate_varchar
+  from lineitem
+PREHOOK: type: CREATETABLE_AS_SELECT
+PREHOOK: Input: default@lineitem
+PREHOOK: Output: database:default
+PREHOOK: Output: default@dsrv2_big
+POSTHOOK: query: create table dsrv2_big stored as orc as
+  select
+  cast(L_PARTKEY as bigint) as partkey_bigint,
+  cast(L_PARTKEY as decimal(10,1)) as partkey_decimal,
+  cast(L_PARTKEY as double) as partkey_double,
+  cast(l_shipdate as date) as shipdate_date,
+  cast(cast(l_shipdate as date) as timestamp) as shipdate_ts,
+  cast(l_shipdate as string) as shipdate_string,
+  cast(l_shipdate as char(10)) as shipdate_char,
+  cast(l_shipdate as varchar(10)) as shipdate_varchar
+  from lineitem
+POSTHOOK: type: CREATETABLE_AS_SELECT
+POSTHOOK: Input: default@lineitem
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@dsrv2_big
+POSTHOOK: Lineage: dsrv2_big.partkey_bigint EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_partkey, type:int, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.partkey_decimal EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_partkey, type:int, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.partkey_double EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_partkey, type:int, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.shipdate_char EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_shipdate, type:string, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.shipdate_date EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_shipdate, type:string, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.shipdate_string SIMPLE [(lineitem)lineitem.FieldSchema(name:l_shipdate, type:string, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.shipdate_ts EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_shipdate, type:string, comment:null), ]
+POSTHOOK: Lineage: dsrv2_big.shipdate_varchar EXPRESSION [(lineitem)lineitem.FieldSchema(name:l_shipdate, type:string, comment:null), ]
+PREHOOK: query: create table dsrv2_small stored as orc as select * from dsrv2_big limit 20
+PREHOOK: type: CREATETABLE_AS_SELECT
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Output: database:default
+PREHOOK: Output: default@dsrv2_small
+POSTHOOK: query: create table dsrv2_small stored as orc as select * from dsrv2_big limit 20
+POSTHOOK: type: CREATETABLE_AS_SELECT
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Output: database:default
+POSTHOOK: Output: default@dsrv2_small
+POSTHOOK: Lineage: dsrv2_small.partkey_bigint SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:partkey_bigint, type:bigint, comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.partkey_decimal SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:partkey_decimal, type:decimal(10,1), comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.partkey_double SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:partkey_double, type:double, comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.shipdate_char SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:shipdate_char, type:char(10), comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.shipdate_date SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:shipdate_date, type:date, comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.shipdate_string SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:shipdate_string, type:string, comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.shipdate_ts SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:shipdate_ts, type:timestamp, comment:null), ]
+POSTHOOK: Lineage: dsrv2_small.shipdate_varchar SIMPLE [(dsrv2_big)dsrv2_big.FieldSchema(name:shipdate_varchar, type:varchar(10), comment:null), ]
+PREHOOK: query: analyze table dsrv2_big compute statistics
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Output: default@dsrv2_big
+POSTHOOK: query: analyze table dsrv2_big compute statistics
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Output: default@dsrv2_big
+PREHOOK: query: analyze table dsrv2_small compute statistics
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_small
+PREHOOK: Output: default@dsrv2_small
+POSTHOOK: query: analyze table dsrv2_small compute statistics
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_small
+POSTHOOK: Output: default@dsrv2_small
+PREHOOK: query: analyze table dsrv2_big compute statistics for columns
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+#### A masked pattern was here ####
+POSTHOOK: query: analyze table dsrv2_big compute statistics for columns
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+#### A masked pattern was here ####
+PREHOOK: query: analyze table dsrv2_small compute statistics for columns
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: analyze table dsrv2_small compute statistics for columns
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_bigint = b.partkey_bigint)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_bigint = b.partkey_bigint)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: partkey_bigint is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_bigint is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_bigint (type: bigint)
+                sort order: +
+                Map-reduce partition columns: partkey_bigint (type: bigint)
+                Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: partkey_bigint is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_bigint is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_bigint (type: bigint)
+                sort order: +
+                Map-reduce partition columns: partkey_bigint (type: bigint)
+                Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 partkey_bigint (type: bigint)
+            1 partkey_bigint (type: bigint)
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_bigint = b.partkey_bigint)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_bigint = b.partkey_bigint)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+20
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_decimal = b.partkey_decimal)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_decimal = b.partkey_decimal)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: partkey_decimal is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 11200 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_decimal is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 11200 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_decimal (type: decimal(10,1))
+                sort order: +
+                Map-reduce partition columns: partkey_decimal (type: decimal(10,1))
+                Statistics: Num rows: 100 Data size: 11200 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: partkey_decimal is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 2240 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_decimal is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 2240 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_decimal (type: decimal(10,1))
+                sort order: +
+                Map-reduce partition columns: partkey_decimal (type: decimal(10,1))
+                Statistics: Num rows: 20 Data size: 2240 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 partkey_decimal (type: decimal(10,1))
+            1 partkey_decimal (type: decimal(10,1))
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_decimal = b.partkey_decimal)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_decimal = b.partkey_decimal)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+20
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_double = b.partkey_double)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_double = b.partkey_double)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: partkey_double is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_double is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_double (type: double)
+                sort order: +
+                Map-reduce partition columns: partkey_double (type: double)
+                Statistics: Num rows: 100 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: partkey_double is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: partkey_double is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: partkey_double (type: double)
+                sort order: +
+                Map-reduce partition columns: partkey_double (type: double)
+                Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 partkey_double (type: double)
+            1 partkey_double (type: double)
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_double = b.partkey_double)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.partkey_double = b.partkey_double)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+20
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_date = b.shipdate_date)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_date = b.shipdate_date)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: shipdate_date is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 5600 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_date is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 5600 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_date (type: date)
+                sort order: +
+                Map-reduce partition columns: shipdate_date (type: date)
+                Statistics: Num rows: 100 Data size: 5600 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: shipdate_date is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 1120 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_date is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 1120 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_date (type: date)
+                sort order: +
+                Map-reduce partition columns: shipdate_date (type: date)
+                Statistics: Num rows: 20 Data size: 1120 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 shipdate_date (type: date)
+            1 shipdate_date (type: date)
+          Statistics: Num rows: 2000 Data size: 16000 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_date = b.shipdate_date)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_date = b.shipdate_date)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+23
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_ts = b.shipdate_ts)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_ts = b.shipdate_ts)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: shipdate_ts is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 4000 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_ts is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 4000 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_ts (type: timestamp)
+                sort order: +
+                Map-reduce partition columns: shipdate_ts (type: timestamp)
+                Statistics: Num rows: 100 Data size: 4000 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: shipdate_ts is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_ts is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_ts (type: timestamp)
+                sort order: +
+                Map-reduce partition columns: shipdate_ts (type: timestamp)
+                Statistics: Num rows: 20 Data size: 800 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 shipdate_ts (type: timestamp)
+            1 shipdate_ts (type: timestamp)
+          Statistics: Num rows: 2000 Data size: 16000 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_ts = b.shipdate_ts)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_ts = b.shipdate_ts)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+23
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_string = b.shipdate_string)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_string = b.shipdate_string)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: shipdate_string is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_string is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_string (type: string)
+                sort order: +
+                Map-reduce partition columns: shipdate_string (type: string)
+                Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: shipdate_string is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_string is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_string (type: string)
+                sort order: +
+                Map-reduce partition columns: shipdate_string (type: string)
+                Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 shipdate_string (type: string)
+            1 shipdate_string (type: string)
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_string = b.shipdate_string)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_string = b.shipdate_string)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+23
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_char = b.shipdate_char)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_char = b.shipdate_char)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: shipdate_char is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_char is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_char (type: char(10))
+                sort order: +
+                Map-reduce partition columns: shipdate_char (type: char(10))
+                Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: shipdate_char is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_char is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_char (type: char(10))
+                sort order: +
+                Map-reduce partition columns: shipdate_char (type: char(10))
+                Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 shipdate_char (type: char(10))
+            1 shipdate_char (type: char(10))
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_char = b.shipdate_char)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_char = b.shipdate_char)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+23
+PREHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_varchar = b.shipdate_varchar)
+PREHOOK: type: QUERY
+POSTHOOK: query: EXPLAIN select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_varchar = b.shipdate_varchar)
+POSTHOOK: type: QUERY
+STAGE DEPENDENCIES:
+  Stage-1 is a root stage
+  Stage-2 depends on stages: Stage-1
+  Stage-0 depends on stages: Stage-2
+
+STAGE PLANS:
+  Stage: Stage-1
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            alias: a
+            filterExpr: shipdate_varchar is not null (type: boolean)
+            Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_varchar is not null (type: boolean)
+              Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_varchar (type: varchar(10))
+                sort order: +
+                Map-reduce partition columns: shipdate_varchar (type: varchar(10))
+                Statistics: Num rows: 100 Data size: 9400 Basic stats: COMPLETE Column stats: COMPLETE
+          TableScan
+            alias: b
+            filterExpr: shipdate_varchar is not null (type: boolean)
+            Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+            Filter Operator
+              predicate: shipdate_varchar is not null (type: boolean)
+              Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+              Reduce Output Operator
+                key expressions: shipdate_varchar (type: varchar(10))
+                sort order: +
+                Map-reduce partition columns: shipdate_varchar (type: varchar(10))
+                Statistics: Num rows: 20 Data size: 1880 Basic stats: COMPLETE Column stats: COMPLETE
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 shipdate_varchar (type: varchar(10))
+            1 shipdate_varchar (type: varchar(10))
+          Statistics: Num rows: 20 Data size: 160 Basic stats: COMPLETE Column stats: COMPLETE
+          Group By Operator
+            aggregations: count()
+            mode: hash
+            outputColumnNames: _col0
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              sort order: 
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              value expressions: _col0 (type: bigint)
+      Execution mode: vectorized
+      Reduce Operator Tree:
+        Group By Operator
+          aggregations: count(VALUE._col0)
+          mode: mergepartial
+          outputColumnNames: _col0
+          Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+          File Output Operator
+            compressed: false
+            Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+
+  Stage: Stage-0
+    Fetch Operator
+      limit: -1
+      Processor Tree:
+        ListSink
+
+PREHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_varchar = b.shipdate_varchar)
+PREHOOK: type: QUERY
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+POSTHOOK: query: select count(*) from dsrv2_big a join dsrv2_small b on (a.shipdate_varchar = b.shipdate_varchar)
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Input: default@dsrv2_small
+#### A masked pattern was here ####
+23
+PREHOOK: query: drop table dsrv2_big
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@dsrv2_big
+PREHOOK: Output: default@dsrv2_big
+POSTHOOK: query: drop table dsrv2_big
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@dsrv2_big
+POSTHOOK: Output: default@dsrv2_big
+PREHOOK: query: drop table dsrv2_small
+PREHOOK: type: DROPTABLE
+PREHOOK: Input: default@dsrv2_small
+PREHOOK: Output: default@dsrv2_small
+POSTHOOK: query: drop table dsrv2_small
+POSTHOOK: type: DROPTABLE
+POSTHOOK: Input: default@dsrv2_small
+POSTHOOK: Output: default@dsrv2_small

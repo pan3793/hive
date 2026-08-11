@@ -335,22 +335,21 @@ STAGE PLANS:
                 native: true
                 projectedOutputColumns: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
             Select Operator
-              expressions: concat(concat(concat('Quarter ', UDFToString(UDFToInteger(((UDFToDouble((month(dt) - 1)) / 3.0) + 1.0)))), '-'), UDFToString(year(dt))) (type: string)
-              outputColumnNames: _col0
+              expressions: dt (type: date)
+              outputColumnNames: dt
               Select Vectorization:
                   className: VectorSelectOperator
                   native: true
-                  projectedOutputColumns: [19]
-                  selectExpressions: StringGroupConcatColCol(col 17, col 18)(children: StringGroupColConcatStringScalar(col 18, val -)(children: StringScalarConcatStringGroupCol(val Quarter , col 17)(children: CastLongToString(col 13)(children: CastDoubleToLong(col 15)(children: DoubleColAddDoubleScalar(col 16, val 1.0)(children: DoubleColDivideDoubleScalar(col 15, val 3.0)(children: CastLongToDouble(col 14)(children: LongColSubtractLongScalar(col 13, val 1)(children: VectorUDFMonthDate(col 12, field MONTH) -> 13:long) -> 14:long) -> 15:double) -> 16:double) -> 15:double) -> 13:long) -> 17:String) -> 18:String_Family) -> 17:String_Family, CastLongToString(col 13)(children: VectorUDFYearDate(col 12, field YEAR) -> 13:long) -> 18:String) -> 19:String_Family
+                  projectedOutputColumns: [12]
               Statistics: Num rows: 2000 Data size: 918712 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 Group By Vectorization:
                     className: VectorGroupByOperator
                     vectorOutput: true
-                    keyExpressions: col 19
+                    keyExpressions: StringGroupConcatColCol(col 17, col 18)(children: StringGroupColConcatStringScalar(col 18, val -)(children: StringScalarConcatStringGroupCol(val Quarter , col 17)(children: CastLongToString(col 13)(children: CastDoubleToLong(col 16)(children: DoubleColAddLongScalar(col 15, val 1)(children: LongColDivideLongScalar(col 14, val 3)(children: LongColSubtractLongScalar(col 13, val 1)(children: VectorUDFMonthDate(col 12, field MONTH) -> 13:long) -> 14:long) -> 15:double) -> 16:double) -> 13:long) -> 17:String) -> 18:String_Family) -> 17:String_Family, CastLongToString(col 13)(children: VectorUDFYearDate(col 12, field YEAR) -> 13:long) -> 18:String) -> 19:String_Family
                     native: false
                     projectedOutputColumns: []
-                keys: _col0 (type: string)
+                keys: concat(concat(concat('Quarter ', UDFToString(UDFToInteger((((month(dt) - 1) / 3) + 1)))), '-'), UDFToString(year(dt))) (type: string)
                 mode: hash
                 outputColumnNames: _col0
                 Statistics: Num rows: 2000 Data size: 918712 Basic stats: COMPLETE Column stats: NONE

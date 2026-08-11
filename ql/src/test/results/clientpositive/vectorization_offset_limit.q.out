@@ -19,7 +19,7 @@ STAGE PLANS:
             alias: alltypesorc
             Statistics: Num rows: 12288 Data size: 2641964 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((UDFToDouble(cbigint) < cdouble) and (cint > 0)) (type: boolean)
+              predicate: ((cbigint < cdouble) and (cint > 0)) (type: boolean)
               Statistics: Num rows: 1365 Data size: 293479 Basic stats: COMPLETE Column stats: NONE
               Select Operator
                 expressions: cbigint (type: bigint), cdouble (type: double)

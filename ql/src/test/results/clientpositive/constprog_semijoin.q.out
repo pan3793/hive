@@ -63,18 +63,14 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((val = 't1val01') and dimid is not null) (type: boolean)
+              predicate: (dimid is not null and (val = 't1val01')) (type: boolean)
               Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val1 (type: string), dimid (type: int)
-                outputColumnNames: _col0, _col2, _col3
+              Reduce Output Operator
+                key expressions: dimid (type: int)
+                sort order: +
+                Map-reduce partition columns: dimid (type: int)
                 Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col3 (type: int)
-                  sort order: +
-                  Map-reduce partition columns: _col3 (type: int)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col2 (type: string)
+                value expressions: id (type: int), val1 (type: string)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
@@ -100,7 +96,7 @@ STAGE PLANS:
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 _col3 (type: int)
+            0 dimid (type: int)
             1 _col0 (type: int)
           outputColumnNames: _col0, _col2
           Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
@@ -154,16 +150,50 @@ STAGE PLANS:
             Filter Operator
               predicate: ((val = 't1val01') and id is not null and dimid is not null) (type: boolean)
               Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), dimid (type: int)
-                outputColumnNames: _col0, _col2
+              Reduce Output Operator
+                key expressions: id (type: int)
+                sort order: +
+                Map-reduce partition columns: id (type: int)
                 Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col2 (type: int)
-                  sort order: +
-                  Map-reduce partition columns: _col2 (type: int)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int)
+                value expressions: dimid (type: int)
+          TableScan
+            alias: table2
+            Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
+            Filter Operator
+              predicate: id is not null (type: boolean)
+              Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
+              Reduce Output Operator
+                key expressions: id (type: int)
+                sort order: +
+                Map-reduce partition columns: id (type: int)
+                Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
+                value expressions: val2 (type: string)
+      Reduce Operator Tree:
+        Join Operator
+          condition map:
+               Inner Join 0 to 1
+          keys:
+            0 id (type: int)
+            1 id (type: int)
+          outputColumnNames: _col0, _col3, _col8
+          Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
+          File Output Operator
+            compressed: false
+            table:
+                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+
+  Stage: Stage-2
+    Map Reduce
+      Map Operator Tree:
+          TableScan
+            Reduce Output Operator
+              key expressions: _col3 (type: int)
+              sort order: +
+              Map-reduce partition columns: _col3 (type: int)
+              Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
+              value expressions: _col0 (type: int), _col8 (type: string)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
@@ -189,53 +219,12 @@ STAGE PLANS:
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 _col2 (type: int)
+            0 _col3 (type: int)
             1 _col0 (type: int)
-          outputColumnNames: _col0
-          Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
-          File Output Operator
-            compressed: false
-            table:
-                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
-
-  Stage: Stage-2
-    Map Reduce
-      Map Operator Tree:
-          TableScan
-            Reduce Output Operator
-              key expressions: _col0 (type: int)
-              sort order: +
-              Map-reduce partition columns: _col0 (type: int)
-              Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
-          TableScan
-            alias: table2
-            Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-            Filter Operator
-              predicate: id is not null (type: boolean)
-              Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val2 (type: string)
-                outputColumnNames: _col0, _col1
-                Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col0 (type: int)
-                  sort order: +
-                  Map-reduce partition columns: _col0 (type: int)
-                  Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col1 (type: string)
-      Reduce Operator Tree:
-        Join Operator
-          condition map:
-               Inner Join 0 to 1
-          keys:
-            0 _col0 (type: int)
-            1 _col0 (type: int)
-          outputColumnNames: _col0, _col4
+          outputColumnNames: _col0, _col8
           Statistics: Num rows: 5 Data size: 121 Basic stats: COMPLETE Column stats: NONE
           Select Operator
-            expressions: _col0 (type: int), 't1val01' (type: string), _col4 (type: string)
+            expressions: _col0 (type: int), 't1val01' (type: string), _col8 (type: string)
             outputColumnNames: _col0, _col1, _col2
             Statistics: Num rows: 5 Data size: 121 Basic stats: COMPLETE Column stats: NONE
             File Output Operator
@@ -264,8 +253,8 @@ POSTHOOK: Input: default@table1
 POSTHOOK: Input: default@table2
 POSTHOOK: Input: default@table3
 #### A masked pattern was here ####
-1	t1val01	t2val201
 3	t1val01	t2val203
+1	t1val01	t2val201
 3	t1val01	t2val203
 PREHOOK: query: explain select table1.id, table1.val, table2.val2 from table1 left semi join table3 on table1.dimid = table3.id inner join table2 on table1.val = 't1val01' and table1.id = table2.id
 PREHOOK: type: QUERY
@@ -284,18 +273,14 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((val = 't1val01') and dimid is not null and id is not null) (type: boolean)
+              predicate: (dimid is not null and (val = 't1val01') and id is not null) (type: boolean)
               Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), dimid (type: int)
-                outputColumnNames: _col0, _col2
+              Reduce Output Operator
+                key expressions: dimid (type: int)
+                sort order: +
+                Map-reduce partition columns: dimid (type: int)
                 Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col2 (type: int)
-                  sort order: +
-                  Map-reduce partition columns: _col2 (type: int)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int)
+                value expressions: id (type: int)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
@@ -321,7 +306,7 @@ STAGE PLANS:
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 _col2 (type: int)
+            0 dimid (type: int)
             1 _col0 (type: int)
           outputColumnNames: _col0
           Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
@@ -347,27 +332,23 @@ STAGE PLANS:
             Filter Operator
               predicate: id is not null (type: boolean)
               Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val2 (type: string)
-                outputColumnNames: _col0, _col1
+              Reduce Output Operator
+                key expressions: id (type: int)
+                sort order: +
+                Map-reduce partition columns: id (type: int)
                 Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: _col0 (type: int)
-                  sort order: +
-                  Map-reduce partition columns: _col0 (type: int)
-                  Statistics: Num rows: 3 Data size: 30 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col1 (type: string)
+                value expressions: val2 (type: string)
       Reduce Operator Tree:
         Join Operator
           condition map:
                Inner Join 0 to 1
           keys:
             0 _col0 (type: int)
-            1 _col0 (type: int)
-          outputColumnNames: _col0, _col4
+            1 id (type: int)
+          outputColumnNames: _col0, _col8
           Statistics: Num rows: 5 Data size: 121 Basic stats: COMPLETE Column stats: NONE
           Select Operator
-            expressions: _col0 (type: int), 't1val01' (type: string), _col4 (type: string)
+            expressions: _col0 (type: int), 't1val01' (type: string), _col8 (type: string)
             outputColumnNames: _col0, _col1, _col2
             Statistics: Num rows: 5 Data size: 121 Basic stats: COMPLETE Column stats: NONE
             File Output Operator
@@ -415,50 +396,42 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: false (type: boolean)
-              Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val (type: string), val1 (type: string)
-                outputColumnNames: _col0, _col1, _col2
-                Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 100 (type: int), true (type: boolean)
-                  sort order: ++
-                  Map-reduce partition columns: 100 (type: int), true (type: boolean)
-                  Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col1 (type: string), _col2 (type: string)
+              predicate: (dimid is not null and (dimid <> 100)) (type: boolean)
+              Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
+              Reduce Output Operator
+                key expressions: dimid (type: int)
+                sort order: +
+                Map-reduce partition columns: dimid (type: int)
+                Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
+                value expressions: id (type: int), val (type: string), val1 (type: string)
           TableScan
             alias: table3
-            Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: COMPLETE
             Filter Operator
-              predicate: ((id = 100) and (id = 100) is not null) (type: boolean)
-              Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: 100 (type: int), true (type: boolean)
+              predicate: false (type: boolean)
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              Group By Operator
+                keys: 100 (type: int), 100 (type: int)
+                mode: hash
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-                Group By Operator
-                  keys: _col0 (type: int), _col1 (type: boolean)
-                  mode: hash
-                  outputColumnNames: _col0, _col1
-                  Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-                  Reduce Output Operator
-                    key expressions: _col0 (type: int), _col1 (type: boolean)
-                    sort order: ++
-                    Map-reduce partition columns: _col0 (type: int), _col1 (type: boolean)
-                    Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+                Reduce Output Operator
+                  key expressions: 100 (type: int)
+                  sort order: +
+                  Map-reduce partition columns: 100 (type: int)
+                  Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 100 (type: int), true (type: boolean)
-            1 _col0 (type: int), _col1 (type: boolean)
+            0 dimid (type: int)
+            1 _col1 (type: int)
           outputColumnNames: _col0, _col1, _col2
-          Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 11 Data size: 220 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
             compressed: false
-            Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 11 Data size: 220 Basic stats: COMPLETE Column stats: NONE
             table:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -496,45 +469,39 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((dimid = 100) and (dimid = 100) is not null) (type: boolean)
+              predicate: (dimid is not null and (dimid) IN (100, 200)) (type: boolean)
               Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val (type: string), val1 (type: string)
-                outputColumnNames: _col0, _col1, _col2
+              Reduce Output Operator
+                key expressions: dimid (type: int)
+                sort order: +
+                Map-reduce partition columns: dimid (type: int)
                 Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 100 (type: int), true (type: boolean)
-                  sort order: ++
-                  Map-reduce partition columns: 100 (type: int), true (type: boolean)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col1 (type: string), _col2 (type: string)
+                value expressions: id (type: int), val (type: string), val1 (type: string)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((id = 100) and (id = 100) is not null) (type: boolean)
+              predicate: (id = 100) (type: boolean)
               Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
               Select Operator
-                expressions: 100 (type: int), true (type: boolean)
-                outputColumnNames: _col0, _col1
                 Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
-                  keys: _col0 (type: int), _col1 (type: boolean)
+                  keys: 100 (type: int), 100 (type: int)
                   mode: hash
                   outputColumnNames: _col0, _col1
                   Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator
-                    key expressions: _col0 (type: int), _col1 (type: boolean)
-                    sort order: ++
-                    Map-reduce partition columns: _col0 (type: int), _col1 (type: boolean)
+                    key expressions: 100 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: 100 (type: int)
                     Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 100 (type: int), true (type: boolean)
-            1 _col0 (type: int), _col1 (type: boolean)
+            0 dimid (type: int)
+            1 _col1 (type: int)
           outputColumnNames: _col0, _col1, _col2
           Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
@@ -579,50 +546,42 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: false (type: boolean)
-              Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val (type: string), val1 (type: string)
-                outputColumnNames: _col0, _col1, _col2
-                Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 100 (type: int), true (type: boolean)
-                  sort order: ++
-                  Map-reduce partition columns: 100 (type: int), true (type: boolean)
-                  Statistics: Num rows: 1 Data size: 20 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col1 (type: string), _col2 (type: string)
+              predicate: (dimid = 200) (type: boolean)
+              Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
+              Reduce Output Operator
+                key expressions: 200 (type: int)
+                sort order: +
+                Map-reduce partition columns: 200 (type: int)
+                Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
+                value expressions: id (type: int), val (type: string), val1 (type: string)
           TableScan
             alias: table3
-            Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: COMPLETE
             Filter Operator
-              predicate: ((id = 100) and (id = 100) is not null) (type: boolean)
-              Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: 100 (type: int), true (type: boolean)
+              predicate: false (type: boolean)
+              Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+              Group By Operator
+                keys: 100 (type: int), 100 (type: int)
+                mode: hash
                 outputColumnNames: _col0, _col1
-                Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-                Group By Operator
-                  keys: _col0 (type: int), _col1 (type: boolean)
-                  mode: hash
-                  outputColumnNames: _col0, _col1
-                  Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
-                  Reduce Output Operator
-                    key expressions: _col0 (type: int), _col1 (type: boolean)
-                    sort order: ++
-                    Map-reduce partition columns: _col0 (type: int), _col1 (type: boolean)
-                    Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+                Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
+                Reduce Output Operator
+                  key expressions: 100 (type: int)
+                  sort order: +
+                  Map-reduce partition columns: 100 (type: int)
+                  Statistics: Num rows: 1 Data size: 8 Basic stats: COMPLETE Column stats: COMPLETE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 100 (type: int), true (type: boolean)
-            1 _col0 (type: int), _col1 (type: boolean)
+            0 dimid (type: int)
+            1 _col1 (type: int)
           outputColumnNames: _col0, _col1, _col2
-          Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
             compressed: false
-            Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
             table:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
@@ -660,45 +619,39 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((dimid = 100) and (dimid = 100) is not null) (type: boolean)
+              predicate: (dimid = 100) (type: boolean)
               Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val (type: string), val1 (type: string)
-                outputColumnNames: _col0, _col1, _col2
+              Reduce Output Operator
+                key expressions: 100 (type: int)
+                sort order: +
+                Map-reduce partition columns: 100 (type: int)
                 Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 100 (type: int), true (type: boolean)
-                  sort order: ++
-                  Map-reduce partition columns: 100 (type: int), true (type: boolean)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col1 (type: string), _col2 (type: string)
+                value expressions: id (type: int), val (type: string), val1 (type: string)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((id = 100) and (id = 100) is not null) (type: boolean)
+              predicate: (id = 100) (type: boolean)
               Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
               Select Operator
-                expressions: 100 (type: int), true (type: boolean)
-                outputColumnNames: _col0, _col1
                 Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
-                  keys: _col0 (type: int), _col1 (type: boolean)
+                  keys: 100 (type: int), 100 (type: int)
                   mode: hash
                   outputColumnNames: _col0, _col1
                   Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator
-                    key expressions: _col0 (type: int), _col1 (type: boolean)
-                    sort order: ++
-                    Map-reduce partition columns: _col0 (type: int), _col1 (type: boolean)
+                    key expressions: 100 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: 100 (type: int)
                     Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 100 (type: int), true (type: boolean)
-            1 _col0 (type: int), _col1 (type: boolean)
+            0 dimid (type: int)
+            1 _col1 (type: int)
           outputColumnNames: _col0, _col1, _col2
           Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
@@ -743,50 +696,44 @@ STAGE PLANS:
             alias: table1
             Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((dimid = 100) and (dimid = 100) is not null) (type: boolean)
-              Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-              Select Operator
-                expressions: id (type: int), val (type: string), val1 (type: string)
-                outputColumnNames: _col0, _col1, _col2
-                Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                Reduce Output Operator
-                  key expressions: 100 (type: int), true (type: boolean)
-                  sort order: ++
-                  Map-reduce partition columns: 100 (type: int), true (type: boolean)
-                  Statistics: Num rows: 5 Data size: 100 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col0 (type: int), _col1 (type: string), _col2 (type: string)
+              predicate: dimid is not null (type: boolean)
+              Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
+              Reduce Output Operator
+                key expressions: dimid (type: int)
+                sort order: +
+                Map-reduce partition columns: dimid (type: int)
+                Statistics: Num rows: 10 Data size: 200 Basic stats: COMPLETE Column stats: NONE
+                value expressions: id (type: int), val (type: string), val1 (type: string)
           TableScan
             alias: table3
             Statistics: Num rows: 5 Data size: 15 Basic stats: COMPLETE Column stats: NONE
             Filter Operator
-              predicate: ((id = 100) and (id = 100) is not null) (type: boolean)
+              predicate: (id = 100) (type: boolean)
               Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
               Select Operator
-                expressions: 100 (type: int), true (type: boolean)
-                outputColumnNames: _col0, _col1
                 Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                 Group By Operator
-                  keys: _col0 (type: int), _col1 (type: boolean)
+                  keys: 100 (type: int), 100 (type: int)
                   mode: hash
                   outputColumnNames: _col0, _col1
                   Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
                   Reduce Output Operator
-                    key expressions: _col0 (type: int), _col1 (type: boolean)
-                    sort order: ++
-                    Map-reduce partition columns: _col0 (type: int), _col1 (type: boolean)
+                    key expressions: 100 (type: int)
+                    sort order: +
+                    Map-reduce partition columns: 100 (type: int)
                     Statistics: Num rows: 2 Data size: 6 Basic stats: COMPLETE Column stats: NONE
       Reduce Operator Tree:
         Join Operator
           condition map:
                Left Semi Join 0 to 1
           keys:
-            0 100 (type: int), true (type: boolean)
-            1 _col0 (type: int), _col1 (type: boolean)
+            0 dimid (type: int)
+            1 _col1 (type: int)
           outputColumnNames: _col0, _col1, _col2
-          Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
+          Statistics: Num rows: 11 Data size: 220 Basic stats: COMPLETE Column stats: NONE
           File Output Operator
             compressed: false
-            Statistics: Num rows: 5 Data size: 110 Basic stats: COMPLETE Column stats: NONE
+            Statistics: Num rows: 11 Data size: 220 Basic stats: COMPLETE Column stats: NONE
             table:
                 input format: org.apache.hadoop.mapred.SequenceFileInputFormat
                 output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat

@@ -60,11 +60,11 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -167,12 +167,10 @@ POSTHOOK: Input: default@src
 POSTHOOK: Output: default@clustergroupby@ds=101
 POSTHOOK: Lineage: clustergroupby PARTITION(ds=101).key SIMPLE [(src)src.FieldSchema(name:key, type:string, comment:default), ]
 POSTHOOK: Lineage: clustergroupby PARTITION(ds=101).value SIMPLE [(src)src.FieldSchema(name:value, type:string, comment:default), ]
-PREHOOK: query: --normal--
-explain
+PREHOOK: query: explain
 select key, count(1) from clustergroupby  where ds='101'  group by key order by key limit 10
 PREHOOK: type: QUERY
-POSTHOOK: query: --normal--
-explain
+POSTHOOK: query: explain
 select key, count(1) from clustergroupby  where ds='101'  group by key order by key limit 10
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
@@ -189,11 +187,11 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -270,12 +268,10 @@ POSTHOOK: Input: default@clustergroupby@ds=101
 111	1
 113	2
 114	1
-PREHOOK: query: --function--
-explain
+PREHOOK: query: explain
 select length(key), count(1) from clustergroupby  where ds='101'  group by length(key) limit 10
 PREHOOK: type: QUERY
-POSTHOOK: query: --function--
-explain
+POSTHOOK: query: explain
 select length(key), count(1) from clustergroupby  where ds='101'  group by length(key) limit 10
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
@@ -290,12 +286,12 @@ STAGE PLANS:
             alias: clustergroupby
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: length(key) (type: int)
-              outputColumnNames: _col0
+              expressions: key (type: string)
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: int)
+                keys: length(key) (type: int)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -361,12 +357,12 @@ STAGE PLANS:
             alias: clustergroupby
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: abs(length(key)) (type: int)
-              outputColumnNames: _col0
+              expressions: key (type: string)
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: int)
+                keys: abs(length(key)) (type: int)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -414,13 +410,11 @@ POSTHOOK: Input: default@clustergroupby@ds=101
 1	10
 2	74
 3	416
-PREHOOK: query: --constant--
-explain
-select key, count(1) from clustergroupby  where ds='101'  group by key,3 order by key,3 limit 10
+PREHOOK: query: explain
+select key, count(1) from clustergroupby  where ds='101'  group by key,'a' order by key,'a' limit 10
 PREHOOK: type: QUERY
-POSTHOOK: query: --constant--
-explain
-select key, count(1) from clustergroupby  where ds='101'  group by key,3 order by key,3 limit 10
+POSTHOOK: query: explain
+select key, count(1) from clustergroupby  where ds='101'  group by key,'a' order by key,'a' limit 10
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
   Stage-1 is a root stage
@@ -436,34 +430,38 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: key (type: string), 'a' (type: string)
                 mode: hash
-                outputColumnNames: _col0, _col1
+                outputColumnNames: _col0, _col1, _col2
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
-                  key expressions: _col0 (type: string)
-                  sort order: +
-                  Map-reduce partition columns: _col0 (type: string)
+                  key expressions: _col0 (type: string), 'a' (type: string)
+                  sort order: ++
+                  Map-reduce partition columns: _col0 (type: string), 'a' (type: string)
                   Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
                   TopN Hash Memory Usage: 0.1
-                  value expressions: _col1 (type: bigint)
+                  value expressions: _col2 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
-          keys: KEY._col0 (type: string)
+          keys: KEY._col0 (type: string), 'a' (type: string)
           mode: mergepartial
-          outputColumnNames: _col0, _col1
+          outputColumnNames: _col0, _col1, _col2
           Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
-          File Output Operator
-            compressed: false
-            table:
-                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
+          Select Operator
+            expressions: _col0 (type: string), _col2 (type: bigint)
+            outputColumnNames: _col0, _col1
+            Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
+            File Output Operator
+              compressed: false
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazybinary.LazyBinarySerDe
 
   Stage: Stage-2
     Map Reduce
@@ -497,12 +495,12 @@ STAGE PLANS:
       Processor Tree:
         ListSink
 
-PREHOOK: query: select key, count(1) from clustergroupby  where ds='101' group by key,3 order by key,3 limit 10
+PREHOOK: query: select key, count(1) from clustergroupby  where ds='101' group by key,'a' order by key,'a' limit 10
 PREHOOK: type: QUERY
 PREHOOK: Input: default@clustergroupby
 PREHOOK: Input: default@clustergroupby@ds=101
 #### A masked pattern was here ####
-POSTHOOK: query: select key, count(1) from clustergroupby  where ds='101' group by key,3 order by key,3 limit 10
+POSTHOOK: query: select key, count(1) from clustergroupby  where ds='101' group by key,'a' order by key,'a' limit 10
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@clustergroupby
 POSTHOOK: Input: default@clustergroupby@ds=101
@@ -517,12 +515,10 @@ POSTHOOK: Input: default@clustergroupby@ds=101
 111	1
 113	2
 114	1
-PREHOOK: query: --subquery--
-explain
+PREHOOK: query: explain
 select key, count(1) from (select value as key, key as value from clustergroupby where ds='101')subq group by key order by key limit 10
 PREHOOK: type: QUERY
-POSTHOOK: query: --subquery--
-explain
+POSTHOOK: query: explain
 select key, count(1) from (select value as key, key as value from clustergroupby where ds='101')subq group by key order by key limit 10
 POSTHOOK: type: QUERY
 STAGE DEPENDENCIES:
@@ -639,11 +635,11 @@ STAGE PLANS:
             Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
@@ -1014,34 +1010,38 @@ STAGE PLANS:
             Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: key (type: string), 3 (type: int)
                 mode: hash
-                outputColumnNames: _col0, _col1
+                outputColumnNames: _col0, _col1, _col2
                 Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
                 Reduce Output Operator
-                  key expressions: _col0 (type: string)
-                  sort order: +
-                  Map-reduce partition columns: _col0 (type: string)
+                  key expressions: _col0 (type: string), 3 (type: int)
+                  sort order: ++
+                  Map-reduce partition columns: _col0 (type: string), 3 (type: int)
                   Statistics: Num rows: 1000 Data size: 10624 Basic stats: COMPLETE Column stats: NONE
-                  value expressions: _col1 (type: bigint)
+                  value expressions: _col2 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
           aggregations: count(VALUE._col0)
-          keys: KEY._col0 (type: string)
+          keys: KEY._col0 (type: string), 3 (type: int)
           mode: mergepartial
-          outputColumnNames: _col0, _col1
+          outputColumnNames: _col0, _col1, _col2
           Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
-          File Output Operator
-            compressed: false
+          Select Operator
+            expressions: _col0 (type: string), _col2 (type: bigint)
+            outputColumnNames: _col0, _col1
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
-            table:
-                input format: org.apache.hadoop.mapred.SequenceFileInputFormat
-                output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
-                serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
+            File Output Operator
+              compressed: false
+              Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
+              table:
+                  input format: org.apache.hadoop.mapred.SequenceFileInputFormat
+                  output format: org.apache.hadoop.hive.ql.io.HiveSequenceFileOutputFormat
+                  serde: org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe
 
   Stage: Stage-0
     Fetch Operator
@@ -1049,13 +1049,11 @@ STAGE PLANS:
       Processor Tree:
         ListSink
 
-PREHOOK: query: -- number of buckets cannot be changed, so drop the table
-drop table clustergroupby
+PREHOOK: query: drop table clustergroupby
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@clustergroupby
 PREHOOK: Output: default@clustergroupby
-POSTHOOK: query: -- number of buckets cannot be changed, so drop the table
-drop table clustergroupby
+POSTHOOK: query: drop table clustergroupby
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@clustergroupby
 POSTHOOK: Output: default@clustergroupby
@@ -1067,13 +1065,11 @@ POSTHOOK: query: create table clustergroupby(key string, value string) partition
 POSTHOOK: type: CREATETABLE
 POSTHOOK: Output: database:default
 POSTHOOK: Output: default@clustergroupby
-PREHOOK: query: --sort columns--
-alter table clustergroupby clustered by (value) sorted by (key, value) into 1 buckets
+PREHOOK: query: alter table clustergroupby clustered by (value) sorted by (key, value) into 1 buckets
 PREHOOK: type: ALTERTABLE_CLUSTER_SORT
 PREHOOK: Input: default@clustergroupby
 PREHOOK: Output: default@clustergroupby
-POSTHOOK: query: --sort columns--
-alter table clustergroupby clustered by (value) sorted by (key, value) into 1 buckets
+POSTHOOK: query: alter table clustergroupby clustered by (value) sorted by (key, value) into 1 buckets
 POSTHOOK: type: ALTERTABLE_CLUSTER_SORT
 POSTHOOK: Input: default@clustergroupby
 POSTHOOK: Output: default@clustergroupby
@@ -1123,12 +1119,12 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
                 bucketGroup: true
-                keys: _col0 (type: string)
+                keys: key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -1225,11 +1221,11 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: value (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: value
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string)
+                keys: value (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -1325,11 +1321,11 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string), value (type: string)
-              outputColumnNames: _col0, _col1
+              outputColumnNames: key, value
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col0 (type: string), _col1 (type: string)
+                keys: key (type: string), value (type: string)
                 mode: final
                 outputColumnNames: _col0, _col1, _col2
                 Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
@@ -1374,13 +1370,11 @@ POSTHOOK: Input: default@clustergroupby@ds=102
 111	1
 113	2
 114	1
-PREHOOK: query: -- number of buckets cannot be changed, so drop the table
-drop table clustergroupby
+PREHOOK: query: drop table clustergroupby
 PREHOOK: type: DROPTABLE
 PREHOOK: Input: default@clustergroupby
 PREHOOK: Output: default@clustergroupby
-POSTHOOK: query: -- number of buckets cannot be changed, so drop the table
-drop table clustergroupby
+POSTHOOK: query: drop table clustergroupby
 POSTHOOK: type: DROPTABLE
 POSTHOOK: Input: default@clustergroupby
 POSTHOOK: Output: default@clustergroupby
@@ -1446,12 +1440,12 @@ STAGE PLANS:
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
               expressions: key (type: string)
-              outputColumnNames: _col0
+              outputColumnNames: key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
                 bucketGroup: true
-                keys: _col0 (type: string)
+                keys: key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -1547,12 +1541,12 @@ STAGE PLANS:
             alias: clustergroupby
             Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
             Select Operator
-              expressions: key (type: string), value (type: string)
-              outputColumnNames: _col1, _col0
+              expressions: value (type: string), key (type: string)
+              outputColumnNames: value, key
               Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
               Group By Operator
                 aggregations: count(1)
-                keys: _col1 (type: string), _col0 (type: string)
+                keys: value (type: string), key (type: string)
                 mode: hash
                 outputColumnNames: _col0, _col1, _col2
                 Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
@@ -1561,7 +1555,6 @@ STAGE PLANS:
                   sort order: ++
                   Map-reduce partition columns: _col0 (type: string), _col1 (type: string)
                   Statistics: Num rows: 500 Data size: 5312 Basic stats: COMPLETE Column stats: NONE
-                  TopN Hash Memory Usage: 0.1
                   value expressions: _col2 (type: bigint)
       Reduce Operator Tree:
         Group By Operator
@@ -1571,7 +1564,7 @@ STAGE PLANS:
           outputColumnNames: _col0, _col1, _col2
           Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
           Select Operator
-            expressions: _col0 (type: string), _col2 (type: bigint)
+            expressions: _col1 (type: string), _col2 (type: bigint)
             outputColumnNames: _col0, _col1
             Statistics: Num rows: 250 Data size: 2656 Basic stats: COMPLETE Column stats: NONE
             File Output Operator

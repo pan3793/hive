@@ -1168,7 +1168,7 @@ STAGE PLANS:
           alias: t1
           Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           Filter Operator
-            predicate: (UDFToInteger(a) < 200) (type: boolean)
+            predicate: (a < 200) (type: boolean)
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Select Operator
               expressions: a (type: tinyint), b (type: smallint)
@@ -1192,7 +1192,7 @@ STAGE PLANS:
           alias: t1
           Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
           Filter Operator
-            predicate: (UDFToInteger(b) > 40000) (type: boolean)
+            predicate: (b > 40000) (type: boolean)
             Statistics: Num rows: 1 Data size: 0 Basic stats: PARTIAL Column stats: NONE
             Select Operator
               expressions: a (type: tinyint), b (type: smallint)

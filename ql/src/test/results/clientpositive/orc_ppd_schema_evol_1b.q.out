@@ -98,15 +98,27 @@ PREHOOK: query: alter table test_two_files change column i i string
 PREHOOK: type: ALTERTABLE_RENAMECOL
 PREHOOK: Input: default@test_two_files
 PREHOOK: Output: default@test_two_files
+POSTHOOK: query: alter table test_two_files change column i i string
+POSTHOOK: type: ALTERTABLE_RENAMECOL
+POSTHOOK: Input: default@test_two_files
+POSTHOOK: Output: default@test_two_files
 PREHOOK: query: select s from test_two_files where i = -1591211872
 PREHOOK: type: QUERY
 PREHOOK: Input: default@test_two_files
+#### A masked pattern was here ####
+POSTHOOK: query: select s from test_two_files where i = -1591211872
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@test_two_files
 #### A masked pattern was here ####
 s
 fred king
 PREHOOK: query: select s from test_two_files where i = -1591211872
 PREHOOK: type: QUERY
 PREHOOK: Input: default@test_two_files
+#### A masked pattern was here ####
+POSTHOOK: query: select s from test_two_files where i = -1591211872
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@test_two_files
 #### A masked pattern was here ####
 s
 fred king
@@ -114,11 +126,19 @@ PREHOOK: query: select s from test_two_files where i = '-1591211872'
 PREHOOK: type: QUERY
 PREHOOK: Input: default@test_two_files
 #### A masked pattern was here ####
+POSTHOOK: query: select s from test_two_files where i = '-1591211872'
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@test_two_files
+#### A masked pattern was here ####
 s
 fred king
 PREHOOK: query: select s from test_two_files where i = -1591211872
 PREHOOK: type: QUERY
 PREHOOK: Input: default@test_two_files
+#### A masked pattern was here ####
+POSTHOOK: query: select s from test_two_files where i = -1591211872
+POSTHOOK: type: QUERY
+POSTHOOK: Input: default@test_two_files
 #### A masked pattern was here ####
 s
 fred king

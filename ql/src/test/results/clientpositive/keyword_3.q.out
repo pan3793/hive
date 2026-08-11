@@ -20,7 +20,7 @@ POSTHOOK: query: insert overwrite table NULLS
 POSTHOOK: type: QUERY
 POSTHOOK: Input: default@src
 POSTHOOK: Output: default@nulls
-POSTHOOK: Lineage: nulls.last SIMPLE []
+POSTHOOK: Lineage: nulls.last SIMPLE [(src)src.FieldSchema(name:key, type:string, comment:default), ]
 PREHOOK: query: select LAST from NULLS
 PREHOOK: type: QUERY
 PREHOOK: Input: default@nulls

@@ -83,7 +83,7 @@ PREHOOK: type: CREATEVIEW
 PREHOOK: Input: escape_comments_db@escape_comments_tbl1
 PREHOOK: Output: database:escape_comments_db
 PREHOOK: Output: escape_comments_db@escape_comments_view1
-Starting task [Stage-1:DDL] in serial mode
+Starting task [Stage-0:DDL] in serial mode
 POSTHOOK: query: create view escape_comments_view1 (col1 comment 'a\nb') comment 'a\nb' 
 as select col1 from escape_comments_tbl1
 POSTHOOK: type: CREATEVIEW
