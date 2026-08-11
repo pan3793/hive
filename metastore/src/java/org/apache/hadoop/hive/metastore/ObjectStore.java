@@ -7282,6 +7282,11 @@ public class ObjectStore implements RawStore, Configurable {
 
   @VisibleForTesting
   public void validateTableCols(Table table, List<String> colNames) throws MetaException {
+    if (table.getSd() == null) {
+      // Tables without a storage descriptor (e.g. some virtual views) have no
+      // columns to validate against.
+      return;
+    }
     List<FieldSchema> colList = table.getSd().getCols();
     for (String colName : colNames) {
       boolean foundCol = false;
@@ -7319,6 +7324,9 @@ public class ObjectStore implements RawStore, Configurable {
         QueryWrapper queryWrapper = new QueryWrapper();
 
         try {
+        if (getTable() == null) {
+          return null;
+        }
         List<MTableColumnStatistics> mStats = getMTableColumnStatistics(getTable(), colNames, queryWrapper);
         if (mStats.isEmpty()) return null;
         // LastAnalyzed is stored per column, but thrift object has it per multiple columns.

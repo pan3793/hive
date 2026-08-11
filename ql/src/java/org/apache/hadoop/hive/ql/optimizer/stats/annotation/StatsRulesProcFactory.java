@@ -50,6 +50,7 @@ import org.apache.hadoop.hive.ql.lib.NodeProcessorCtx;
 import org.apache.hadoop.hive.ql.metadata.HiveException;
 import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.parse.PrunedPartitionList;
+import org.apache.hadoop.hive.ql.parse.SemanticAnalyzer;
 import org.apache.hadoop.hive.ql.parse.SemanticException;
 import org.apache.hadoop.hive.ql.plan.AggregationDesc;
 import org.apache.hadoop.hive.ql.plan.ColStatistics;
@@ -124,6 +125,12 @@ public class StatsRulesProcFactory {
       AnnotateStatsProcCtx aspCtx = (AnnotateStatsProcCtx) procCtx;
       PrunedPartitionList partList = aspCtx.getParseContext().getPrunedPartitions(tsop);
       Table table = tsop.getConf().getTableMetadata();
+      if (table == null || SemanticAnalyzer.DUMMY_DATABASE.equals(table.getDbName())
+          || SemanticAnalyzer.DUMMY_TABLE.equals(table.getTableName())) {
+        // The dummy table is a virtual in-memory table with no metastore metadata;
+        // there is nothing to collect statistics for.
+        return null;
+      }
 
       try {
         // gather statistics for the first time and the attach it to table scan operator
@@ -1445,8 +1452,13 @@ public class StatsRulesProcFactory {
         Map<Integer, List<String>> joinKeys = Maps.newHashMap();
         List<Long> rowCounts = Lists.newArrayList();
 
-        // detect if there are multiple attributes in join key
-        ReduceSinkOperator rsOp = (ReduceSinkOperator) jop.getParentOperators().get(0);
+      // detect if there are multiple attributes in join key
+      if (!(jop.getParentOperators().get(0) instanceof ReduceSinkOperator)) {
+        // Demux/other join forms do not have ReduceSink parents; their stats
+        // cannot be computed here (and DemuxOperator would fail the cast below).
+        return null;
+      }
+      ReduceSinkOperator rsOp = (ReduceSinkOperator) jop.getParentOperators().get(0);
         List<String> keyExprs = StatsUtils.getQualifedReducerKeyNames(rsOp.getConf()
             .getOutputKeyColumnNames());
         numAttr = keyExprs.size();
@@ -1455,6 +1467,9 @@ public class StatsRulesProcFactory {
         long inferredRowCount = inferPKFKRelationship(numAttr, parents, jop);
         // get the join keys from parent ReduceSink operators
         for (int pos = 0; pos < parents.size(); pos++) {
+          if (!(jop.getParentOperators().get(pos) instanceof ReduceSinkOperator)) {
+            return null;
+          }
           ReduceSinkOperator parent = (ReduceSinkOperator) jop.getParentOperators().get(pos);
           Statistics parentStats;
           try {

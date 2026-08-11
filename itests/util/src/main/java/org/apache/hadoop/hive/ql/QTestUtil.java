@@ -972,24 +972,41 @@ public class QTestUtil {
     if(cliDriver == null) {
       cliDriver = new CliDriver();
     }
-    cliDriver.processLine("set test.data.dir=" + testFiles + ";");
-    File scriptFile = new File(this.initScript);
-    if (!scriptFile.isFile()) {
-      LOG.info("No init script detected. Skipping");
-      return;
+    // Redirect the session output to stdout while running the init script, so that
+    // init output does not pollute the qfile-results file of the previous test
+    // (the session may be reused across tests).
+    SessionState ss = SessionState.get();
+    PrintStream oldOut = ss == null ? null : ss.out;
+    PrintStream oldErr = ss == null ? null : ss.err;
+    if (ss != null && ss.out != null && ss.out != System.out) {
+      ss.out = System.out;
+      ss.err = System.out;
     }
-    conf.setBoolean("hive.test.init.phase", true);
+    try {
+      cliDriver.processLine("set test.data.dir=" + testFiles + ";");
+      File scriptFile = new File(this.initScript);
+      if (!scriptFile.isFile()) {
+        LOG.info("No init script detected. Skipping");
+        return;
+      }
+      conf.setBoolean("hive.test.init.phase", true);
 
-    String initCommands = readEntireFileIntoString(scriptFile);
-    LOG.info("Initial setup (" + initScript + "):\n" + initCommands);
+      String initCommands = readEntireFileIntoString(scriptFile);
+      LOG.info("Initial setup (" + initScript + "):\n" + initCommands);
 
-    int result = cliDriver.processLine(initCommands);
-    LOG.info("Result from cliDrriver.processLine in createSources=" + result);
-    if (result != 0) {
-      Assert.fail("Failed during createSources processLine with code=" + result);
+      int result = cliDriver.processLine(initCommands);
+      LOG.info("Result from cliDrriver.processLine in createSources=" + result);
+      if (result != 0) {
+        Assert.fail("Failed during createSources processLine with code=" + result);
+      }
+
+      conf.setBoolean("hive.test.init.phase", false);
+    } finally {
+      if (ss != null) {
+        ss.out = oldOut;
+        ss.err = oldErr;
+      }
     }
-
-    conf.setBoolean("hive.test.init.phase", false);
   }
 
   public void init() throws Exception {
