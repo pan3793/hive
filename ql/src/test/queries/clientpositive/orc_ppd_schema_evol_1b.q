@@ -35,7 +35,6 @@ stored as orc;
 insert into table test_two_files select * from unique_1 where i <= 0;
 insert into table test_two_files select * from unique_2 where i > 0;
 
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecTezSummaryPrinter;
 
 alter table test_two_files change column i i string;
 

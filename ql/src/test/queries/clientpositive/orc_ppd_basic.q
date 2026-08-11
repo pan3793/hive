@@ -62,7 +62,6 @@ STORED AS ORC tblproperties("orc.row.index.stride" = "1000", "orc.bloom.filter.c
 
 insert overwrite table orc_ppd select t, si, i, b, f, d, bo, s, cast(s as char(50)), cast(s as varchar(50)), da, dec, bin from orc_ppd_staging order by t, s;
 
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecTezSummaryPrinter;
 
 -- Row group statistics for column t:
 -- Entry 0: count: 994 hasNull: true min: -10 max: 54 sum: 26014 positions: 0,0,0,0,0,0,0
@@ -197,7 +196,6 @@ set hive.mapred.mode=nonstrict;
 SET hive.fetch.task.conversion=none;
 SET hive.optimize.index.filter=true;
 SET hive.cbo.enable=false;
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecOrcRowGroupCountPrinter;
 -- these tests include timestamp column that will impact the file size when tests run across
 -- different timezones. So we print only the selected row group count instead of entire tez exeuction summary.
 create temporary table tmp_orcppd

@@ -19,7 +19,6 @@ load data local inpath '../../data/files/unique_1.txt' into table unique_1;
 
 create table test1 stored as orc as select * from unique_1;
 
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecTezSummaryPrinter;
 
 alter table test1 change column i i string;
 

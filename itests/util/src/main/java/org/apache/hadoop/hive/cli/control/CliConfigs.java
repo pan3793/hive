@@ -46,10 +46,7 @@ public class CliConfigs {
       try {
         setQueryDir("ql/src/test/queries/clientpositive");
 
-        excludesFrom(testConfigProps, "minillap.query.files");
-        excludesFrom(testConfigProps, "minillaplocal.query.files");
         excludesFrom(testConfigProps, "minimr.query.files");
-        excludesFrom(testConfigProps, "minitez.query.files");
         excludesFrom(testConfigProps, "encrypted.query.files");
         excludesFrom(testConfigProps, "disabled.query.files");
 
@@ -109,83 +106,6 @@ public class CliConfigs {
     }
   }
 
-  public static class MiniTezCliConfig extends AbstractCliConfig {
-    public MiniTezCliConfig() {
-      super(CoreCliDriver.class);
-      try {
-        setQueryDir("ql/src/test/queries/clientpositive");
-
-        includesFrom(testConfigProps, "minitez.query.files");
-        includesFrom(testConfigProps, "minitez.query.files.shared");
-        excludesFrom(testConfigProps, "minillap.query.files");
-        excludesFrom(testConfigProps, "minillap.shared.query.files");
-
-        setResultsDir("ql/src/test/results/clientpositive/tez");
-        setLogDir("itests/qtest/target/qfile-results/clientpositive");
-
-        setInitScript("q_test_init_tez.sql");
-        setCleanupScript("q_test_cleanup_tez.sql");
-
-        setHiveConfDir("data/conf/tez");
-        setClusterType(MiniClusterType.tez);
-        setMetastoreType(MetastoreType.sql);
-        setFsType(QTestUtil.FsType.hdfs);
-      } catch (Exception e) {
-        throw new RuntimeException("can't construct cliconfig", e);
-      }
-    }
-  }
-
-  public static class MiniLlapCliConfig extends AbstractCliConfig {
-    public MiniLlapCliConfig() {
-      super(CoreCliDriver.class);
-      try {
-        setQueryDir("ql/src/test/queries/clientpositive");
-
-        includesFrom(testConfigProps, "minillap.query.files");
-        includesFrom(testConfigProps, "minillap.shared.query.files");
-
-        setResultsDir("ql/src/test/results/clientpositive/llap");
-        setLogDir("itests/qtest/target/qfile-results/clientpositive");
-
-        setInitScript("q_test_init.sql");
-        setCleanupScript("q_test_cleanup.sql");
-
-        setHiveConfDir("data/conf/llap");
-        setClusterType(MiniClusterType.llap);
-        setMetastoreType(MetastoreType.sql);
-      } catch (Exception e) {
-        throw new RuntimeException("can't construct cliconfig", e);
-      }
-    }
-  }
-
-  public static class MiniLlapLocalCliConfig extends AbstractCliConfig {
-
-    public MiniLlapLocalCliConfig() {
-      super(CoreCliDriver.class);
-      try {
-        setQueryDir("ql/src/test/queries/clientpositive");
-
-        includesFrom(testConfigProps, "minillaplocal.query.files");
-        includesFrom(testConfigProps, "minillaplocal.shared.query.files");
-
-        setResultsDir("ql/src/test/results/clientpositive/llap");
-        setLogDir("itests/qtest/target/qfile-results/clientpositive");
-
-        setInitScript("q_test_init.sql");
-        setCleanupScript("q_test_cleanup.sql");
-
-        setHiveConfDir("data/conf/llap");
-        setClusterType(MiniClusterType.llap_local);
-        setMetastoreType(MetastoreType.sql);
-        setFsType(QTestUtil.FsType.local);
-      } catch (Exception e) {
-        throw new RuntimeException("can't construct cliconfig", e);
-      }
-    }
-  }
-
   public static class EncryptedHDFSCliConfig extends AbstractCliConfig {
     public EncryptedHDFSCliConfig() {
       super(CoreCliDriver.class);
@@ -203,11 +123,7 @@ public class CliConfigs {
 
         setClusterType(MiniClusterType.mr);
         setFsType(QTestUtil.FsType.encrypted_hdfs);
-        if (getClusterType() == MiniClusterType.tez) {
-          setHiveConfDir("data/conf/tez");
-        } else {
-          setHiveConfDir("data/conf");
-        }
+        setHiveConfDir("data/conf");
 
       } catch (Exception e) {
         throw new RuntimeException("can't construct cliconfig", e);
@@ -234,29 +150,6 @@ public class CliConfigs {
     }
   }
 
-  public static class PerfCliConfig extends AbstractCliConfig {
-    public PerfCliConfig() {
-      super(CorePerfCliDriver.class);
-      try {
-        setQueryDir("ql/src/test/queries/clientpositive/perf");
-
-        excludesFrom(testConfigProps, "minimr.query.files");
-        excludesFrom(testConfigProps, "minitez.query.files");
-        excludesFrom(testConfigProps, "encrypted.query.files");
-
-        setResultsDir("ql/src/test/results/clientpositive/perf/");
-        setLogDir("itests/qtest/target/qfile-results/clientpositive/");
-
-        setInitScript("q_perf_test_init.sql");
-        setCleanupScript("q_perf_test_cleanup.sql");
-
-        setHiveConfDir("data/conf/perf-reg/");
-        setClusterType(MiniClusterType.tez);
-      } catch (Exception e) {
-        throw new RuntimeException("can't construct cliconfig", e);
-      }
-    }
-  }
 
   public static class CompareCliConfig extends AbstractCliConfig {
     public CompareCliConfig() {

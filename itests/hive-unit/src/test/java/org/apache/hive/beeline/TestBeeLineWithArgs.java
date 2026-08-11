@@ -93,7 +93,7 @@ public class TestBeeLineWithArgs {
         "org.apache.hadoop.hive.ql.lockmgr.EmbeddedLockManager");
     hiveConf.setBoolVar(HiveConf.ConfVars.HIVEOPTIMIZEMETADATAQUERIES, false);
     hiveConf.set(ConfVars.HIVE_SERVER2_LOGGING_OPERATION_LEVEL.varname, "verbose");
-    miniHS2 = new MiniHS2(hiveConf, MiniClusterType.TEZ);
+    miniHS2 = new MiniHS2(hiveConf, MiniClusterType.MR);
 
     Map<String, String> confOverlay = new HashMap<String, String>();
     miniHS2.start(confOverlay);

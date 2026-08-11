@@ -60,7 +60,6 @@ STORED AS ORC tblproperties("orc.row.index.stride" = "1000", "orc.bloom.filter.c
 
 insert overwrite table orc_ppd select t, si, i, b, f, d, bo, s, cast(s as char(50)), cast(s as varchar(50)), da, dec, bin from orc_ppd_staging order by t, s;
 
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecTezSummaryPrinter;
 SET hive.optimize.index.filter=false;
 
 -- Row group statistics for column t:

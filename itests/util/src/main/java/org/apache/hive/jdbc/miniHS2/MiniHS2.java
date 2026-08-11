@@ -33,8 +33,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.llap.LlapItUtils;
-import org.apache.hadoop.hive.llap.daemon.MiniLlapCluster;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.ql.exec.Utilities;
 import org.apache.hadoop.hive.ql.util.ZooKeeperHiveHelper;
@@ -66,7 +64,6 @@ public class MiniHS2 extends AbstractHiveService {
   private final Path baseFsDir;
   private MiniMrShim mr;
   private MiniDFSShim dfs;
-  private MiniLlapCluster llapCluster = null;
   private final FileSystem localFS;
   private boolean useMiniKdc = false;
   private final String serverPrincipal;
@@ -78,8 +75,6 @@ public class MiniHS2 extends AbstractHiveService {
 
   public enum MiniClusterType {
     MR,
-    TEZ,
-    LLAP,
     LOCALFS_ONLY;
   }
 
@@ -240,20 +235,6 @@ public class MiniHS2 extends AbstractHiveService {
 
       // Initialize the execution engine based on cluster type
       switch (miniClusterType) {
-      case TEZ:
-        // Change the engine to tez
-        hiveConf.setVar(ConfVars.HIVE_EXECUTION_ENGINE, "tez");
-        // TODO: This should be making use of confDir to load configs setup for Tez, etc.
-        mr = ShimLoader.getHadoopShims().getMiniTezCluster(hiveConf, 2, uriString, false);
-        break;
-      case LLAP:
-        if (usePortsFromConf) {
-          hiveConf.setBoolean("minillap.usePortsFromConf", true);
-        }
-        llapCluster = LlapItUtils.startAndGetMiniLlapCluster(hiveConf, null, null);
-
-        mr = ShimLoader.getHadoopShims().getMiniTezCluster(hiveConf, 2, uriString, true);
-        break;
       case MR:
         mr = ShimLoader.getHadoopShims().getMiniMrCluster(hiveConf, 2, uriString, 1);
         break;
@@ -383,9 +364,7 @@ public class MiniHS2 extends AbstractHiveService {
     hiveServer2.stop();
     setStarted(false);
     try {
-      if (llapCluster != null) {
-        llapCluster.stop();
-      }
+
       if (mr != null) {
         mr.shutdown();
         mr = null;

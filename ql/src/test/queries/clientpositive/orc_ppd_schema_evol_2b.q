@@ -36,7 +36,6 @@ stored as orc;
 insert into table test_two_files select * from unique_1 where cast(d as double) <= 0 order by cast(d as double);
 insert into table test_two_files select * from unique_2 where cast(d as double) > 0 order by cast(d as double);
 
-SET hive.exec.post.hooks=org.apache.hadoop.hive.ql.hooks.PostExecTezSummaryPrinter;
 
 alter table test_two_files change column d d double;
 

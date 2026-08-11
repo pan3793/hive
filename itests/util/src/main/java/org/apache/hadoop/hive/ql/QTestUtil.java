@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Deque;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -84,15 +83,11 @@ import org.apache.hadoop.hive.common.io.SortAndDigestPrintStream;
 import org.apache.hadoop.hive.common.io.SortPrintStream;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
-import org.apache.hadoop.hive.llap.LlapItUtils;
-import org.apache.hadoop.hive.llap.daemon.MiniLlapCluster;
-import org.apache.hadoop.hive.llap.io.api.LlapProxy;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
 import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
-import org.apache.hadoop.hive.ql.exec.tez.TezSessionState;
 import org.apache.hadoop.hive.ql.lockmgr.zookeeper.CuratorFrameworkSingleton;
 import org.apache.hadoop.hive.ql.lockmgr.zookeeper.ZooKeeperHiveLockManager;
 import org.apache.hadoop.hive.ql.metadata.Hive;
@@ -177,10 +172,8 @@ public class QTestUtil {
   private HadoopShims.MiniDFSShim dfs = null;
   private FileSystem fs;
   private HadoopShims.HdfsEncryptionShim hes = null;
-  private MiniLlapCluster llapCluster = null;
   private String hadoopVer = null;
   private QTestSetup setup = null;
-  private TezSessionState tezSessionState = null;
   private boolean isSessionStateStarted = false;
   private static final String javaVersion = getJavaVersion();
 
@@ -339,14 +332,6 @@ public class QTestUtil {
       // TODO Ideally this should be done independent of whether mr is setup or not.
       setFsRelatedProperties(conf, fs.getScheme().equals("file"),fs);
     }
-
-    if (llapCluster != null) {
-      Configuration clusterSpecificConf = llapCluster.getClusterSpecificConfiguration();
-      for (Map.Entry<String, String> confEntry : clusterSpecificConf) {
-        // Conf.get takes care of parameter replacement, iterator.value does not.
-        conf.set(confEntry.getKey(), clusterSpecificConf.get(confEntry.getKey()));
-      }
-    }
   }
 
   private void setFsRelatedProperties(HiveConf conf, boolean isLocalFs, FileSystem fs) {
@@ -420,9 +405,7 @@ public class QTestUtil {
   }
 
   private enum CoreClusterType {
-    MR,
-    TEZ,
-    SPARK
+    MR
   }
 
   public enum FsType {
@@ -434,10 +417,6 @@ public class QTestUtil {
   public enum MiniClusterType {
 
     mr(CoreClusterType.MR, FsType.hdfs),
-    tez(CoreClusterType.TEZ, FsType.hdfs),
-    tez_local(CoreClusterType.TEZ, FsType.local),
-    llap(CoreClusterType.TEZ, FsType.hdfs),
-    llap_local(CoreClusterType.TEZ, FsType.local),
     none(CoreClusterType.MR, FsType.local);
 
 
@@ -461,14 +440,6 @@ public class QTestUtil {
       // Replace this with valueOf.
       if (type.equals("miniMR")) {
         return mr;
-      } else if (type.equals("tez")) {
-        return tez;
-      } else if (type.equals("tez_local")) {
-        return tez_local;
-      } else if (type.equals("llap")) {
-        return llap;
-      } else if (type.equals("llap_local")) {
-        return llap_local;
       } else {
         return none;
       }
@@ -542,11 +513,6 @@ public class QTestUtil {
 
     initConf();
 
-    if (withLlapIo && (clusterType == MiniClusterType.none)) {
-      LOG.info("initializing llap IO");
-      LlapProxy.initializeLlapIo(conf);
-    }
-
 
     // Use the current directory if it is not specified
     String dataDir = conf.get("test.data.files");
@@ -603,23 +569,7 @@ public class QTestUtil {
 
     String uriString = fs.getUri().toString();
 
-    if (clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
-      if (confDir != null && !confDir.isEmpty()) {
-        conf.addResource(new URL("file://" + new File(confDir).toURI().getPath()
-            + "/tez-site.xml"));
-      }
-      int numTrackers = 2;
-      if (EnumSet.of(MiniClusterType.llap, MiniClusterType.llap_local).contains(clusterType)) {
-        llapCluster = LlapItUtils.startAndGetMiniLlapCluster(conf, setup.zooKeeperCluster, confDir);
-      } else {
-      }
-      if (EnumSet.of(MiniClusterType.llap_local, MiniClusterType.tez_local).contains(clusterType)) {
-        mr = shims.getLocalMiniTezCluster(conf, clusterType == MiniClusterType.llap_local);
-      } else {
-        mr = shims.getMiniTezCluster(conf, numTrackers, uriString,
-            EnumSet.of(MiniClusterType.llap, MiniClusterType.llap_local).contains(clusterType));
-      }
-    } else if (clusterType == MiniClusterType.mr) {
+    if (clusterType == MiniClusterType.mr) {
       mr = shims.getMiniMrCluster(conf, 2, uriString, 1);
     }
   }
@@ -630,9 +580,6 @@ public class QTestUtil {
       cleanUp();
     }
 
-    if (clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
-      SessionState.get().getTezSession().close(false);
-    }
     setup.tearDown();
     if (mr != null) {
       mr.shutdown();
@@ -1112,15 +1059,6 @@ public class QTestUtil {
     ss.setIsSilent(true);
     SessionState oldSs = SessionState.get();
 
-    boolean canReuseSession = !qNoSessionReuseQuerySet.contains(tname);
-    if (oldSs != null && canReuseSession && clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
-      // Copy the tezSessionState from the old CliSessionState.
-      tezSessionState = oldSs.getTezSession();
-      oldSs.setTezSession(null);
-      ss.setTezSession(tezSessionState);
-      oldSs.close();
-    }
-
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
     }
@@ -1155,14 +1093,6 @@ public class QTestUtil {
     ss.err = System.out;
 
     SessionState oldSs = SessionState.get();
-    if (oldSs != null && canReuseSession && clusterType.getCoreClusterType() == CoreClusterType.TEZ) {
-      // Copy the tezSessionState from the old CliSessionState.
-      tezSessionState = oldSs.getTezSession();
-      ss.setTezSession(tezSessionState);
-      oldSs.setTezSession(null);
-      oldSs.close();
-    }
-
     if (oldSs != null && oldSs.out != null && oldSs.out != System.out) {
       oldSs.out.close();
     }
