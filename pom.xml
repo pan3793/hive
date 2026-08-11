@@ -31,7 +31,6 @@
   </prerequisites>
 
   <modules>
-    <module>accumulo-handler</module>
     <module>vector-code-gen</module>
     <module>beeline</module>
     <module>cli</module>
@@ -98,7 +97,6 @@
     <maven.build-helper.plugin.version>1.8</maven.build-helper.plugin.version>
 
     <!-- Library Dependency Versions -->
-    <accumulo.version>1.7.3</accumulo.version>
     <ant.version>1.9.1</ant.version>
     <antlr.version>3.5.2</antlr.version>
     <apache-directory-server.version>1.5.7</apache-directory-server.version>
@@ -351,31 +349,6 @@
         <groupId>org.apache.commons</groupId>
         <artifactId>commons-exec</artifactId>
         <version>${commons-exec.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.accumulo</groupId>
-        <artifactId>accumulo-core</artifactId>
-        <version>${accumulo.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.accumulo</groupId>
-        <artifactId>accumulo-fate</artifactId>
-        <version>${accumulo.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.accumulo</groupId>
-        <artifactId>accumulo-minicluster</artifactId>
-        <version>${accumulo.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.accumulo</groupId>
-        <artifactId>accumulo-start</artifactId>
-        <version>${accumulo.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.accumulo</groupId>
-        <artifactId>accumulo-trace</artifactId>
-        <version>${accumulo.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.avro</groupId>
