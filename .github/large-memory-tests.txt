@@ -1,0 +1,16 @@
+# hcatalog/core
+**/org/apache/hive/hcatalog/mapreduce/TestHCatMultiOutputFormat.java
+**/org/apache/hive/hcatalog/mapreduce/TestHCatPartitionPublish.java
+
+# itests/hive-unit
+**/org/apache/hive/beeline/TestBeeLineWithArgs.java
+**/org/apache/hive/jdbc/TestJdbcWithMiniHA.java
+**/org/apache/hive/jdbc/TestJdbcWithMiniLlap.java
+**/org/apache/hive/service/cli/operation/TestOperationLoggingAPIWithTez.java
+
+# flaky multi-threaded qtest, upstream disabled it via HIVE-22616
+**/org/apache/hadoop/hive/ql/TestMTQueries.java
+
+# jdbc-handler
+# this test fails with `NoClassDefFound org/apache/commons/dbcp/BasicDataSourceFactory`
+**/org/apache/hive/storage/jdbc/dao/GenericJdbcDatabaseAccessorTest.java

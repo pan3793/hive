@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - branch-*
+  pull_request:
+    branches:
+      - branch-*
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        modules:
+          - "-pl :hive-vector-code-gen,:hive-shims-common,:hive-shims-0.23,:hive-shims-scheduler,:hive-shims,:hive-common,:hive-service-rpc,:hive-serde,:hive-metastore"
+          - "-pl :hive-service,:hive-jdbc,:hive-beeline,:hive-cli,:hive-contrib,:hive-jdbc-handler"
+          - "-pl :hive-exec"
+          - "-pl :hive-hcatalog,:hive-hcatalog-core,:hive-hcatalog-pig-adapter,:hive-hcatalog-server-extensions,:hive-webhcat-java-client"
+          - "-pl :hive-webhcat,:hive-hplsql,:hive-shims-aggregator,:hive-testutils,:hive-packaging,:hive-it,:hive-it-util,:hive-it-custom-serde,:hive-it-custom-udfs,:udf-classloader-util,:udf-classloader-udf1,:udf-classloader-udf2,:udf-vectorized-badexample,:hive-it-unit-hadoop2,:hive-blobstore,:hive-it-test-serde,:hive-jmh,:hive-it-minikdc"
+          - "-pl :hive-it-unit"
+          - "-pl :hive-it-qfile -Dtest=TestContribCliDriver,TestContribNegativeCliDriver,TestCompareCliDriver,TestParseNegativeDriver"
+          - "-pl :hive-it-qfile -Dtest=TestBeeLineDriver,TestNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver -Dqfile_regex=^[a-c].*"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver -Dqfile_regex=^[d-j].*"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver -Dqfile_regex=^[k-q].*"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver -Dqfile_regex=^[r-t].*"
+          - "-pl :hive-it-qfile -Dtest=TestCliDriver -Dqfile_regex=^[u-z].*"
+          - "-pl :hive-it-qfile -Dtest=TestEncryptedHDFSCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestHBaseCliDriver,TestHBaseNegativeCliDriver"
+          - "-pl :hive-it-qfile -Dtest=TestMinimrCliDriver,TestNegativeMinimrCliDriver"
+    steps:
+    - uses: actions/checkout@v7
+    - name: Setup JDK 8
+      uses: actions/setup-java@v5
+      with:
+        distribution: zulu
+        java-version: 8
+        cache: maven
+        check-latest: false
+    - name: Build and Test with Maven
+      run: |
+        export HADOOP_HEAPSIZE=512m
+        export MAVEN_OPTS="-Xmx768m -Djava.awt.headless=true"
+        export MAVEN_ARGS="-B"
+        mvn clean install -Pitests,dist -DskipTests
+        mvn -Pitests \
+            org.apache.maven.plugins:maven-antrun-plugin:run@define-classpath \
+            org.apache.maven.plugins:maven-antrun-plugin:run@setup-test-dirs \
+            org.apache.maven.plugins:maven-antrun-plugin:run@setup-metastore-scripts \
+            org.apache.maven.plugins:maven-surefire-plugin:test \
+            -Dsurefire.excludesFile=$PWD/.github/large-memory-tests.txt \
+            ${{ matrix.modules }}
+    - name: Upload test log
+      if: failure()
+      uses: actions/upload-artifact@v7
+      with:
+        name: unit-test-log
+        path: |
+          **/target/**/*.log
+          **/target/surefire-reports/**
+          **/target/qfile-results/**
