@@ -97,25 +97,6 @@ OK
 Shutting down query create view escape_comments_view1 (col1 comment 'a\nb') comment 'a\nb' 
 as select col1 from escape_comments_tbl1
 No rows affected 
->>>  create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb';
-Acquired the compile lock.
-Compiling commandqueryId=(!!{queryId}!!): create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb'
-Semantic Analysis Completed
-Returning Hive schema: Schema(fieldSchemas:null, properties:null)
-Completed compiling commandqueryId=(!!{queryId}!!); Time taken: !!ELIDED!! seconds
-Executing commandqueryId=(!!{queryId}!!): create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb'
-PREHOOK: query: create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb'
-PREHOOK: type: CREATEINDEX
-PREHOOK: Input: escape_comments_db@escape_comments_tbl1
-Starting task [Stage-0:DDL] in serial mode
-POSTHOOK: query: create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb'
-POSTHOOK: type: CREATEINDEX
-POSTHOOK: Input: escape_comments_db@escape_comments_tbl1
-POSTHOOK: Output: escape_comments_db@escape_comments_db__escape_comments_tbl1_index2__
-Completed executing commandqueryId=(!!{queryId}!!); Time taken: !!ELIDED!! seconds
-OK
-Shutting down query create index index2 on table escape_comments_tbl1(col1) as 'COMPACT' with deferred rebuild comment 'a\nb'
-No rows affected 
 >>>  
 >>>  describe database extended escape_comments_db;
 Acquired the compile lock.
@@ -371,27 +352,6 @@ Shutting down query describe formatted escape_comments_view1
 'View Expanded Text: ','SELECT `col1` AS `col1` FROM (select `escape_comments_tbl1`.`col1` from `escape_comments_db`.`escape_comments_tbl1`) `escape_comments_db.escape_comments_view1`','NULL'
 'View Rewrite Enabled:','No                  ','NULL'
 28 rows selected 
->>>  show formatted index on escape_comments_tbl1;
-Acquired the compile lock.
-Compiling commandqueryId=(!!{queryId}!!): show formatted index on escape_comments_tbl1
-Semantic Analysis Completed
-Returning Hive schema: Schema(fieldSchemas:[FieldSchema(name:idx_name, type:string, comment:from deserializer), FieldSchema(name:tab_name, type:string, comment:from deserializer), FieldSchema(name:col_names, type:string, comment:from deserializer), FieldSchema(name:idx_tab_name, type:string, comment:from deserializer), FieldSchema(name:idx_type, type:string, comment:from deserializer), FieldSchema(name:comment, type:string, comment:from deserializer)], properties:null)
-Completed compiling commandqueryId=(!!{queryId}!!); Time taken: !!ELIDED!! seconds
-Executing commandqueryId=(!!{queryId}!!): show formatted index on escape_comments_tbl1
-PREHOOK: query: show formatted index on escape_comments_tbl1
-PREHOOK: type: SHOWINDEXES
-Starting task [Stage-0:DDL] in serial mode
-POSTHOOK: query: show formatted index on escape_comments_tbl1
-POSTHOOK: type: SHOWINDEXES
-Completed executing commandqueryId=(!!{queryId}!!); Time taken: !!ELIDED!! seconds
-OK
-Shutting down query show formatted index on escape_comments_tbl1
-'idx_name','tab_name','col_names','idx_tab_name','idx_type','comment'
-'idx_name            ','tab_name            ','col_names           ','idx_tab_name        ','idx_type            ','comment             '
-'','NULL','NULL','NULL','NULL','NULL'
-'','NULL','NULL','NULL','NULL','NULL'
-'index2              ','escape_comments_tbl1','col1                ','escape_comments_db__escape_comments_tbl1_index2__','compact             ','a\nb                '
-4 rows selected 
 >>>  
 >>>  drop database escape_comments_db cascade;
 Acquired the compile lock.
@@ -404,7 +364,6 @@ PREHOOK: query: drop database escape_comments_db cascade
 PREHOOK: type: DROPDATABASE
 PREHOOK: Input: database:escape_comments_db
 PREHOOK: Output: database:escape_comments_db
-PREHOOK: Output: escape_comments_db@escape_comments_db__escape_comments_tbl1_index2__
 PREHOOK: Output: escape_comments_db@escape_comments_tbl1
 PREHOOK: Output: escape_comments_db@escape_comments_view1
 Starting task [Stage-0:DDL] in serial mode
@@ -412,7 +371,6 @@ POSTHOOK: query: drop database escape_comments_db cascade
 POSTHOOK: type: DROPDATABASE
 POSTHOOK: Input: database:escape_comments_db
 POSTHOOK: Output: database:escape_comments_db
-POSTHOOK: Output: escape_comments_db@escape_comments_db__escape_comments_tbl1_index2__
 POSTHOOK: Output: escape_comments_db@escape_comments_tbl1
 POSTHOOK: Output: escape_comments_db@escape_comments_view1
 Completed executing commandqueryId=(!!{queryId}!!); Time taken: !!ELIDED!! seconds

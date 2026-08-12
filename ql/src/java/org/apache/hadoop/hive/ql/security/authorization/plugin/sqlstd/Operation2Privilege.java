@@ -241,16 +241,6 @@ public class Operation2Privilege {
     op2Priv.put(HiveOperationType.ALTERTABLE_ADDCONSTRAINT, PrivRequirement.newIOPrivRequirement
 (OWNER_PRIV_AR, OWNER_PRIV_AR));
 
-    //table ownership for create/drop/alter index
-    op2Priv.put(HiveOperationType.CREATEINDEX, PrivRequirement.newIOPrivRequirement
-(OWNER_PRIV_AR, OWNER_INS_SEL_DEL_NOGRANT_AR));
-    op2Priv.put(HiveOperationType.DROPINDEX, PrivRequirement.newIOPrivRequirement
-(OWNER_PRIV_AR, OWNER_PRIV_AR));
-    op2Priv.put(HiveOperationType.ALTERINDEX_REBUILD, PrivRequirement.newIOPrivRequirement
-(OWNER_PRIV_AR, OWNER_PRIV_AR));
-    op2Priv.put(HiveOperationType.ALTERINDEX_PROPS, PrivRequirement.newIOPrivRequirement
-(OWNER_PRIV_AR, OWNER_PRIV_AR));
-
     // require view ownership for alter/drop view
     op2Priv.put(HiveOperationType.ALTERVIEW_PROPERTIES, PrivRequirement.newIOPrivRequirement
 (OWNER_PRIV_AR, OWNER_PRIV_AR));
@@ -346,8 +336,6 @@ public class Operation2Privilege {
         new PrivRequirement(OWNER_PRIV_AR, HivePrivilegeObjectType.DATABASE)));
 
     op2Priv.put(HiveOperationType.SHOWFUNCTIONS, PrivRequirement.newIOPrivRequirement
-(null, null));
-    op2Priv.put(HiveOperationType.SHOWINDEXES, PrivRequirement.newIOPrivRequirement
 (null, null));
     op2Priv.put(HiveOperationType.SHOWLOCKS, PrivRequirement.newIOPrivRequirement
 (null, null));

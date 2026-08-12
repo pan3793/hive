@@ -25,7 +25,6 @@ import java.util.Set;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.ql.optimizer.correlation.CorrelationOptimizer;
 import org.apache.hadoop.hive.ql.optimizer.correlation.ReduceSinkDeDuplication;
-import org.apache.hadoop.hive.ql.optimizer.index.RewriteGBUsingIndex;
 import org.apache.hadoop.hive.ql.optimizer.lineage.Generator;
 import org.apache.hadoop.hive.ql.optimizer.listbucketingpruner.ListBucketingPruner;
 import org.apache.hadoop.hive.ql.optimizer.metainfo.annotation.AnnotateWithOpTraits;
@@ -146,7 +145,6 @@ public class Optimizer {
       }
     }
     if (HiveConf.getBoolVar(hiveConf, HiveConf.ConfVars.HIVEOPTGBYUSINGINDEX)) {
-      transformations.add(new RewriteGBUsingIndex());
     }
     transformations.add(new SamplePruner());
 

@@ -32,12 +32,9 @@ import org.apache.hadoop.hive.metastore.api.Decimal;
 import org.apache.hadoop.hive.metastore.api.DecimalColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.DoubleColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
-import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.metastore.api.LongColumnStatsData;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.StringColumnStatsData;
-import org.apache.hadoop.hive.ql.index.HiveIndex;
-import org.apache.hadoop.hive.ql.index.HiveIndex.IndexType;
 import org.apache.hadoop.hive.ql.metadata.ForeignKeyInfo;
 import org.apache.hadoop.hive.ql.metadata.Partition;
 import org.apache.hadoop.hive.ql.metadata.PrimaryKeyInfo;
@@ -45,7 +42,6 @@ import org.apache.hadoop.hive.ql.metadata.Table;
 import org.apache.hadoop.hive.ql.metadata.ForeignKeyInfo.ForeignKeyCol;
 import org.apache.hadoop.hive.ql.plan.DescTableDesc;
 import org.apache.hadoop.hive.ql.plan.PlanUtils;
-import org.apache.hadoop.hive.ql.plan.ShowIndexesDesc;
 import org.apache.hadoop.hive.serde2.io.DateWritable;
 import org.apache.hive.common.util.HiveStringUtils;
 
@@ -236,44 +232,6 @@ public final class MetaDataFormatUtils {
     colBuffer.append(LINE_DELIM);
   }
 
-  public static String getIndexInformation(Index index, boolean isOutputPadded) {
-    StringBuilder indexInfo = new StringBuilder(DEFAULT_STRINGBUILDER_SIZE);
-
-    List<String> indexColumns = new ArrayList<String>();
-
-    indexColumns.add(index.getIndexName());
-    indexColumns.add(index.getOrigTableName());
-
-    // index key names
-    List<FieldSchema> indexKeys = index.getSd().getCols();
-    StringBuilder keyString = new StringBuilder();
-    boolean first = true;
-    for (FieldSchema key : indexKeys)
-    {
-      if (!first)
-      {
-        keyString.append(", ");
-      }
-      keyString.append(key.getName());
-      first = false;
-    }
-
-    indexColumns.add(keyString.toString());
-
-    indexColumns.add(index.getIndexTableName());
-
-    // index type
-    String indexHandlerClass = index.getIndexHandlerClass();
-    IndexType indexType = HiveIndex.getIndexTypeByClassName(indexHandlerClass);
-    indexColumns.add(indexType.getName());
-
-    String comment = index.getParameters().get("comment");
-    indexColumns.add(comment == null ? null : HiveStringUtils.escapeJava(comment));
-
-    formatOutput(indexColumns.toArray(new String[0]), indexInfo, isOutputPadded);
-
-    return indexInfo.toString();
-  }
 
   public static String getConstraintsInformation(PrimaryKeyInfo pkInfo, ForeignKeyInfo fkInfo) {
     StringBuilder constraintsInfo = new StringBuilder(DEFAULT_STRINGBUILDER_SIZE);
@@ -750,11 +708,6 @@ public final class MetaDataFormatUtils {
     return DescTableDesc.getSchema(showColStats).split("#")[0].split(",");
   }
 
-  public static String getIndexColumnsHeader() {
-    StringBuilder indexCols = new StringBuilder(DEFAULT_STRINGBUILDER_SIZE);
-    formatOutput(ShowIndexesDesc.getSchema().split("#")[0].split(","), indexCols);
-    return indexCols.toString();
-  }
 
   public static MetaDataFormatter getFormatter(HiveConf conf) {
     if ("json".equals(conf.get(HiveConf.ConfVars.HIVE_DDL_OUTPUT_FORMAT.varname, "text"))) {

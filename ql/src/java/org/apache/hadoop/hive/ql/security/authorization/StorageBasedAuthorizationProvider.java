@@ -293,9 +293,6 @@ public class StorageBasedAuthorizationProvider extends HiveAuthorizationProvider
       return FsAction.WRITE;
     case DROP:
       return FsAction.WRITE;
-    case INDEX:
-      throw new AuthorizationException(
-          "StorageBasedAuthorizationProvider cannot handle INDEX privilege");
     case LOCK:
       throw new AuthorizationException(
           "StorageBasedAuthorizationProvider cannot handle LOCK privilege");

@@ -84,7 +84,6 @@ import org.apache.hadoop.hive.common.io.SortPrintStream;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.metastore.MetaStoreUtils;
-import org.apache.hadoop.hive.metastore.api.Index;
 import org.apache.hadoop.hive.ql.exec.FunctionRegistry;
 import org.apache.hadoop.hive.ql.exec.Task;
 import org.apache.hadoop.hive.ql.exec.Utilities;
@@ -811,20 +810,7 @@ public class QTestUtil {
             LOG.warn("Trying to drop table " + e.getTableName() + ". But it does not exist.");
             continue;
           }
-          // dropping index table can not be dropped directly. Dropping the base
-          // table will automatically drop all its index table
-          if(tblObj.isIndexTable()) {
-            continue;
-          }
           db.dropTable(dbName, tblName, true, true, fsType == FsType.encrypted_hdfs);
-        } else {
-          // this table is defined in srcTables, drop all indexes on it
-         List<Index> indexes = db.getIndexes(dbName, tblName, (short)-1);
-          if (indexes != null && indexes.size() > 0) {
-            for (Index index : indexes) {
-              db.dropIndex(dbName, tblName, index.getIndexName(), true, true);
-            }
-          }
         }
       }
       if (!DEFAULT_DATABASE_NAME.equals(dbName)) {

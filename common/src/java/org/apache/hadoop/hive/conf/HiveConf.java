@@ -1544,9 +1544,7 @@ public class HiveConf extends Configuration {
 
     // Optimizer
     HIVEOPTINDEXFILTER("hive.optimize.index.filter", false,
-        "Whether to enable automatic use of indexes"),
-    HIVEINDEXAUTOUPDATE("hive.optimize.index.autoupdate", false,
-        "Whether to update stale indexes automatically"),
+        "Whether to push predicates down to storage handlers and file formats (e.g. ORC row-group pruning)"),
     HIVEOPTPPD("hive.optimize.ppd", true,
         "Whether to enable predicate pushdown"),
     HIVEOPTPPD_WINDOWING("hive.optimize.ppd.windowing", true,
@@ -1657,12 +1655,6 @@ public class HiveConf extends Configuration {
         "Minimum size (in bytes) of the inputs on which a compact index is automatically used."), // 5G
     HIVEOPTINDEXFILTER_COMPACT_MAXSIZE("hive.optimize.index.filter.compact.maxsize", (long) -1,
         "Maximum size (in bytes) of the inputs on which a compact index is automatically used.  A negative number is equivalent to infinity."), // infinity
-    HIVE_INDEX_COMPACT_QUERY_MAX_ENTRIES("hive.index.compact.query.max.entries", (long) 10000000,
-        "The maximum number of index entries to read during a query that uses the compact index. Negative value is equivalent to infinity."), // 10M
-    HIVE_INDEX_COMPACT_QUERY_MAX_SIZE("hive.index.compact.query.max.size", (long) 10 * 1024 * 1024 * 1024,
-        "The maximum number of bytes that a query using the compact index can read. Negative value is equivalent to infinity."), // 10G
-    HIVE_INDEX_COMPACT_BINARY_SEARCH("hive.index.compact.binary.search", true,
-        "Whether or not to use a binary search to find the entries in an index table that match the filter, where possible"),
 
     // Statistics
     HIVESTATSAUTOGATHER("hive.stats.autogather", true,
@@ -2153,12 +2145,6 @@ public class HiveConf extends Configuration {
 
     HIVE_ERROR_ON_EMPTY_PARTITION("hive.error.on.empty.partition", false,
         "Whether to throw an exception if dynamic partition insert generates empty results."),
-
-    HIVE_INDEX_COMPACT_FILE("hive.index.compact.file", "", "internal variable"),
-    HIVE_INDEX_BLOCKFILTER_FILE("hive.index.blockfilter.file", "", "internal variable"),
-    HIVE_INDEX_IGNORE_HDFS_LOC("hive.index.compact.file.ignore.hdfs", false,
-        "When true the HDFS location stored in the index file will be ignored at runtime.\n" +
-        "If the data got moved or the name of the cluster got changed, the index data should still be usable."),
 
     HIVE_EXIM_URI_SCHEME_WL("hive.exim.uri.scheme.whitelist", "hdfs,pfile,file,s3,s3a",
         "A comma separated list of acceptable URI schemes for import and export."),

@@ -81,10 +81,6 @@ div
 e
 elt
 encode
-ewah_bitmap
-ewah_bitmap_and
-ewah_bitmap_empty
-ewah_bitmap_or
 exp
 explode
 extract_union

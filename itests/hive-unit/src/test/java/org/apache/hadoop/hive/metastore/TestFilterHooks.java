@@ -157,7 +157,6 @@ public class TestFilterHooks {
   private static final String DBNAME2 = "testdb2";
   private static final String TAB1 = "tab1";
   private static final String TAB2 = "tab2";
-  private static final String INDEX1 = "idx1";
   private static HiveConf hiveConf;
   private static HiveMetaStoreClient msc;
   private static Driver driver;
@@ -189,7 +188,6 @@ public class TestFilterHooks {
     driver.run("create table " + TAB2 + " (id int) partitioned by (name string)");
     driver.run("ALTER TABLE " + TAB2 + " ADD PARTITION (name='value1')");
     driver.run("ALTER TABLE " + TAB2 + " ADD PARTITION (name='value2')");
-    driver.run("CREATE INDEX " + INDEX1 + " on table " + TAB1 + "(id) AS 'COMPACT' WITH DEFERRED REBUILD");
   }
 
   @AfterClass
@@ -205,8 +203,8 @@ public class TestFilterHooks {
   @Test
   public void testDefaultFilter() throws Exception {
     assertNotNull(msc.getTable(DBNAME1, TAB1));
-    assertEquals(3, msc.getTables(DBNAME1, "*").size());
-    assertEquals(3, msc.getAllTables(DBNAME1).size());
+    assertEquals(2, msc.getTables(DBNAME1, "*").size());
+    assertEquals(2, msc.getAllTables(DBNAME1).size());
     assertEquals(1, msc.getTables(DBNAME1, TAB2).size());
     assertEquals(0, msc.getAllTables(DBNAME2).size());
 
@@ -218,7 +216,6 @@ public class TestFilterHooks {
     assertNotNull(msc.getPartition(DBNAME1, TAB2, "name=value1"));
     assertEquals(1, msc.getPartitionsByNames(DBNAME1, TAB2, Lists.newArrayList("name=value1")).size());
 
-    assertNotNull(msc.getIndex(DBNAME1, TAB1, INDEX1));
   }
 
   @Test
@@ -262,15 +259,5 @@ public class TestFilterHooks {
         Lists.newArrayList("name=value1")).size());
   }
 
-  @Test
-  public void testDummyFilterForIndex() throws Exception {
-    DummyMetaStoreFilterHookImpl.blockResults = true;
-    try {
-      assertNotNull(msc.getIndex(DBNAME1, TAB1, INDEX1));
-      fail("getPartition() should fail with blocking mode");
-    } catch (NoSuchObjectException e) {
-      // Excepted
-    }
-  }
 
 }
